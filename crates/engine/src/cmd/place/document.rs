@@ -1,4 +1,4 @@
-//! Placed documents (`file.place` of a VectorCraft document from a file, with `link`): one
+//! Placed documents (`file.place` of a MIXEL Vector document from a file, with `link`): one
 //! locked object showing an artboard of the document, a [`PlacedDocument`].
 //!
 //! The object keeps the file's bytes (in the document's images, like image data) and the link; the
@@ -27,17 +27,17 @@ use super::super::*;
 
 /// The largest file placed (bytes).
 pub(crate) const MAX_FILE: usize = 256 << 20;
-/// The format ids of VectorCraft documents.
+/// The format ids of MIXEL Vector documents.
 const NATIVE: [&str; 2] = ["vectorcraft", "template"];
 /// The type a placed file's bytes are stored with.
 const MIME: &str = "application/json";
 
-/// Is `name` with `bytes` a VectorCraft document?
+/// Is `name` with `bytes` a MIXEL Vector document?
 pub(crate) fn is_native(name: &str, bytes: &[u8]) -> bool {
     fileio::detect(name, bytes).is_some_and(|f| NATIVE.contains(&f.id))
 }
 
-/// An artboard of a VectorCraft document, read as art to place.
+/// An artboard of a MIXEL Vector document, read as art to place.
 pub(crate) struct DocumentArt {
     /// The document, its layers taken: the art's resources.
     pub doc: Document,
@@ -50,12 +50,12 @@ pub(crate) struct DocumentArt {
     pub warnings: Vec<String>,
 }
 
-/// Artboard `page` (1-based) of the VectorCraft document `name` (`bytes`, read from `path` when
+/// Artboard `page` (1-based) of the MIXEL Vector document `name` (`bytes`, read from `path` when
 /// there is one, so its linked images are found), clipped to the artboard unless `bounding`.
 pub(crate) fn document_art(name: &str, bytes: &[u8], path: Option<&str>, page: u32, bounding: bool, cmd: &str) -> Result<DocumentArt> {
     let file = fileio::file_name(name);
     if !is_native(name, bytes) {
-        return Err(bad(cmd, format!("`{file}` isn't a VectorCraft document")));
+        return Err(bad(cmd, format!("`{file}` isn't a MIXEL Vector document")));
     }
     if bytes.len() > MAX_FILE {
         return Err(bad(cmd, format!("`{file}` is over {} MB", MAX_FILE >> 20)));
@@ -100,7 +100,7 @@ pub(crate) fn read_file_again(p: &PlacedDocument) -> Option<Vec<u8>> {
     Some(bytes)
 }
 
-/// A VectorCraft document read for placing linked.
+/// A MIXEL Vector document read for placing linked.
 #[derive(Clone)]
 pub(crate) struct Source {
     /// The file's bytes, with their preview.
@@ -112,7 +112,7 @@ pub(crate) struct Source {
     pub warnings: Vec<String>,
 }
 
-/// The VectorCraft document `name` (`bytes`, from `path` when there is one) read for showing
+/// The MIXEL Vector document `name` (`bytes`, from `path` when there is one) read for showing
 /// artboard `page` (its art's bounds when `bounding`).
 pub(crate) fn source(name: &str, bytes: &[u8], path: Option<&str>, page: u32, bounding: bool, cmd: &str) -> Result<Source> {
     // The same document placed the same way is read once (placing it again is free).

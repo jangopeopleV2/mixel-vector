@@ -43,7 +43,7 @@ const NAME_ENV: &str = "WGPU_ADAPTER_NAME";
 
 /// Where to read how to choose another adapter, for the error that ends the app.
 const HELP: &str =
-    "to choose a graphics adapter, see https://github.com/storytold/vectorcraft/blob/main/docs/development.md#desktop-graphics-processor";
+    "to choose a graphics adapter, see https://github.com/jangopeopleV2/mixel-vector/blob/main/docs/development.md#desktop-graphics-processor";
 
 /// Frames the UI ran before the failure, below which it was still starting up. The failure in
 /// #502 came on the first or second frame; later, the adapter has proved itself, and a lost
@@ -85,7 +85,7 @@ pub fn preferred_displays(pref: Option<&str>, env: Option<PowerPreference>) -> V
 /// unless `WGPU_BACKEND` names others (`env_set`; `default` then holds them). Creating a Vulkan
 /// instance loads every installed Vulkan driver into the process, and a faulty one (Intel's
 /// `igvk64.dll`, #806) crashed the app before its window appeared. DX12 is Windows' own backend,
-/// as in PdfCraft. Elsewhere, `default`.
+/// as in MIXEL Print. Elsewhere, `default`.
 pub fn backends(default: Backends, env_set: bool) -> Backends {
     if cfg!(windows) && !env_set { Backends::DX12 | Backends::GL } else { default }
 }

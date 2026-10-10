@@ -1,4 +1,4 @@
-//! VectorCraft live effects (Illustrator's Effect menu).
+//! MIXEL Vector live effects (Illustrator's Effect menu).
 //!
 //! Effects live in appearance stacks as [`Effect`] `{id, params, visible}` records. This crate
 //! interprets them:

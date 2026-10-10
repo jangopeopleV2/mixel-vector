@@ -1,8 +1,8 @@
-# VectorCraft app icon
+# MIXEL Vector app icon
 
-**Creature:** a regal engraved dragon, VectorCraft's mascot.
+**Creature:** a regal engraved dragon, MIXEL Vector's mascot.
 
-**Style:** an engraving-style portrait in the Crafting Apps owl template (the FilmCraft owl): a tight
+**Style:** an engraving-style portrait in the Crafting Apps owl template (the MIXEL Film owl): a tight
 head-and-shoulders portrait on a full-bleed field, no frame or roundel, with the body running off the tile.
 
 **Palette** (exactly three colours):
@@ -11,7 +11,7 @@ head-and-shoulders portrait on a full-bleed field, no frame or roundel, with the
 |---|---|---|
 | Ink | `#0b0b0c` | line work and contour |
 | Paper | `#efe9dc` | the figure |
-| VectorCraft colour | `#e8573f` | the full-bleed field |
+| MIXEL Vector colour | `#e8573f` | the full-bleed field |
 
 **Tile:** `viewBox="0 0 512 512"`, a rounded square with `rx=112`, clipped. The macOS files add Apple's
 transparent margin (tile = 824/1024 of the canvas); Windows and Linux use the tile edge to edge.
@@ -31,8 +31,8 @@ artwork. Licence: see `LICENSE.txt`.
 | `vectorcraft-macos-512.png` | tile with Apple margin, 512 px | runtime Dock icon (`apps/vectorcraft/src/main.rs`) |
 | `vectorcraft.icns` | macOS icon set, 16 to 1024 px | `cargo xtask bundle` (`CFBundleIconFile`) |
 | `vectorcraft.ico` | Windows icon, 16 to 256 px | `apps/vectorcraft/build.rs` (embedded in the `.exe`) |
-| `hicolor/<size>/apps/ai.storyteller.vectorcraft.png` | Linux theme icons, 16 to 512 px; the 256 one is also the runtime icon on Windows and Linux, the 128 one the brand mark in the app bar and About box (`crates/ui-egui/src/brand.rs`) | `packaging/linux/ai.storyteller.vectorcraft.desktop` |
-| `hicolor/scalable/apps/ai.storyteller.vectorcraft.svg` | Linux scalable icon | as above |
+| `hicolor/<size>/apps/ch.mixel.vector.png` | Linux theme icons, 16 to 512 px; the 256 one is also the runtime icon on Windows and Linux, the 128 one the brand mark in the app bar and About box (`crates/ui-egui/src/brand.rs`) | `packaging/linux/ch.mixel.vector.desktop` |
+| `hicolor/scalable/apps/ch.mixel.vector.svg` | Linux scalable icon | as above |
 
 ## How it reaches each OS
 
@@ -40,9 +40,9 @@ artwork. Licence: see `LICENSE.txt`.
   `.app` from `cargo xtask bundle` carries `vectorcraft.icns`.
 - **Windows:** `build.rs` embeds `vectorcraft.ico` and VERSIONINFO with `winresource` (taskbar, Start
   menu, Explorer, Alt-Tab); the runtime icon covers the title bar.
-- **Linux:** install `packaging/linux/ai.storyteller.vectorcraft.desktop` to `share/applications/` and
+- **Linux:** install `packaging/linux/ch.mixel.vector.desktop` to `share/applications/` and
   `hicolor/` to `share/icons/`. The app sets its Wayland app ID / X11 class to
-  `ai.storyteller.vectorcraft`, so the dock matches the window to the launcher.
+  `ch.mixel.vector`, so the dock matches the window to the launcher.
 
 ## Regenerate
 

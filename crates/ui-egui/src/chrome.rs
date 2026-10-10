@@ -12,7 +12,7 @@ use crate::theme::{self, Tokens};
 use crate::widgets;
 use crate::{VectorcraftApp, icons, menus, titlebar};
 
-/// The application bar's height, in points (compact, as in PhotoCraft).
+/// The application bar's height, in points (compact, as in MIXEL Photo).
 pub const APP_BAR_HEIGHT: f32 = 32.0;
 /// The brand mark's side.
 const MARK: f32 = 18.0;
@@ -49,7 +49,7 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             // With the macOS menu bar the menus are at the top of the screen instead.
             let menus_end = if app.services.native_menu.is_some() {
                 let full = ui.max_rect();
-                ui.painter().text(full.center(), egui::Align2::CENTER_CENTER, "VectorCraft", egui::FontId::proportional(13.5), t.text);
+                ui.painter().text(full.center(), egui::Align2::CENTER_CENTER, "MIXEL Vector", egui::FontId::proportional(13.5), t.text);
                 ui.cursor().min.x
             } else {
                 menus::menu_bar(app, ui)
@@ -67,7 +67,7 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             let ws = ui.painter().layout_no_wrap(ws_name, egui::FontId::proportional(12.0), t.text);
             let ws_w = (ws.size().x + 36.0).clamp(112.0, 190.0);
             let gap = ui.spacing().item_spacing.x;
-            // The search icon, as in PhotoCraft: shown while a minimal switcher fits beside it.
+            // The search icon, as in MIXEL Photo: shown while a minimal switcher fits beside it.
             let icon = 28.0;
             let search = room >= 64.0 + 8.0 + gap + icon;
             let ws_w = ws_w.min(room - 8.0 - gap - if search { icon } else { 0.0 }).max(64.0);
@@ -119,8 +119,8 @@ pub fn system_title_bar(app: &VectorcraftApp) -> bool {
 pub fn window_title(app: &VectorcraftApp) -> String {
     app.session
         .active()
-        .map(|d| format!("{}{} \u{2014} VectorCraft", if d.is_dirty() { "*" } else { "" }, d.title()))
-        .unwrap_or_else(|| "VectorCraft".into())
+        .map(|d| format!("{}{} \u{2014} MIXEL Vector", if d.is_dirty() { "*" } else { "" }, d.title()))
+        .unwrap_or_else(|| "MIXEL Vector".into())
 }
 
 /// Keep the OS window title (and the taskbar / Alt-Tab entry) on the active file. Sends
@@ -1010,17 +1010,17 @@ mod tests {
 
     #[test]
     fn window_title_with_no_document_is_the_app_name() {
-        assert_eq!(super::window_title(&title_test_app(true)), "VectorCraft");
+        assert_eq!(super::window_title(&title_test_app(true)), "MIXEL Vector");
     }
 
     #[test]
     fn window_title_follows_the_active_file() {
         let mut app = title_test_app(true);
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
-        assert_eq!(super::window_title(&app), "foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "foo.svg \u{2014} MIXEL Vector");
         // Unsaved changes gain a `*` prefix, like the `*` in the document tabs.
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
-        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} MIXEL Vector");
     }
 
     #[test]
@@ -1054,11 +1054,11 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "VectorCraft");
+        assert_eq!(app.last_window_title, "MIXEL Vector");
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
         out.textures_delta.clear();
         let cmds = out.viewport_output.remove(&egui::ViewportId::ROOT).map(|v| v.commands).unwrap_or_default();
-        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "VectorCraft")), "{cmds:?}");
+        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "MIXEL Vector")), "{cmds:?}");
         // Same document state again: the cached title stops a repeat command.
         super::sync_window_title(&mut app, &ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -1067,6 +1067,6 @@ mod tests {
         assert!(!cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(_))), "repeat Title: {cmds:?}");
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "foo.svg \u{2014} VectorCraft");
+        assert_eq!(app.last_window_title, "foo.svg \u{2014} MIXEL Vector");
     }
 }

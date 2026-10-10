@@ -1,0 +1,16 @@
+diff --git a/crates/ui-egui/src/prefs_dialog.rs b/crates/ui-egui/src/prefs_dialog.rs
+index 2f90166b..e37b8d18 100644
+--- a/crates/ui-egui/src/prefs_dialog.rs
++++ b/crates/ui-egui/src/prefs_dialog.rs
+@@ -560,6 +560,11 @@ mod tests {
+         out.textures_delta.clear();
+         let mut shown = vec![];
+         out.shapes.iter().for_each(|c| texts(&c.shape, &mut shown));
++        // macOS always has the system's title bar, so the row is hidden there.
++        if cfg!(target_os = "macos") {
++            assert!(!shown.iter().any(|t| t == "System Title Bar"), "{shown:?}");
++            return;
++        }
+         assert!(shown.iter().any(|t| t == "System Title Bar"), "{shown:?}");
+         assert!(shown.iter().any(|t| t == "Applies the next time MIXEL Vector starts."), "{shown:?}");
+         a.ui.dialog.as_mut().unwrap().fields.insert("systemTitleBar".into(), json!(true));
