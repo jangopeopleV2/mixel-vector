@@ -6,19 +6,10 @@ use vectorcraft_text::FontDb;
 
 use crate::import::import;
 
-/// The bundled Source Sans 3 renamed `family` (as long as the original name).
+/// The bundled Noto Sans with a rebuilt name table for `family`.
 fn renamed(family: &str) -> Vec<u8> {
-    let mut data = include_bytes!("../../../../assets/fonts/SourceSans3-Regular.ttf").to_vec();
-    let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
-    for (from, to) in [(utf16("Source Sans 3"), utf16(family)), (b"Source Sans 3".to_vec(), family.as_bytes().to_vec())] {
-        assert_eq!(from.len(), to.len());
-        let mut i = 0;
-        while let Some(at) = data[i..].windows(from.len()).position(|w| w == from) {
-            data[i + at..i + at + to.len()].copy_from_slice(&to);
-            i += at + to.len();
-        }
-    }
-    data
+    let data = include_bytes!("../../../../assets/fonts/NotoSans-Regular.ttf");
+    vectorcraft_text::test_fonts::renamed_font(data, &[("Noto Sans", family)]).unwrap()
 }
 
 #[test]
@@ -55,4 +46,11 @@ fn abbreviated_styles_in_postscript_names_are_spelled_out() {
     assert_eq!(crate::family_style("AkzidenzGroteskPro-LightCn").1, "Light Condensed");
     // Whole words stay as they were.
     assert_eq!(crate::family_style("Helvetica-BoldOblique").1, "Bold Oblique");
+}
+
+/// A face of that exact PostScript name gives its own family and style, however the name splits
+/// (a family can hold hyphens, as Rounded-X M+ 1c's `rounded-x-mplus-1c-black` does).
+#[test]
+fn an_installed_face_of_the_postscript_name_names_the_font() {
+    assert_eq!(crate::family_style("ABCDEF+NotoSans-SemiBold"), ("Noto Sans".to_string(), "SemiBold".to_string()));
 }

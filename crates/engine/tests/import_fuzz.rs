@@ -260,8 +260,8 @@ proptest! {
             let mut s = vectorcraft_engine::Session::new();
             s.execute("file.new", &json!({"width":100,"height":100})).unwrap();
             let p = json!({"name":"renamed.png", "dataBase64":vectorcraft_format::base64_encode(&bytes)});
-            for cmd in ["file.place", "file.place.info"] { assert!(s.execute(cmd, &p).is_err()); }
-            assert!(s.execute("file.place.queue", &json!({"files":[p]})).is_err());
+            for cmd in ["file.place", "file.place.info"] { assert!(no_panic(s.execute(cmd, &p)).is_err()); }
+            assert!(no_panic(s.execute("file.place.queue", &json!({"files":[p]}))).is_err());
         });
         prop_assert!(r.is_ok(), "Affinity placement panicked: {:?}", r.err());
     }
@@ -485,6 +485,15 @@ fn mutate_text(src: &str, cut: usize, edits: &[(usize, char)]) -> String {
     chars.into_iter().collect()
 }
 
+/// Type shifted two billion points down exports to PDF: an input of
+/// `svg_hostile_markup_never_panics`, cut down to its type.
+#[test]
+fn svg_type_shifted_two_billion_points_exports_to_pdf() {
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><text baseline-shift="-2147483649">f</text></svg>"#;
+    let d = vectorcraft_svg::import(svg).unwrap();
+    assert!(vectorcraft_engine::export_pdf(&d, &vectorcraft_pdf::PdfOptions::default()).is_ok());
+}
+
 proptest! {
     #![proptest_config(config())]
 
@@ -669,8 +678,8 @@ proptest! {
         let r = catch_quiet(|| {
             let mut s = vectorcraft_engine::Session::new();
             let p = json!({"name": "x.pdf", "dataBase64": b64, "pages": pages, "cropTo": crop, "password": password, "thumbnail": 1, "thumbnailSize": 64});
-            let _ = s.execute("document.pdfInfo", &p);
-            if s.execute("document.open", &p).is_ok() {
+            let _ = no_panic(s.execute("document.pdfInfo", &p));
+            if no_panic(s.execute("document.open", &p)).is_ok() {
                 let d = (*s.doc().unwrap().doc).clone();
                 survive("pdf options", || Some(d)).unwrap();
             }
@@ -704,7 +713,7 @@ fn rich_resources_pdf(content: &str, config: &str) -> Vec<u8> {
     ];
     let (a, b, form, pat, mesh, hidden) = (x, x + 1, x + 2, x + 3, x + 4, x + 5);
     let resources = format!(
-        "/Properties << /MC0 {a} 0 R /MC1 {b} 0 R >> /XObject << /X0 {form} 0 R /X1 {hidden} 0 R >> /Pattern << /P0 {pat} 0 R >> /Shading << /Sh0 {mesh} 0 R /Sh1 << /ShadingType 3 /ColorSpace /DeviceGray /Coords [50 50 0 50 50 40] /Extend [false false] /Function << /FunctionType 2 /Domain [0 1] /C0 [0] /C1 [1] /N 1 >> >> >> /ExtGState << /GS0 << /SMask << /Type /Mask /S /Luminosity /G {form} 0 R /BC [1] /TR << /FunctionType 2 /Domain [0 1] /C0 [1] /C1 [0] /N 1 >> >> >> /GS1 << /SMask << /Type /Mask /S /Alpha /G {form} 0 R >> >> >> /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /ABCDEF+Odd-Name,Bold >> >> /ColorSpace << /CS0 [/Pattern /DeviceRGB] >>"
+        "/Properties << /MC0 {a} 0 R /MC1 {b} 0 R >> /XObject << /X0 {form} 0 R /X1 {hidden} 0 R >> /Pattern << /P0 {pat} 0 R >> /Shading << /Sh0 {mesh} 0 R /Sh1 << /ShadingType 3 /ColorSpace /DeviceGray /Coords [50 50 0 50 50 40] /Extend [false false] /Function << /FunctionType 2 /Domain [0 1] /C0 [0] /C1 [1] /N 1 >> >> >> /ExtGState << /GS0 << /OP true /OPM 1 /SMask << /Type /Mask /S /Luminosity /G {form} 0 R /BC [1] /TR << /FunctionType 2 /Domain [0 1] /C0 [1] /C1 [0] /N 1 >> >> >> /GS1 << /OP true /op false /SMask << /Type /Mask /S /Alpha /G {form} 0 R >> >> /GS2 << /OP 7 /op (x) /OPM -3 >> /GS3 << /op true >> >> /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /ABCDEF+Odd-Name,Bold >> >> /ColorSpace << /CS0 [/Pattern /DeviceRGB] >>"
     );
     let catalog = format!("/OCProperties << /OCGs [{a} 0 R {b} 0 R 99 0 R] /D << {} >> >> ", config.replace("{B}", &format!("{b} 0 R")));
     let extra: Vec<&str> = extra.iter().map(String::as_str).collect();
@@ -725,6 +734,9 @@ fn arb_rich_op() -> impl Strategy<Value = String> {
             "/X1 Do",
             "/GS0 gs",
             "/GS1 gs",
+            // Overprint (#1388): set, malformed, and for fills alone.
+            "/GS2 gs",
+            "/GS3 gs",
             "/CS0 cs 1 0 0 /P0 scn",
             "/Pattern cs /P0 scn",
             "/Sh0 sh",
@@ -1037,8 +1049,8 @@ proptest! {
             let mut s = vectorcraft_engine::Session::new();
             s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
             let p = json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(&bytes), "thumbnail": 8});
-            let _ = s.execute("file.place.info", &p);
-            let _ = s.execute("file.place", &p);
+            let _ = no_panic(s.execute("file.place.info", &p));
+            let _ = no_panic(s.execute("file.place", &p));
         });
         prop_assert!(r.is_ok(), "{name}: panicked: {:?}", r.err());
     }
@@ -1133,10 +1145,10 @@ fn paste_from_elsewhere(cmd: &str, p: Value) -> Result<(), TestCaseError> {
     let r = catch_quiet(|| {
         let mut s = vectorcraft_engine::Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
-        if s.execute(cmd, &p).is_ok() {
+        if no_panic(s.execute(cmd, &p)).is_ok() {
             // Paste may refuse what it was given, e.g. a damaged PDF whose art spans more than the
             // canvas ("result would exceed the canvas"): an error is a fine outcome, a panic isn't.
-            let _ = s.execute("edit.paste", &json!({"center": [50, 50]}));
+            let _ = no_panic(s.execute("edit.paste", &json!({"center": [50, 50]})));
         }
     });
     prop_assert!(r.is_ok(), "{cmd}: panicked: {:?}", r.err());
@@ -1278,17 +1290,30 @@ proptest! {
         survive("mutated EPS PostScript", || vectorcraft_eps::import(&bytes).ok().map(|r| r.document))?;
     }
 
+    /// A damaged EPS another app copied: Paste reads it as an error or as objects.
+    #[test]
+    fn pasted_eps_never_panics(cut in 0usize..400_000, edits in prop::collection::vec((0usize..400_000, any::<u8>()), 0..12)) {
+        static SAMPLE: std::sync::OnceLock<Vec<u8>> = std::sync::OnceLock::new();
+        paste_from_elsewhere("clipboard.importEps", json!({"dataBase64": mutated_b64(SAMPLE.get_or_init(foreign_eps_sample).clone(), cut, &edits)}))?;
+    }
+
     /// Hostile PostScript programs: operators in any order with any operands, opened and placed;
     /// as files in the legacy Illustrator format too (the creator line is what turns on its
-    /// documented `u` … `U` groups), the groups unbalanced, deep and among clips.
+    /// documented `u` … `U` groups), the groups unbalanced, deep and among clips; in a layer, which
+    /// the editing data reader reads from the program too.
     #[test]
-    fn eps_hostile_programs_never_panic(tokens in prop::collection::vec(arb_ps_token(), 0..60), illustrator in any::<bool>()) {
+    fn eps_hostile_programs_never_panic(tokens in prop::collection::vec(arb_ps_token(), 0..60), illustrator in any::<bool>(), layers in any::<bool>()) {
         let head = if illustrator { "%%Creator: Adobe Illustrator(R) 8.0\n%%EndComments\n/u {} def /U {} def" } else { "%%EndComments" };
-        let ps = format!("%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 200 200\n{head}\n{}\nshowpage\n", tokens.join(" "));
+        let (open, close) = if layers {
+            ("/Lb {10 {pop} repeat} def /Ln {pop} def /LB {} def\n%AI5_BeginLayer\n1 1 1 1 0 0 -1 0 0 0 Lb\n(L) Ln\n", "\nLB\n%AI5_EndLayer--")
+        } else {
+            ("", "")
+        };
+        let ps = format!("%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 200 200\n{head}\n{open}{}{close}\nshowpage\n", tokens.join(" "));
         survive("hostile PostScript", || vectorcraft_engine::cmd::fileio::load("x.eps", ps.as_bytes()).ok().map(|l| l.doc))?;
         let r = catch_quiet(|| {
             let mut s = rich_session();
-            let _ = s.execute("file.place", &json!({"name": "x.eps", "dataBase64": vectorcraft_format::base64_encode(ps.as_bytes())}));
+            let _ = no_panic(s.execute("file.place", &json!({"name": "x.eps", "dataBase64": vectorcraft_format::base64_encode(ps.as_bytes())})));
         });
         r.map_err(|msg| TestCaseError::fail(format!("placing hostile PostScript panicked: {msg}")))?;
     }
@@ -1384,8 +1409,8 @@ proptest! {
         let r = catch_quiet(|| {
             let mut s = vectorcraft_engine::Session::new();
             let p = json!({"name": "x.pdf", "dataBase64": b64, "password": password});
-            let _ = s.execute("document.pdfInfo", &p);
-            if s.execute("document.open", &p).is_ok() {
+            let _ = no_panic(s.execute("document.pdfInfo", &p));
+            if no_panic(s.execute("document.open", &p)).is_ok() {
                 let d = (*s.doc().unwrap().doc).clone();
                 survive("encrypted pdf", || Some(d)).unwrap();
             }
@@ -1454,11 +1479,11 @@ fn survive_dxf(what: &str, bytes: &[u8], fit: bool) -> Result<(), TestCaseError>
     let _ = vectorcraft_cad::is_dxf(bytes);
     survive(what, || {
         let mut s = vectorcraft_engine::Session::new();
-        s.execute("file.new", &json!({"width": 300, "height": 200})).ok()?;
+        no_panic(s.execute("file.new", &json!({"width": 300, "height": 200}))).ok()?;
         let p = json!({"name": "x.dxf", "dataBase64": vectorcraft_format::base64_encode(bytes), "dxf": {"fit": fit}, "thumbnail": 8});
-        let _ = s.execute("file.place.info", &p);
-        let _ = s.execute("file.place", &p);
-        let _ = s.execute("document.dxfInfo", &p);
+        let _ = no_panic(s.execute("file.place.info", &p));
+        let _ = no_panic(s.execute("file.place", &p));
+        let _ = no_panic(s.execute("document.dxfInfo", &p));
         Some((*s.doc().ok()?.doc).clone())
     })
 }
@@ -1563,7 +1588,7 @@ fn survive_metafile(what: &str, name: &str, bytes: &[u8]) -> Result<(), TestCase
     let r = catch_quiet(|| {
         let mut s = vectorcraft_engine::Session::new();
         s.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
-        let _ = s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)}));
+        let _ = no_panic(s.execute("file.place", &json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)})));
     });
     prop_assert!(r.is_ok(), "{what}: placing panicked: {:?}", r.err());
     Ok(())
@@ -1702,6 +1727,9 @@ fn ascii85(data: &[u8]) -> String {
     out
 }
 
+/// A pattern's definition in editing data: its name and tile, its art on `%_` lines, its end.
+const PATTERN: &str = "%AI3_BeginPattern: (Dots)\n(Dots) 0 0 6 6\n%_0 A\n%_0 Ae\n%_u\n%_0 0 m\n%_0 6 L\n%_6 6 L\n%_6 0 L\n%_n\n%_0 0 0 1 K\n%_1 J 1 w\n%_3 3 m\n%_3 3 L\n%_S\n%_U\n%_9 () XW\nE\n%AI3_EndPattern\n";
+
 /// The editing data of a file with every sort of object the layers reader knows, and some it doesn't.
 fn editing_text() -> String {
     let square = |x: u32| format!("0 0 1 0 k\n{x} 10 m\n{} 10 L\n{} 14 L\n{x} 14 L\nf", x + 4, x + 4);
@@ -1720,17 +1748,22 @@ fn editing_text() -> String {
         "1 Xw".into(),
         "u".into(),
         "/AI11Text :\n0 /FreeUndo ,\n;".into(),
+        "/AI11Text :\n1 /FreeUndo ,\n;\n1 (Style) XW".into(),
         "U".into(),
         "0 Xw".into(),
         "1 0 0 0 1 0 Bg".into(),
+        "Bb\n1 (G) 0 0 0 1 1 0 0 1 0 0 1 Bg\n1 0 0 1 0 0 Xm\n0 0 0 0 0 0 Bm\n1 0 0 1 5 5 Bm\n0 BB".into(),
         "0 1 w 2 J 0 j 4 M [3 2]0 d 1 D".into(),
+        "0 0 0 1 (Black global) 0.4 0 Xk".into(),
+        "(Dots) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p".into(),
+        square(60),
     ]
     .join("\n");
     let layer = |name: &str, visible: u8, body: &str| {
         format!("%AI5_BeginLayer\n{visible} 1 1 1 0 0 1 0 79 128 255 0 50 0 Lb\n({name}) Ln\n{body}\nLB\n%AI5_EndLayer--\n")
     };
     format!(
-        "%!PS-Adobe-3.0 \n%%BoundingBox: 0 0 100 100\n%%HiResBoundingBox: 0 0 100 100\n%AI3_Cropmarks: 0 0 100 100\n{}{}%%Trailer\n",
+        "%!PS-Adobe-3.0 \n%%BoundingBox: 0 0 100 100\n%%HiResBoundingBox: 0 0 100 100\n%AI3_Cropmarks: 0 0 100 100\n{PATTERN}{}{}%%Trailer\n",
         layer("One", 1, &format!("{body}\n{}", layer("Sub", 1, &square(70)))),
         layer("Two", 0, &square(80))
     )
@@ -1812,6 +1845,24 @@ fn the_frames_fixture_reads_as_threaded_area_type_and_type_on_a_path() {
     assert_eq!(l.doc.text_threads.len(), 1);
 }
 
+/// The smallest failing input `eps_text_frames_never_panic` found: the first frame's bottom edge
+/// has a control point at x = 8e115 (`8e0115`). That frame holds no text, and the story flows on
+/// into the second frame.
+#[test]
+fn a_text_frame_with_a_control_point_at_8e115_opens_with_its_story_in_the_next_frame() {
+    let text = mutate_text(&frames_document_text(), 1397, &[(191, '1'), (1586, 'e')]);
+    assert!(text.contains(" 8e0115 "));
+    let l = vectorcraft_engine::cmd::fileio::load("x.eps", &text_eps_of(&text, FRAME_OBJECTS)).unwrap();
+    let mut texts = vec![];
+    l.doc.walk(|n| {
+        if let vectorcraft_doc::NodeKind::Text(t) = &n.kind {
+            texts.push(t.plain_text());
+        }
+    });
+    assert_eq!(texts, ["", "A story in two frames\nand more", "On a path"], "{:?}", l.warnings);
+    survive("a frame with a control point at 8e115 pt", || Some(l.doc)).unwrap();
+}
+
 /// An EPS with a hidden text object whose story is in `document`.
 fn text_eps(document: &str) -> Vec<u8> {
     text_eps_of(document, "/AI11Text :\n0 /FrameIndex ,\n0 /StoryIndex ,\n;\n")
@@ -1868,7 +1919,36 @@ proptest! {
                 *x = b;
             }
         }
-        survive("mutated .ai editing data", || Some(vectorcraft_eps::layered_ai(&private, Document::new(100.0, 100.0), vec![], false).0))?;
+        survive("mutated .ai editing data", || Some(vectorcraft_eps::layered_ai(&private, Document::new(100.0, 100.0), vec![], false, false).0))?;
+    }
+}
+
+/// A `.ai` in PostScript form as other apps write it: the procsets that define its operators named,
+/// not included, so its program can't be run and its layers are read from it.
+const NAMED_PROLOG_AI: &str = "%!PS-Adobe-3.0\n%%BoundingBox: 0 0 200 100\n%%DocumentNeededResources: procset Adobe_packedarray 2.0 0\n%AI3_TemplateBox: 288 384 288 384\n%%EndComments\n\
+    %%BeginProlog\n%%IncludeResource: procset Adobe_packedarray 2.0 0\nAdobe_packedarray /initialize get exec\n%%EndProlog\n%%BeginSetup\n%AI5_Begin_NonPrinting\nNp\n%AI5_End_NonPrinting--\n%%EndSetup\n\
+    %AI5_BeginLayer\n1 1 1 1 0 0 -1 191 63 255 Lb\n(A::B) Ln\n0 A\n0 R\n0 0 0 1 K\n0 i 1 J 1 j 0.8 w 4 M [2 1]0 d\n0 D\n10 10 m\n90 10 L\n90 90 L\n10 90 L\n10 10 L\nS\n\
+    u\n0.5 g\n20 20 m\n40 20 L\n40 40 L\nf\nU\n%AI5_BeginLayer\n0 1 1 1 0 0 3 0 0 0 Lb\n(Sub) Ln\n110 10 m\n190 90 L\nS\nLB\n%AI5_EndLayer--\nLB\n%AI5_EndLayer--\n\
+    %%PageTrailer\ngsave annotatepage grestore showpage\n%%Trailer\n%%EOF\n";
+
+/// The fixture, as it is, opens with its layer and sublayer.
+#[test]
+fn the_named_prolog_fixture_opens_with_its_layers() {
+    let l = vectorcraft_engine::cmd::fileio::load("x.ai", NAMED_PROLOG_AI.as_bytes()).unwrap();
+    let names: Vec<_> = l.doc.layers.iter().map(|l| l.name.clone()).collect();
+    assert_eq!(names, [Some("A::B".to_string())], "{:?}", l.warnings);
+    assert_eq!(l.doc.layers[0].children().unwrap().len(), 3);
+}
+
+proptest! {
+    #![proptest_config(config())]
+
+    /// A `.ai` in PostScript form whose prolog is named, not included, damaged: read from its
+    /// layers, or refused.
+    #[test]
+    fn ps_form_ai_never_panics(cut in 0usize..1_200, edits in prop::collection::vec((0usize..1_200, prop::sample::select(vec!['0', '9', '-', '.', ' ', '\n', '(', ')', '/', '[', ']', '%', 'u', 'U', 'L', 'b', 'B', 'i', 'A', 'K'])), 0..12)) {
+        let text = mutate_text(NAMED_PROLOG_AI, cut, &edits);
+        survive("mutated PostScript-form .ai", || vectorcraft_engine::cmd::fileio::load("x.ai", text.as_bytes()).ok().map(|l| l.doc))?;
     }
 }
 
@@ -1980,6 +2060,16 @@ fn arb_ai_token() -> impl Strategy<Value = String> {
             "/Binary : /ASCII85Decode ,",
             "~>",
             "p",
+            "P",
+            "(Dots) 0 0 1 1 0 0 0 0 0 [1 0 0 1 0 0] p",
+            "(Dots) 0 0 1 1 0 0 0 0 0 [0 0 0 0 1e308 0] P",
+            "Xk",
+            "XK",
+            "0 0 0 1 (Global) 0.4 0 Xk",
+            "1 0.5 0 (Global) 0 1 XK",
+            "E",
+            "\n%AI3_BeginPattern: (Dots)\n(Dots) 0 0 6 6\n",
+            "\n%AI3_EndPattern\n",
             "To",
             "frobnicate",
             "\n%AI5_BeginLayer\n",
@@ -2000,6 +2090,64 @@ fn arb_ai_token() -> impl Strategy<Value = String> {
             "\n%AI9_ColorModel: 2\n",
             "\n%AI5_BeginPlace\n",
             "\n%AI26_BeginPlacedObjectPreview\n",
+            "\n%AI26_BeginPlacedObjectPreview\n2 1 8 32 17 abcdefgh",
+            "\n%AI26_BeginPlacedObjectPreview\n4096 4096 1e9 32 17 ",
+            "\n%AI26_EndPlacedObjectPreview\n",
+            "[1 0 0 -1 0 0] 0 0 2 1 4 4 0 (a.png) `",
+            "[1e308 0 0 1e308 0 0] 0 0 -1e308 1e308 4 4 0 (a.png) `",
+            "`",
+            "~",
+            "\n%AI5_EndPlace\n",
+            "Xm",
+            "50 -50 -100 -100 5000 -2000 Xm",
+            "0 0 0 0 1e308 -1e308 Xm",
+            "Xd",
+            "0 1 Xd",
+            "1 0 Xd",
+            "XD",
+            "(00800080) Xt 0 XD",
+            "X!",
+            "/Mesh X!",
+            "/End X!",
+            "X#",
+            "(DeviceRGB) /CS X#",
+            "[0 0] /P X#",
+            "[1 0 0 1 0 0 10 10 12 10 1 8 10 1] /N X#",
+            "[1e308 -1e308 0] /N X#",
+            "0 /E X#",
+            "\n%AI9_BeginArtStyles\n",
+            "\n%AI9_EndArtStyles\n",
+            "/KnownStyle :",
+            "(style) /Name ,",
+            "/ActiveStyle :",
+            "/CompoundFilter :",
+            "/BasicFilter :",
+            "(Stroke Style Filter) 0 0 /Filter ,",
+            "(Fill Style Filter) 0 0 /Filter ,",
+            "(Adobe Outer Glow) 1 0 /Filter ,",
+            "(Adobe Drop Shadow) 1 0 /Filter ,",
+            "1 /Visible ,",
+            "2 /FillOrStroke ,",
+            "1 /Bool (BSDashAdj) ,",
+            "0.75 /Real (opac) ,",
+            "1e308 /Real (blur) ,",
+            "0 /Real ,",
+            "; (BSVariableWidthTValuesArray) ,",
+            "; (BSCenteredWidthsArray) ,",
+            "/StrokeStyle : 0 R",
+            "/FillStyle : 0 O",
+            "/Def ;",
+            "/Execution ;",
+            "[5 5] 1e308 d",
+            "-0.5 /Real ,",
+            "1.5 /Real ,",
+            "-2 /Real ,",
+            "; (BSLeftWidthsArray) ,",
+            "; (BSRightWidthsArray) ,",
+            "[0.5 1e308 0 0 0 0 1 0 0 1] /N X#",
+            "(DeviceGray) /CS X#",
+            "\n%\n",
+            "\n%AI5_EndPlace\n",
             "\n%%PageTrailer\n",
         ])
         .prop_map(str::to_string),
@@ -2023,8 +2171,9 @@ proptest! {
     fn ai_hostile_editing_data_never_panics(tokens in prop::collection::vec(arb_ai_token(), 0..80)) {
         use vectorcraft_testkit::ai;
         let data = ai::editing_data(200.0, 100.0, &format!("%AI5_BeginLayer\n1 1 1 1 0 0 1 0 79 128 255 0 50 0 Lb\n(L) Ln\n{}\nLB\n", tokens.join(" ")));
-        survive("hostile editing data", || Some(vectorcraft_eps::layered_ai(data.as_bytes(), Document::new(200.0, 100.0), vec![], false).0))?;
-        survive("hostile editing data, type as outlines", || Some(vectorcraft_eps::layered_ai(data.as_bytes(), Document::new(200.0, 100.0), vec![], true).0))?;
+        survive("hostile editing data", || Some(vectorcraft_eps::layered_ai(data.as_bytes(), Document::new(200.0, 100.0), vec![], false, false).0))?;
+        survive("hostile editing data, type as outlines", || Some(vectorcraft_eps::layered_ai(data.as_bytes(), Document::new(200.0, 100.0), vec![], true, false).0))?;
+        survive("hostile editing data, trusted", || Some(vectorcraft_eps::layered_ai(data.as_bytes(), Document::new(200.0, 100.0), vec![], false, true).0))?;
         let eps = ai::eps(data.as_bytes(), ai::page_ps());
         survive("hostile editing data in an EPS", || vectorcraft_engine::cmd::fileio::load("x.eps", &eps).ok().map(|l| l.doc))?;
         // An EPS whose page is its art's box, not its artboard: what prints outside it is compared too.
@@ -2032,7 +2181,7 @@ proptest! {
         survive("hostile editing data in an EPS of its art's box", || vectorcraft_engine::cmd::fileio::load("x.eps", &boxed).ok().map(|l| l.doc))?;
     }
 
-    /// The testkit's sample damaged, as it is and compressed, in EPS and `.ai` files.
+    /// The testkit's sample damaged, as it is and compressed, in EPS, `.ai` and PDF files.
     #[test]
     fn ai_mutated_sample_never_panics(cut in 0usize..4_000, edits in prop::collection::vec((0usize..4_000, any::<u8>()), 0..12)) {
         use vectorcraft_testkit::ai;
@@ -2047,6 +2196,8 @@ proptest! {
             bytes.truncate(cut.max(4));
             let file = ai::ai(&bytes, ai::page_pdf());
             survive(what, || vectorcraft_engine::cmd::fileio::load("x.ai", &file).ok().map(|l| l.doc))?;
+            let file = ai::pdf(&bytes, ai::page_pdf());
+            survive(what, || vectorcraft_engine::cmd::fileio::load("x.pdf", &file).ok().map(|l| l.doc))?;
             let file = ai::eps(&bytes, ai::page_ps());
             survive(what, || vectorcraft_engine::cmd::fileio::load("x.eps", &file).ok().map(|l| l.doc))?;
         }
@@ -2056,7 +2207,7 @@ proptest! {
 // ---------- font files a folder search reads ----------
 
 /// A small font file holding what a folder search reads: an outline table's tag, the `name` and
-/// `OS/2` tables of the bundled Source Sans 3 renamed "Findme Sans 3", and an `fvar` table with a
+/// `OS/2` tables of the bundled Noto Sans renamed "Findme Sans 3", and an `fvar` table with a
 /// weight axis and three named instances (named by name ids 2, 1 and 4).
 fn search_font() -> Vec<u8> {
     let font = vectorcraft_testkit::fonts::renamed("Findme Sans 3");
@@ -2131,7 +2282,7 @@ fn findme_wanted() -> vectorcraft_text::WantedFonts {
     vectorcraft_text::WantedFonts::new(&[
         WantedFont { family: "Findme Sans 3".into(), style: "Regular".into(), installed: None },
         WantedFont { family: "FINDME SANS 3".into(), style: "Black".into(), installed: Some("Findme Sans 3".into()) },
-        WantedFont { family: "SourceSans3-Regular".into(), style: "Bold".into(), installed: None },
+        WantedFont { family: "NotoSans-Regular".into(), style: "Bold".into(), installed: None },
     ])
 }
 

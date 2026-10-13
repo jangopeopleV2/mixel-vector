@@ -13,7 +13,8 @@ use crate::composer::{Breakpoint, Params, compose};
 use crate::fontdb::FontDb;
 use crate::hyphen::hyphen_points;
 use crate::shape::{
-    Punct, SGlyph, Tcy, cap_x_heights, hyphen_glyph, is_cjk, no_line_end, no_line_start, punct, shape_range, soft_line_start, style_metrics,
+    Punct, SGlyph, Tcy, cap_x_heights, hyphen_glyph, is_cjk, mark_word_ends, no_line_end, no_line_start, punct, shape_range, soft_line_start,
+    style_metrics,
 };
 use crate::{Composer, FirstBaseline, InlineGlyph, LayoutOptions, LineInfo, OtFeatures, PositionedGlyph, TextLayout, VerticalAlign};
 
@@ -55,6 +56,15 @@ impl Ctx<'_> {
                 let extra = upright_cell(g) - g.face.advance(g.gid) * g.sx;
                 g.dx += extra * 0.5;
                 g.adv += extra;
+                // Proportional Metrics: `vpal` (and the vertical kerning with it) moves it and
+                // changes its length down the column, in fonts with vertical metrics (else the cell
+                // stays as it is, #966).
+                if let Some(a) = g.vpal.filter(|_| g.tcy.is_none() && g.face.vertical_glyph(g.gid).is_some()) {
+                    g.dx += a.dx;
+                    g.dy += a.dy;
+                    g.adv += a.advance;
+                    g.proportional = a.proportional;
+                }
             }
         }
         v
@@ -146,6 +156,33 @@ pub fn layout(db: &FontDb, t: &TextObject) -> TextLayout {
     layout_with(db, t, &opts)
 }
 
+/// Area type in a frame too short for its first line draws nothing (type that doesn't fit its frame
+/// isn't drawn). For importers whose source shows that line: the frame is made taller, from its
+/// top, by what the first line needs. Whether it was.
+pub fn fit_first_line(db: &FontDb, t: &mut TextObject) -> bool {
+    let TextKind::Area { frame } = &t.kind else { return false };
+    let Some(b) = frame.bounds().filter(|b| b.height() > 1e-6) else { return false };
+    if !layout(db, t).lines.is_empty() {
+        return false;
+    }
+    // The height of its first line: the line's as point type.
+    let point = TextObject { kind: TextKind::Point, ..t.clone() };
+    let Some(need) = layout(db, &point).lines.first().map(|l| l.ascent + l.descent) else { return false };
+    // (A little more than it, for the rounding of the layout.)
+    let by = (need + 0.05) / b.height();
+    if !(by.is_finite() && by > 1.0) {
+        return false;
+    }
+    let taller = frame.transformed(Affine::translate((0.0, b.y0)) * Affine::scale_non_uniform(1.0, by) * Affine::translate((0.0, -b.y0)));
+    let short = std::mem::replace(&mut t.kind, TextKind::Area { frame: taller });
+    // Something else keeps the line out (a frame narrower than a letter): as the source has it.
+    if layout(db, t).lines.is_empty() {
+        t.kind = short;
+        return false;
+    }
+    true
+}
+
 /// The underline and strikethrough bars of `t` laid out as `layout` (#847): per run and line, a
 /// bar from the stretch's first glyph to its last one's advance, placed and sized by the font's
 /// own underline and strikeout metrics through the glyph's transform (so the size, baseline shift
@@ -200,15 +237,21 @@ pub fn layout_with(db: &FontDb, t: &TextObject, opts: &LayoutOptions) -> TextLay
 }
 
 /// Shrink Text to Fit for text that overflows at full size: the largest scale in `min..1` at which
-/// it fits, searched by bisection over the first run's size in steps of 0.1 pt (so its scaled size
+/// it fits, searched by bisection over the first run's document size in steps of 0.1 pt (so its scaled size
 /// is a whole number of tenths of a point, the same every time). Down at `min` it lays out there,
 /// still overflowing. None (keep the full-size layout) when the text has no usable size.
 fn shrink_to_fit(db: &FontDb, t: &TextObject, opts: &LayoutOptions, min: f64) -> Option<TextLayout> {
-    let size = t.runs.first().map(|r| r.style.size).filter(|s| s.is_finite() && *s >= 0.1)?;
+    // Exact size edits after object scaling may store a local size below 0.1. Fit in the
+    // same document points as the Character controls, independent of that representation.
+    let points = t.style_scale()?.points;
+    let size = t.runs.first().map(|r| r.style.size * points).filter(|s| s.is_finite() && *s >= 0.1)?;
     if !(min.is_finite() && min < 1.0) {
         return None;
     }
     let tenths = size * 10.0;
+    if !tenths.is_finite() {
+        return None;
+    }
     // Candidate sizes k/10 pt for k in lo..hi: `hi` (full size, rounded down) is known to overflow
     // unless it is below the full size; `lo` is the smallest allowed.
     let mut lo = (tenths * min).ceil().max(1.0);
@@ -234,7 +277,7 @@ fn shrink_to_fit(db: &FontDb, t: &TextObject, opts: &LayoutOptions, min: f64) ->
     }
     // Invariant: everything at `hi` or above overflows; `lo` fits or is the floor.
     while hi - lo > 1.0 && passes + 1 < SHRINK_PASSES {
-        let mid = ((lo + hi) * 0.5).floor();
+        let mid = (lo + (hi - lo) * 0.5).floor();
         let l = at(mid);
         passes += 1;
         if l.overflow {
@@ -381,7 +424,8 @@ fn tate_chu_yoko(g: &mut [SGlyph], size: impl Fn(&SGlyph) -> f64) {
 /// Half an em of `g`'s size when it is full-width Japanese punctuation of kind `kind` (its
 /// advance an em, give or take a tenth), the space that mojikumi can take off.
 fn punct_half(g: &SGlyph, kind: Punct) -> Option<f64> {
-    if punct(g.ch)? != kind || g.tcy.is_some() {
+    // A glyph Proportional Metrics re-spaced has no empty half left to take off (#966).
+    if punct(g.ch)? != kind || g.tcy.is_some() || g.proportional {
         return None;
     }
     let em = g.face.units_per_em();
@@ -719,8 +763,27 @@ struct Region {
     gap: f64,
 }
 
-/// Flattened closed polygons of a path.
-fn polygons(path: &BezPath) -> Vec<Vec<Point>> {
+/// The largest magnitude a coordinate of a frame, a text wrap shape or the path of type on a path
+/// may have (points), control points included. A frame or path with a larger coordinate, or a
+/// coordinate that isn't finite, holds no text, and a text wrap shape with one is ignored.
+const MAX_COORD: f64 = 1e9;
+
+/// Are the coordinates of `path`, control points included, finite and within [`MAX_COORD`]?
+fn in_range(path: &BezPath) -> bool {
+    let near = |p: &Point| p.x.abs() <= MAX_COORD && p.y.abs() <= MAX_COORD;
+    path.elements().iter().all(|el| match el {
+        PathEl::MoveTo(p) | PathEl::LineTo(p) => near(p),
+        PathEl::QuadTo(a, p) => near(a) && near(p),
+        PathEl::CurveTo(a, b, p) => near(a) && near(b) && near(p),
+        PathEl::ClosePath => true,
+    })
+}
+
+/// Flattened closed polygons of a path; `None` when it isn't [`in_range`].
+fn polygons(path: &BezPath) -> Option<Vec<Vec<Point>>> {
+    if !in_range(path) {
+        return None;
+    }
     let mut polys: Vec<Vec<Point>> = Vec::new();
     kurbo::flatten(path, 0.1, |el| match el {
         PathEl::MoveTo(p) => polys.push(vec![p]),
@@ -732,7 +795,7 @@ fn polygons(path: &BezPath) -> Vec<Vec<Point>> {
         _ => {}
     });
     polys.retain(|p| p.len() >= 3);
-    polys
+    Some(polys)
 }
 
 /// Inside intervals (even-odd) of the horizontal line at `y` through `polys`.
@@ -800,9 +863,13 @@ fn intersect_intervals(a: &[(f64, f64)], b: &[(f64, f64)]) -> Vec<(f64, f64)> {
 
 impl Region {
     fn cells(path: &BezPath, opts: &LayoutOptions, wrap: &[vectorcraft_doc::WrapShape]) -> Vec<Region> {
-        let polys = polygons(path);
-        let wraps: Vec<(Vec<Vec<Point>>, f64, bool)> =
-            wrap.iter().map(|w| (polygons(&w.path.to_bezpath()), w.wrap.offset.max(0.0), w.wrap.invert)).filter(|w| !w.0.is_empty()).collect();
+        // A frame out of range has no cells, and a wrap shape out of range is left out.
+        let Some(polys) = polygons(path) else { return vec![] };
+        let wraps: Vec<(Vec<Vec<Point>>, f64, bool)> = wrap
+            .iter()
+            .filter_map(|w| Some((polygons(&w.path.to_bezpath())?, w.wrap.offset.max(0.0), w.wrap.invert)))
+            .filter(|w| !w.0.is_empty())
+            .collect();
         let bbox = path.bounding_box();
         let rect = polys.len() == 1 && {
             let area: f64 = polys[0].iter().zip(polys[0].iter().cycle().skip(1)).map(|(a, b)| a.x * b.y - b.x * a.y).sum::<f64>().abs() * 0.5;
@@ -948,6 +1015,10 @@ struct Pen<'r> {
     next_top: Option<f64>,
 }
 
+/// The largest number of steps layout takes to move a line down a frame cell to find room for it:
+/// in a cell taller than this many leads, a step is the cell's height divided by this.
+const MAX_STEPS: usize = 100_000;
+
 impl Pen<'_> {
     /// Baseline and horizontal span for a line with estimated metrics `est` and indents; `None` =
     /// the frame is full (overflow).
@@ -968,7 +1039,10 @@ impl Pen<'_> {
                 None => r.top() + r.shift + est.first_baseline(self.fb, self.fb_min),
                 Some(b) => self.next_baseline(b, est) + r.gap,
             };
-            loop {
+            // The baseline moves down the cell a lead at a time, or a `MAX_STEPS`th of the cell's
+            // height when that is more, in at most `MAX_STEPS` steps.
+            let step = est.lead.max(1.0).max(r.cell.height() / MAX_STEPS as f64);
+            for _ in 0..=MAX_STEPS {
                 if baseline + est.desc > r.bottom() + 0.01 {
                     break;
                 }
@@ -976,13 +1050,13 @@ impl Pen<'_> {
                 if r.wraps.is_empty() {
                     match r.span(baseline - est.asc, baseline + est.desc) {
                         Some(s) if fits(&s) => return Some((baseline, s.0, s.1, false)),
-                        _ => baseline += est.lead.max(1.0),
+                        _ => baseline += step,
                     }
                 } else {
                     // Wrap objects can split a line: fill every span, left to right.
                     let mut spans: Vec<(f64, f64)> = r.spans(baseline - est.asc, baseline + est.desc).into_iter().filter(fits).collect();
                     if spans.is_empty() {
-                        baseline += est.lead.max(1.0);
+                        baseline += step;
                         continue;
                     }
                     let (a, b) = spans.remove(0);
@@ -1145,7 +1219,7 @@ mod wrapping_tests {
         // entirely synthetic, so the regressions don't depend on a particular font's shaping.
         static DB: std::sync::OnceLock<FontDb> = std::sync::OnceLock::new();
         let db = DB.get_or_init(|| FontDb::with_font_dirs(vec![]));
-        let face = db.face("Source Sans 3", "Regular").expect("bundled test face");
+        let face = db.face("Noto Sans", "Regular").expect("bundled test face");
         specs
             .iter()
             .map(|&(byte, len, adv, ch)| SGlyph {
@@ -1169,7 +1243,10 @@ mod wrapping_tests {
                 ch,
                 tcy: None,
                 inline: None,
+                word_end: false,
                 lead: 0.0,
+                proportional: false,
+                vpal: None,
                 level: unicode_bidi::Level::ltr(),
             })
             .collect()
@@ -1425,6 +1502,8 @@ fn flow(cx: &mut Ctx<'_>, paras: &[Range<usize>], t: &TextObject, regions: Optio
         let bidi = para_bidi(text.get(pr.clone()).unwrap_or_default(), para.direction);
         let rtl = is_rtl(bidi.as_ref());
         let mut sg = cx.shape_para(pr.clone(), bidi.as_ref());
+        // Thai, Lao, Khmer and Myanmar break lines between words, not at spaces.
+        mark_word_ends(text.get(pr.clone()).unwrap_or_default(), pr.start, &mut sg);
         // Japanese composition: consecutive punctuation shares one half-em space.
         let compressed = if para.mojikumi == Mojikumi::LineEndHalf { compress_punctuation(&mut sg) } else { vec![] };
         // …and a quarter em between Japanese and Latin text.
@@ -1703,7 +1782,8 @@ fn on_path(cx: &mut Ctx<'_>, paras: &[Range<usize>], t: &TextObject, path: &Path
         }
     }
     let rtl = rtl.unwrap_or(false);
-    let ap = ArcPath::new(path);
+    // A path out of range holds no text, as a path with no length holds none.
+    let ap = if in_range(&path.to_bezpath()) { ArcPath::new(path) } else { ArcPath::default() };
     let m = Metrics::max(&sg).map(|m| (m.asc, m.desc)).unwrap_or_else(|| {
         let s = style_metrics(cx.db, cx.style_at(0));
         (s.0, s.1)

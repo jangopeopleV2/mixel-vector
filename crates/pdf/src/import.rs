@@ -21,13 +21,20 @@ use vectorcraft_geom::{FillRule, PathData};
 
 use crate::import_color::{Colors, Native};
 use crate::import_mask::{MaskSpec, contains, is_rectangle, luminance, mask_spec, white_cover};
-use crate::import_scan::{MAX_NESTING, Ocgs, Scan, all_on, hides_forms, scan_page, tag_key};
-use crate::import_shading::{clipped, extend_clip, fold_stop_opacity, mesh_shading, shading_gradient};
+use crate::import_scan::{FontNames, MAX_NESTING, Ocgs, Scan, TextOverprint, all_on, hides_forms, scan_page, tag_key};
+use crate::import_shading::{clipped, extend_clip, fold_stop_opacity, gradient_shape, mesh_shading, shading_gradient};
 use crate::import_text::{Families, LineFacts, Look, Placement, TextLine, Upright};
 use crate::{CropTo, ImportOptions, ImportReport, PdfError, TextAs};
 
+/// Mixed into an image's cache key when it is read white inside an alpha soft mask.
+const WHITE_KEY: u128 = 0x7717_e000_a1fa;
 /// The name of the paths text imports as.
 const TEXT_OUTLINES: &str = "<Text Outlines>";
+/// A page whose overprint (ISO 32000-1 §8.6.7) is left out rather than given to the wrong objects.
+const OVERPRINT_UNREAD: &str = "the overprint of a page's objects couldn't be read: they knock out";
+/// The document overprints as overprint mode 1 does.
+const OVERPRINT_ZERO_MODE: &str =
+    "overprint in the mode where a process colour's zero tints knock out (/OPM 0) is imported as overprint, where they don't";
 /// The deepest soft masks, patterns and type 3 glyphs are read within each other.
 const MAX_NESTED: u32 = 8;
 /// A tiling pattern read this many times with the same art is taken to always draw it.
@@ -136,7 +143,7 @@ pub const OFF_ARTBOARD_NOTE: &str =
     "only the PDF-compatible part of this file was read: art outside its artboards is kept in the editor's private data alone, so it doesn't open";
 
 /// Warning: art reaching past the page box was clipped to it.
-pub(crate) const PAST_PAGE_NOTE: &str = "art reaching past the page was clipped to it, as PDF viewers show it";
+pub const PAST_PAGE_NOTE: &str = "art reaching past the page was clipped to it, as PDF viewers show it";
 
 /// Import a PDF, returning the document plus warnings about content that was approximated or skipped.
 pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportReport, PdfError> {
@@ -189,10 +196,14 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
     b.unsure = route && ocgs.list.iter().any(|g| (all_on && !g.on) || !g.print);
     b.taken = taken;
     b.warnings = notes;
+    b.colors.uncalibrated_rgb = opts.uncalibrated_rgb && picked.iter().filter_map(|&n| pages.get(n)).any(crate::pages::has_private_data);
     let cache = InterpreterCache::new();
     let mut x = 0.0;
-    // Every page only a placeholder (text) over private data: the file's art isn't in its PDF part.
-    let mut placeholder = true;
+    // Where the next page's art may begin (a `.ai` page's art reaches past its artboard).
+    let mut clear = f64::NEG_INFINITY;
+    // Every page only text over private data: a file saved without its PDF part shows a notice
+    // there, not its art. A page that states where its art is isn't that notice.
+    let (mut only_text, mut art_boxes) = (true, false);
     let mut slots: Vec<Slot> = vec![];
     let mut group_art: HashMap<usize, Vec<Arc<Node>>> = HashMap::new();
     let mut nesting = Nesting::new();
@@ -200,12 +211,21 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
     let (mut order, mut known) = (vec![], HashSet::new());
     for (i, &number) in picked.iter().enumerate() {
         let Some(page) = pages.get(number) else { continue };
+        // Artboards on the trim boxes have the bleed boxes round them as the document's bleed
+        // (the widest of the pages' on each side), so the art there shows and prints as bleed.
+        if opts.crop == CropTo::Trim {
+            for (side, b) in doc.setup.bleed.iter_mut().zip(crate::pages::bleed(page)) {
+                *side = side.max(b);
+            }
+        }
         // The chosen box sits at (x, 0); the page draws round it.
         let (init, frame) = crate::pages::frame(page, opts.crop);
         let mut ab = Rect::new(x, 0.0, x + frame.width(), frame.height());
         let xf = Affine::translate((x - frame.x0, -frame.y0)) * init;
         let mut ctx = Context::new(xf, ab, &cache, pdf.xref(), settings.clone());
         b.page = ab;
+        // The first id of this page's art.
+        let first_id = b.next;
         let scan = scan_page(page, &mut ocgs, all_on, &mut b.fonts);
         if route {
             let mut seen = HashSet::new();
@@ -253,8 +273,36 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
         if clipped {
             b.warn(PAST_PAGE_NOTE);
         }
+        // A `.ai` page keeps its art past the artboard edge, unclipped (#646), so a page whose art
+        // reaches far to the left would lay it over the page before it in the row: there it would
+        // be taken for that page's art (by the check against the editing data, which then finds
+        // art its layers don't have there, and by `place_pages`). Such a page moves right until its
+        // art clears the art before it.
+        let mut art_right = f64::NEG_INFINITY;
+        if ai && let Some(art) = parts.iter().flat_map(|(_, v)| v.iter()).filter_map(|n| n.visual_bounds()).reduce(|a, b| a.union(b)) {
+            // Art at a coordinate that isn't a number (a damaged file) moves nothing.
+            let dx = Some((clear - art.x0).max(0.0)).filter(|dx| dx.is_finite()).unwrap_or(0.0);
+            if dx > 0.0 {
+                let shift = Affine::translate((dx, 0.0));
+                for (_, v) in &mut parts {
+                    for n in v.iter_mut() {
+                        Arc::make_mut(n).transform(shift, false);
+                    }
+                }
+                // What the page's lines of type were is told where their glyphs are (the outlines
+                // stroked on them are looked for there), so that moves with them.
+                for facts in b.lines.iter_mut().filter(|(id, _)| id.0 >= first_id).map(|(_, facts)| facts) {
+                    for ink in &mut facts.ink {
+                        *ink = *ink + kurbo::Vec2::new(dx, 0.0);
+                    }
+                }
+                ab = Rect::new(ab.x0 + dx, ab.y0, ab.x1 + dx, ab.y1);
+            }
+            art_right = art.x1 + dx;
+        }
         let children: Vec<Arc<Node>> = parts.iter().flat_map(|(_, v)| v.iter().cloned()).collect();
-        placeholder &= ai && only_text(&children);
+        only_text &= ai && is_only_text(&children);
+        art_boxes |= crate::pages::states_art(page);
         let mut right = ab.x1;
         if opts.crop == CropTo::Bounding
             && let Some(art) = vectorcraft_doc::live::nodes_bounds(&children)
@@ -263,6 +311,7 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
             ab = art;
         }
         x = right + opts.artboard_gap;
+        clear = right.max(art_right) + opts.artboard_gap;
         doc.artboards.push(Artboard {
             id: i as u32 + 1,
             name: format!("Artboard {}", i + 1),
@@ -296,7 +345,7 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
             }
         }
     }
-    if placeholder {
+    if only_text && !art_boxes {
         return Err(PdfError::PlaceholderOnly);
     }
     // A group the pages mark but draw nothing in is an empty layer, as the editor had it.
@@ -336,7 +385,8 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
     // A file painted mostly in CMYK opens as a CMYK document (with CMYK default swatches).
     if b.colors.cmyk_document() {
         doc.color_mode = ColorMode::Cmyk;
-        (doc.swatches, doc.swatch_groups) = vectorcraft_color::default_swatches(ColorMode::Cmyk.model());
+        let (swatches, groups) = vectorcraft_color::default_swatches(ColorMode::Cmyk.model());
+        (doc.swatches, doc.swatch_groups) = (swatches.into(), groups.into());
     }
     doc.swatches.extend(b.colors.swatches());
     // Tiling patterns are pattern swatches.
@@ -367,7 +417,7 @@ pub fn import_with_report(bytes: &[u8], opts: &ImportOptions) -> Result<ImportRe
             }
         }
     }
-    Ok(ImportReport { document: doc, warnings, native: crate::editing::editing_in(&pdf) })
+    Ok(ImportReport { document: doc, warnings, native: crate::editing::editing_in(&pdf), only_text })
 }
 
 /// The characters of a CID-keyed CFF font embedded without a ToUnicode map (as macOS writes
@@ -591,7 +641,7 @@ fn drop_page_fill(parts: &mut Vec<(Option<usize>, Vec<Arc<Node>>)>, page: Rect) 
 }
 
 /// Is this art text and nothing else (in groups and clips), with some text?
-fn only_text(nodes: &[Arc<Node>]) -> bool {
+fn is_only_text(nodes: &[Arc<Node>]) -> bool {
     fn walk(nodes: &[Arc<Node>], text: &mut bool) -> bool {
         nodes.iter().all(|n| match &n.kind {
             NodeKind::Path { clipping: true, .. } => true,
@@ -658,6 +708,7 @@ struct GlyphRun {
     opacity: f32,
     stroke: Option<StrokeProps>,
     scale: f64,
+    overprint: bool,
 }
 
 /// How often a tiling pattern was read, and the art (as its paints) each reading drew with the
@@ -692,8 +743,9 @@ struct Builder<'p> {
     /// Mask keys of CMYK images whose mask turned out to hide nothing.
     opaque: HashSet<u128>,
     warnings: Vec<String>,
-    /// Fonts by cache key → base font name (from [`scan_page`]).
-    fonts: HashMap<u128, String>,
+    /// Fonts by cache key → base font name and whether the file carries its glyphs (from
+    /// [`scan_page`]).
+    fonts: FontNames,
     font_names: HashMap<u128, FontInfo>,
     families: Option<Families>,
     missing_fonts: Vec<String>,
@@ -725,6 +777,8 @@ struct Builder<'p> {
     scan: Scan,
     tag_at: usize,
     group_at: usize,
+    /// The fills and strokes of paths drawn so far ([`Scan::paints`]).
+    paint_at: usize,
     aligned: bool,
     /// Whether optional content groups become layers.
     route: bool,
@@ -736,6 +790,10 @@ struct Builder<'p> {
     /// A transparency group was just pushed: a form's (whose flags come next) or an image's.
     pending: bool,
     nested: u32,
+    /// Reading an alpha soft mask's art: images are read white with their own alpha, so the
+    /// mask's luminance is their alpha, as whitened vector art's is (cairo, and so Inkscape,
+    /// rasterizes masks into such images).
+    white_images: bool,
     /// The last filled path: its node and its outline (a stroke of the same outline joins it).
     last_fill: Option<(NodeId, BezPath)>,
     /// What each line of type made tells beyond its text object ([`crate::import_lines`]).
@@ -772,7 +830,7 @@ fn fill_rule(r: hayro_interpret::FillRule) -> FillRule {
 }
 
 /// `p` with every subpath closed: how a fill reads it.
-fn closed_subpaths(p: &BezPath) -> BezPath {
+pub(crate) fn closed_subpaths(p: &BezPath) -> BezPath {
     let mut out = BezPath::new();
     let mut open = false;
     for el in p.elements() {
@@ -871,12 +929,14 @@ impl<'p> Builder<'p> {
             scan: Scan::default(),
             tag_at: 0,
             group_at: 0,
+            paint_at: 0,
             aligned: true,
             route,
             unsure: false,
             marked: vec![],
             pending: false,
             nested: 0,
+            white_images: false,
             last_fill: None,
             lines: HashMap::new(),
         }
@@ -921,12 +981,49 @@ impl<'p> Builder<'p> {
         self.masked.clear();
         self.marked.clear();
         self.pending = false;
-        (self.scan, self.tag_at, self.group_at, self.aligned) = (scan, 0, 0, true);
+        (self.scan, self.tag_at, self.group_at, self.aligned, self.paint_at) = (scan, 0, 0, true, 0);
+        if self.scan.overprints && self.scan.cut {
+            self.scan.overprints = false;
+            self.warn(OVERPRINT_UNREAD);
+        }
+        if self.scan.overprints && self.scan.zero_mode {
+            self.warn(OVERPRINT_ZERO_MODE);
+        }
+    }
+
+    /// Whether the path the interpreter draws now (a fill or a stroke, each counted) overprints.
+    fn path_overprint(&mut self) -> bool {
+        if self.nested > 0 || !self.scan.overprints {
+            return false;
+        }
+        self.paint_at += 1;
+        self.scan.paints.get(self.paint_at - 1).copied().unwrap_or(false)
+    }
+
+    /// Whether the glyph the interpreter draws now (its fill, or its `stroke`) overprints.
+    fn glyph_overprint(&mut self, stroke: bool) -> bool {
+        if self.nested > 0 || !self.scan.overprints {
+            return false;
+        }
+        match self.scan.texts.get(self.paint_at) {
+            Some(TextOverprint::All { fill, stroke: s }) => *if stroke { s } else { fill },
+            Some(TextOverprint::Mixed) => {
+                self.warn("some text is set to overprint in a way that can't be read: it knocks out");
+                false
+            }
+            _ => false,
+        }
     }
 
     /// The page's art, split by optional content group (in the order they first paint).
     fn end_page(&mut self) -> Vec<(Option<usize>, Vec<Arc<Node>>)> {
-        let children = self.close_frames();
+        let mut children = self.close_frames();
+        // The interpreter drew another number of paths than the file was read to paint: which
+        // of them overprint can't be trusted.
+        if self.scan.overprints && self.paint_at != self.scan.paints.len() {
+            children.iter_mut().for_each(vectorcraft_doc::overprint::clear_overprints);
+            self.warn(OVERPRINT_UNREAD);
+        }
         let groups = std::mem::take(&mut self.root_groups);
         let mut parts: Vec<(Option<usize>, Vec<Arc<Node>>)> = vec![];
         // Thousands of groups: find each one's part by index.
@@ -1014,17 +1111,17 @@ impl<'p> Builder<'p> {
             MaskSpec::Mask(m) => {
                 let m = self.fresh_mask(m.clone());
                 let node = match <[Arc<Node>; 1]>::try_from(art) {
-                    Ok([one]) if one.mask.is_none() => {
-                        fold_stop_opacity(&one, &m).unwrap_or_else(|| Node { mask: Some(Box::new(m)), ..Arc::unwrap_or_clone(one) })
+                    Ok([one]) if one.extras().mask.is_none() => {
+                        fold_stop_opacity(&one, &m).unwrap_or_else(|| Arc::unwrap_or_clone(one).with_mask(Some(Box::new(m))))
                     }
                     Ok([one]) => {
                         let mut g = Node::group(self.id(), vec![one]);
-                        g.mask = Some(Box::new(m));
+                        g.extras_mut().mask = Some(Box::new(m));
                         g
                     }
                     Err(all) => {
                         let mut g = Node::group(self.id(), all);
-                        g.mask = Some(Box::new(m));
+                        g.extras_mut().mask = Some(Box::new(m));
                         g
                     }
                 };
@@ -1060,6 +1157,9 @@ impl<'p> Builder<'p> {
                     // A rectangle around all of its art (a form's box) clips nothing.
                     grouped(f.children, f.child_groups, group).for_each(|(c, g)| self.emit(c, g));
                     None
+                } else if let Some(shape) = gradient_shape(&clip, &f.children) {
+                    // One path, so tools such as the Shape Builder see the shape, not its box (#1304).
+                    Some(shape)
                 } else {
                     let mut ch = vec![Arc::new(*clip)];
                     ch.extend(f.children);
@@ -1087,7 +1187,7 @@ impl<'p> Builder<'p> {
                     && !only.is_container()
                     && !isolate
                     && !knockout
-                    && (mask.is_none() || only.mask.is_none())
+                    && (mask.is_none() || only.extras().mask.is_none())
                 {
                     // A single object in a group: fold opacity, blend and mask into the object.
                     let mut only = (**only).clone();
@@ -1097,7 +1197,7 @@ impl<'p> Builder<'p> {
                     }
                     if let Some(m) = mask {
                         let m = self.fresh_mask(m);
-                        only = fold_stop_opacity(&only, &m).unwrap_or(Node { mask: Some(Box::new(m)), ..only });
+                        only = fold_stop_opacity(&only, &m).unwrap_or_else(|| only.with_mask(Some(Box::new(m))));
                     }
                     Some(only)
                 } else {
@@ -1106,7 +1206,7 @@ impl<'p> Builder<'p> {
                     if knockout {
                         g.knockout = Knockout::On;
                     }
-                    g.mask = mask.map(|m| Box::new(self.fresh_mask(m)));
+                    g.extras_mut().mask = mask.map(|m| Box::new(self.fresh_mask(m)));
                     Some(g)
                 }
             }
@@ -1125,10 +1225,14 @@ impl<'p> Builder<'p> {
         match &run.stroke {
             None => {
                 let mut f = FillLayer::new(run.paint);
-                f.opacity = run.opacity;
+                (f.opacity, f.overprint) = (run.opacity, run.overprint);
                 ap.items.push(AppearanceItem::Fill(f));
             }
-            Some(p) => ap.items.push(AppearanceItem::Stroke(stroke_layer(run.paint, run.opacity, p, run.scale))),
+            Some(p) => {
+                let mut st = stroke_layer(run.paint, run.opacity, p, run.scale);
+                st.overprint = run.overprint;
+                ap.items.push(AppearanceItem::Stroke(st));
+            }
         }
         let id = self.id();
         let mut n = Node::path(id, PathData::from_bezpath(&run.path), ap);
@@ -1202,7 +1306,10 @@ impl<'p> Builder<'p> {
             return s.clone();
         }
         let page = self.page;
-        let spec = match self.nested(page, |b| m.interpret(b)) {
+        let saved = std::mem::replace(&mut self.white_images, m.mask_type() == MaskType::Alpha);
+        let art = self.nested(page, |b| m.interpret(b));
+        self.white_images = saved;
+        let spec = match art {
             Some(art) => {
                 let [r, g, b, _] = m.background_color().to_rgba().components();
                 let backdrop = luminance(&Color::rgb(r, g, b));
@@ -1233,10 +1340,15 @@ impl<'p> Builder<'p> {
         {
             return Some(Paint::Pattern { pattern: name.clone(), xf });
         }
+        // A swatch is shared with uses outside an alpha mask, and pattern paints keep their
+        // colours there: its images are read as they are.
+        let white = std::mem::take(&mut self.white_images);
         let art = self.nested(Rect::ZERO, |b| {
             // A cell whose content can't be decoded is empty.
             let _ = t.interpret(b, Affine::IDENTITY, stroke);
-        })?;
+        });
+        self.white_images = white;
+        let art = art?;
         let sig = paints(&art);
         let entry = self.pattern_keys.entry(key).or_default();
         entry.0 += 1;
@@ -1287,7 +1399,10 @@ impl<'p> Builder<'p> {
             (k, a.width, a.height)
         };
         let xf = transform * Affine::scale_non_uniform(f64::from(w) / f64::from(mw.max(1)), f64::from(h) / f64::from(mh.max(1)));
-        let art = Node::new(self.id(), NodeKind::Image(ImageObject { key: k, width: mw, height: mh, xf, link: None, placement: Default::default() }));
+        let art = Node::new(
+            self.id(),
+            NodeKind::Image(Box::new(ImageObject { key: k, width: mw, height: mh, xf, link: None, placement: Default::default() })),
+        );
         Some(OpacityMask::new(art, true))
     }
 
@@ -1306,8 +1421,9 @@ impl<'p> Builder<'p> {
             (k, w, h)
         };
         let id = self.id();
-        let mut n = Node::new(id, NodeKind::Image(ImageObject { key: k, width: w, height: h, xf, link: None, placement: Default::default() }));
-        n.mask = mask.map(Box::new);
+        let mut n =
+            Node::new(id, NodeKind::Image(Box::new(ImageObject { key: k, width: w, height: h, xf, link: None, placement: Default::default() })));
+        n.extras_mut().mask = mask.map(Box::new);
         self.push_node(n);
     }
 
@@ -1346,7 +1462,7 @@ impl<'p> Builder<'p> {
             return n.clone();
         }
         let data = o.font_data();
-        let name = self.fonts.get(&key).cloned().or_else(|| data.as_ref().and_then(|d| d.postscript_name.clone()));
+        let name = self.fonts.get(&key).map(|(n, _)| n.clone()).or_else(|| data.as_ref().and_then(|d| d.postscript_name.clone()));
         let (weight, italic) = data.as_ref().map_or((None, false), |d| (d.weight, d.is_italic));
         // A subset's six-letter tag.
         let ps = name.as_deref().map(|n| match n.split_once('+') {
@@ -1382,6 +1498,7 @@ impl<'p> Builder<'p> {
         scale: f64,
         paint: &hayro_interpret::Paint<'_>,
         stroke: Option<&StrokeProps>,
+        overprint: bool,
     ) -> bool {
         if self.text_as != TextAs::Text || self.nested > 0 {
             return false;
@@ -1429,7 +1546,12 @@ impl<'p> Builder<'p> {
         let upright = width.is_some_and(|w| w.abs() <= 1.0);
         let top = m * kurbo::Point::new(f64::from(width.filter(|w| *w > 1.0).unwrap_or(1000.0)) * 0.5, 880.0);
         let mut info = self.font_name(key, o);
-        if let Some(face) = &info.face {
+        // A font the file doesn't carry is drawn with a stand-in: its glyphs can't tell which
+        // style of the installed family it is, so the name decides.
+        let embedded = self.fonts.get(&key).is_none_or(|(_, e)| *e);
+        if let Some(face) = &info.face
+            && embedded
+        {
             let decided = match self.matched.get(&key) {
                 Some(m) => m.clone(),
                 // A glyph that can't be compared (several characters, a vertical form) decides
@@ -1468,6 +1590,8 @@ impl<'p> Builder<'p> {
             version,
             size: at.size,
             h_scale: at.h_scale,
+            overprint_fill: stroke.is_none() && overprint,
+            overprint_stroke: stroke.is_some() && overprint,
             fill: stroke.is_none().then_some(paint),
             stroke,
         };
@@ -1479,7 +1603,7 @@ impl<'p> Builder<'p> {
         // A stroke over the glyph just filled (fill and stroke rendering).
         if let (Some(s), Some(line)) = (&look.stroke, &mut self.text)
             && look.fill.is_none()
-            && line.stroke_last(key, at, s.clone())
+            && line.stroke_last(key, at, s.clone(), overprint)
         {
             return true;
         }
@@ -1545,6 +1669,7 @@ impl<'a> Device<'a> for Builder<'_> {
         self.flush_glyphs();
         self.flush_text();
         self.pending = false;
+        let overprint = self.path_overprint();
         let mut bp = path.clone();
         bp.apply_affine(transform);
         if bp.elements().is_empty() {
@@ -1584,7 +1709,7 @@ impl<'a> Device<'a> for Builder<'_> {
         match draw_mode {
             PathDrawMode::Fill(rule) => {
                 let mut f = FillLayer::new(paint);
-                f.opacity = opacity;
+                (f.opacity, f.overprint) = (opacity, overprint);
                 let mut n = Node::path(self.id(), pd, Appearance { items: vec![AppearanceItem::Fill(f)], ..Default::default() });
                 if let NodeKind::Path { rule: r, .. } = &mut n.kind {
                     *r = fill_rule(*rule);
@@ -1594,10 +1719,10 @@ impl<'a> Device<'a> for Builder<'_> {
                 self.push_node(n);
             }
             PathDrawMode::Stroke(props) => {
-                let st = stroke_layer(paint, opacity, props, mean_scale(transform));
-                // Fill-then-stroke of the same path (the `B` operator, or a fill and a stroke of
-                // the outline as Illustrator writes an object) becomes one object: a path with a
-                // fill and a live stroke.
+                let mut st = stroke_layer(paint, opacity, props, mean_scale(transform));
+                st.overprint = overprint;
+                // Fill-then-stroke of the same path (the `B` operator, or a fill and then a stroke
+                // of the same outline) becomes one object: a path with a fill and a live stroke.
                 let blend = self.blend;
                 let fill = self.last_fill.take();
                 let last = match self.mask {
@@ -1609,6 +1734,10 @@ impl<'a> Device<'a> for Builder<'_> {
                     && let Some((id, outline)) = fill
                     && last.id == id
                     && last.blend == blend
+                    // Opacity or a mask of its own came from a transparency group the fill was
+                    // drawn in and this stroke wasn't.
+                    && last.opacity == 1.0
+                    && last.extras().mask.is_none()
                     && last.appearance.stroke().is_none()
                     && same_outline(&outline, &bp)
                 {
@@ -1640,14 +1769,12 @@ impl<'a> Device<'a> for Builder<'_> {
                 (*isolate, *knockout) = (i, k);
             }
         }
-        let bb = clip_path.path.bounding_box();
-        // Clips that contain the whole page do nothing visible; don't create groups for them.
+        // Clips that contain the whole page do nothing visible; don't create groups for them. Only
+        // a polygon that really covers it counts: a diamond touching the page edges has the page
+        // as its bounding box but cuts its corners away (#1542).
         let redundant = clip_path.path.elements().len() <= 6
-            && bb.x0 <= self.page.x0 + 0.01
-            && bb.y0 <= self.page.y0 + 0.01
-            && bb.x1 >= self.page.x1 - 0.01
-            && bb.y1 >= self.page.y1 - 0.01
-            && self.page.area() > 0.0;
+            && self.page.area() > 0.0
+            && vectorcraft_geom::hit::polygon_covers_rect(&clip_path.path, self.page, 0.01);
         let kind = if redundant { FrameKind::Skip } else { FrameKind::Clip(Box::new(self.clip_node(&clip_path.path, fill_rule(clip_path.fill)))) };
         self.stack.push(Frame::new(kind));
     }
@@ -1678,7 +1805,8 @@ impl<'a> Device<'a> for Builder<'_> {
         match glyph {
             Glyph::Outline(o) => {
                 let scale = mean_scale(transform);
-                if self.type_glyph(o, transform * glyph_transform, scale, paint, stroke.as_ref()) {
+                let overprint = self.glyph_overprint(stroke.is_some());
+                if self.type_glyph(o, transform * glyph_transform, scale, paint, stroke.as_ref(), overprint) {
                     return;
                 }
                 self.flush_text();
@@ -1688,12 +1816,13 @@ impl<'a> Device<'a> for Builder<'_> {
                 let same = self.glyphs.as_ref().is_some_and(|r| {
                     r.paint == paint
                         && r.opacity == opacity
+                        && r.overprint == overprint
                         && r.stroke.as_ref().map(|s| s.line_width) == stroke.as_ref().map(|s| s.line_width)
                         && (r.scale - scale).abs() < 1e-9
                 });
                 if !same {
                     self.flush_glyphs();
-                    self.glyphs = Some(GlyphRun { path: BezPath::new(), paint, opacity, stroke, scale });
+                    self.glyphs = Some(GlyphRun { path: BezPath::new(), paint, opacity, stroke, scale, overprint });
                 }
                 if let Some(r) = &mut self.glyphs {
                     r.path.extend(bp.iter());
@@ -1718,12 +1847,14 @@ impl<'a> Device<'a> for Builder<'_> {
         self.pending = false;
         match image {
             Image::Raster(r) => {
-                let key = hayro_interpret::CacheKey::cache_key(&r);
+                let white = self.white_images;
+                // Inside an alpha mask the same image is read again, white (its own cache key).
+                let key = hayro_interpret::CacheKey::cache_key(&r) ^ if white { WHITE_KEY } else { 0 };
                 let st = r.stream();
                 let (w, h) = (r.width(), r.height());
                 // CMYK images keep their samples (read once per image).
-                let known = self.cmyk_keys.contains(&key);
-                let cmyk = if known {
+                let known = !white && self.cmyk_keys.contains(&key);
+                let cmyk = if known || white {
                     None
                 } else {
                     crate::import_image::cmyk(st, w, h).unwrap_or_else(|why| {
@@ -1742,7 +1873,8 @@ impl<'a> Device<'a> for Builder<'_> {
                 let dict = st.dict();
                 let filters = st.filters();
                 let cs_ok = dict.get::<Name<'_>>(b"ColorSpace").is_some_and(|n| matches!(n.as_ref(), b"DeviceRGB" | b"DeviceGray"));
-                let jpeg = filters.len() == 1
+                let jpeg = !white
+                    && filters.len() == 1
                     && matches!(filters[0], hayro_syntax::Filter::DctDecode)
                     && cs_ok
                     && !dict.contains_key(b"SMask")
@@ -1759,6 +1891,7 @@ impl<'a> Device<'a> for Builder<'_> {
                         let (w, h, sf) = (img.width(), img.height(), img.scale_factors());
                         let a = alpha.map(|a| resize_alpha(&a, w, h)).unwrap_or_else(|| vec![255; (w * h) as usize]);
                         let rgba: Vec<u8> = match img {
+                            _ if white => a.into_iter().flat_map(|a| [255, 255, 255, a]).collect(),
                             ImageData::Rgb(d) => d.data.as_chunks::<3>().0.iter().zip(a).flat_map(|(c, a)| [c[0], c[1], c[2], a]).collect(),
                             ImageData::Luma(d) => d.data.iter().zip(a).flat_map(|(g, a)| [*g, *g, *g, a]).collect(),
                         };
@@ -1774,11 +1907,13 @@ impl<'a> Device<'a> for Builder<'_> {
                 self.add_image(key, || rgba_png(rgba, w, h).map(|png| (ImageBlob::new("image/png", png), w, h)), xf);
             }
             Image::Stencil(s) => {
-                let key = hayro_interpret::CacheKey::cache_key(&s);
+                let white = self.white_images;
+                let key = hayro_interpret::CacheKey::cache_key(&s) ^ if white { WHITE_KEY } else { 0 };
                 let mut decoded: Option<Decoded> = None;
                 s.with_stencil(
                     |luma, paint| {
                         let rgb = match paint {
+                            _ if white => [255, 255, 255, 255],
                             hayro_interpret::Paint::Color(c) => c.to_rgba().to_rgba8(),
                             _ => [0, 0, 0, 255],
                         };

@@ -280,16 +280,17 @@ fn step_value(ui: &Ui, resp: &Response, buf: &mut String, read: impl Fn(&str) ->
 }
 
 /// The flag `dialogs::show` raises while it draws the body of a dialog that has just opened; the
-/// first field drawn takes it ([`take_dialog_focus`]).
+/// first enabled field drawn takes it ([`take_dialog_focus`]).
 pub(crate) fn dialog_focus_flag() -> egui::Id {
     egui::Id::new("dialog-focus-first-field")
 }
 
-/// If field `id` (showing `text`) is the first field of a dialog that has just opened, give it the
-/// keyboard focus with all of `text` selected: typing replaces the value and Enter applies it.
+/// If field `id` (showing `text`) is the first enabled field of a dialog that has just opened, give
+/// it the keyboard focus with all of `text` selected: typing replaces the value and Enter applies it.
 pub(crate) fn take_dialog_focus(ui: &Ui, id: egui::Id, text: &str) {
-    // A new window's first frame only measures its contents: nothing can take focus yet.
-    if ui.is_sizing_pass() || ui.data_mut(|d| d.remove_temp::<bool>(dialog_focus_flag())).is_none() {
+    // A new window's first frame only measures its contents: nothing can take focus yet. Nor can a
+    // greyed-out field (egui drops its focus): the flag stays for the first field that is enabled.
+    if ui.is_sizing_pass() || !ui.is_enabled() || ui.data_mut(|d| d.remove_temp::<bool>(dialog_focus_flag())).is_none() {
         return;
     }
     focus_field(ui, id, text);
@@ -309,13 +310,33 @@ fn select_all(ui: &Ui, id: egui::Id, text: &str) {
     st.store(ui.ctx(), id);
 }
 
-/// Numeric fields take the whole text, unit included, when they gain focus or are double-clicked
-/// (egui would select one word): typing a number or an expression replaces it.
+/// Numeric fields select the whole text on keyboard focus, a completed focus click or a
+/// double-click. A pointer press keeps its caret so dragging selects from the pressed position.
 fn select_all_on_focus(ui: &Ui, resp: &Response, text: &str) {
-    if !(resp.gained_focus() || resp.double_clicked()) {
+    let pending = resp.id.with("select-all-on-focus-click");
+    let (pressed, released) =
+        ui.input(|i| (i.pointer.button_pressed(egui::PointerButton::Primary), i.pointer.button_released(egui::PointerButton::Primary)));
+    if resp.gained_focus() {
+        ui.data_mut(|d| {
+            if pressed {
+                d.insert_temp(pending, true);
+            } else {
+                d.remove_temp::<bool>(pending);
+            }
+        });
+    }
+    let clicked_focus = released && ui.data_mut(|d| d.remove_temp::<bool>(pending)).unwrap_or(false) && resp.clicked_by(egui::PointerButton::Primary);
+    if resp.lost_focus() {
+        ui.data_mut(|d| d.remove_temp::<bool>(pending));
+    }
+    if !(resp.gained_focus() && !pressed || resp.double_clicked() || clicked_focus) {
         return;
     }
-    if egui::TextEdit::load_state(ui.ctx(), resp.id).is_some() {
+    if let Some(st) = egui::TextEdit::load_state(ui.ctx(), resp.id) {
+        // Preserve a text selection if the focus click already produced one.
+        if clicked_focus && !resp.double_clicked() && st.cursor.char_range().is_some_and(|r| !r.as_sorted_char_range().is_empty()) {
+            return;
+        }
         select_all(ui, resp.id, text);
         ui.ctx().request_repaint();
     }
@@ -327,7 +348,14 @@ fn select_all_on_focus(ui: &Ui, resp: &Response, text: &str) {
 fn recessed_text(ui: &mut Ui, id: egui::Id, shown: &str, width: f32, rows: usize) -> (String, Response, Rect) {
     let t = Tokens::get(ui.ctx());
     let editing = ui.memory(|m| m.has_focus(id));
-    let mut buf: String = if editing { ui.data_mut(|d| d.get_temp::<String>(id)).unwrap_or_else(|| shown.to_string()) } else { shown.to_string() };
+    // When the value changes under a focused field (the slider beside it, a preview, another
+    // field's edit), its text follows: the text typed for the old value would otherwise go back in
+    // on the next Enter, Tab or arrow key (#1457).
+    let shown_id = id.with("shown");
+    let followed = ui.data_mut(|d| d.get_temp::<String>(shown_id)).is_none_or(|before| before == shown);
+    ui.data_mut(|d| d.insert_temp(shown_id, shown.to_string()));
+    let typed = if editing && followed { ui.data_mut(|d| d.get_temp::<String>(id)) } else { None };
+    let mut buf: String = typed.unwrap_or_else(|| shown.to_string());
     // The box is exactly as tall as the other controls of a row (26 points a line), its text
     // centred in it: a frame around the text came out a point taller and stood out next to
     // spinners and dropdowns (#900).
@@ -342,6 +370,7 @@ fn recessed_text(ui: &mut Ui, id: egui::Id, shown: &str, width: f32, rows: usize
             let resp = egui::Frame::NONE
                 .inner_margin(margin)
                 .show(ui, |ui| {
+                    crate::theme::strong_selected_text(ui);
                     let edit = if rows > 1 { egui::TextEdit::multiline(&mut buf).desired_rows(rows) } else { egui::TextEdit::singleline(&mut buf) };
                     ui.add(
                         edit.id(id)
@@ -866,7 +895,7 @@ pub fn opacity_blend(
         icons::paint(ui, "chevron-right", r.shrink2(vec2(3.0, 7.0)), if enabled { t.icon } else { t.text_disabled });
         egui::Popup::menu(&resp).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
             let mut o = opacity.unwrap_or(1.0) * 100.0;
-            let r = ui.add(egui::Slider::new(&mut o, 0.0..=100.0).show_value(false));
+            let r = slider(ui, egui::Slider::new(&mut o, 0.0..=100.0).show_value(false));
             let phase = if r.drag_stopped() || (r.changed() && !r.dragged()) {
                 Live::Released
             } else if r.changed() {
@@ -961,6 +990,19 @@ pub fn icon_button_enabled(ui: &mut Ui, icon: &str, tip: &str, selected: bool, e
     if tip.is_empty() { resp } else { resp.on_hover_text(tl!(tip)) }
 }
 
+/// A slider whose rail shows, filled up to the handle: the theme's widget fill matches the panel
+/// and dialog background, which leaves only the handle visible (#1483).
+pub fn slider(ui: &mut Ui, slider: egui::Slider<'_>) -> Response {
+    let t = Tokens::get(ui.ctx());
+    ui.scope(|ui| {
+        let v = ui.visuals_mut();
+        v.widgets.inactive.bg_fill = t.input_border;
+        v.selection.bg_fill = t.accent;
+        ui.add(slider.trailing_fill(true))
+    })
+    .inner
+}
+
 /// Regular-weight panel sub-header ("Shape Modes:", "Align Objects:").
 pub fn subheader(ui: &mut Ui, text: &str) {
     let t = Tokens::get(ui.ctx());
@@ -982,12 +1024,11 @@ pub fn link_label(ui: &mut Ui, text: &str) -> Response {
     resp
 }
 
-/// The row of a checkbox or radio button: allocates a 13 pt box plus `label`, draws the label and
-/// returns the box, the response and the box's border colour.
-fn choice_row(ui: &mut Ui, label: &str, enabled: bool) -> (Rect, Response, Color32) {
+/// The row of a checkbox or radio button: allocates a 13 pt box plus `text` (already translated),
+/// draws the text and returns the box, the response and the box's border colour.
+fn choice_row(ui: &mut Ui, text: &str, enabled: bool) -> (Rect, Response, Color32) {
     let t = Tokens::get(ui.ctx());
-    let galley =
-        ui.painter().layout_no_wrap(tl!(label).to_string(), egui::FontId::proportional(12.5), if enabled { t.text } else { t.text_disabled });
+    let galley = ui.painter().layout_no_wrap(text.to_string(), egui::FontId::proportional(12.5), if enabled { t.text } else { t.text_disabled });
     let (rect, resp) =
         ui.allocate_exact_size(vec2(18.0 + galley.size().x, 20.0f32.max(galley.size().y)), if enabled { Sense::click() } else { Sense::hover() });
     let bx = Rect::from_min_size(pos2(rect.left(), rect.center().y - 6.5), Vec2::splat(13.0));
@@ -1009,21 +1050,27 @@ pub fn check(ui: &mut Ui, label: &str, value: bool, enabled: bool) -> bool {
 
 /// [`check`] with tooltip `tip` on the box and its label. Returns true when toggled.
 pub fn check_tip(ui: &mut Ui, label: &str, value: bool, enabled: bool, tip: &str) -> bool {
-    let (clicked, resp) = check_row(ui, label, Some(value), enabled);
+    let (clicked, resp) = check_row(ui, tl!(label), Some(value), enabled);
     resp.on_hover_text(tip);
     clicked
 }
 
 /// Three-state [`check`]: `None` shows a dash (a neutral or mixed state). Returns true when clicked.
 pub fn check3(ui: &mut Ui, label: &str, value: Option<bool>, enabled: bool) -> bool {
-    check_row(ui, label, value, enabled).0
+    check_row(ui, tl!(label), value, enabled).0
 }
 
-/// [`check3`], also returning the row's response (what a tooltip goes on: a widget around it never
-/// counts as hovered under the box).
-fn check_row(ui: &mut Ui, label: &str, value: Option<bool>, enabled: bool) -> (bool, Response) {
+/// [`check`] for a name of the document's (an artboard's, an asset's), shown as it is, never
+/// translated. Returns true when toggled.
+pub fn check_name(ui: &mut Ui, name: &str, value: bool) -> bool {
+    check_row(ui, name, Some(value), true).0
+}
+
+/// [`check3`] with its `text` already translated, also returning the row's response (what a
+/// tooltip goes on: a widget around it never counts as hovered under the box).
+fn check_row(ui: &mut Ui, text: &str, value: Option<bool>, enabled: bool) -> (bool, Response) {
     let t = Tokens::get(ui.ctx());
-    let (bx, resp, border) = choice_row(ui, label, enabled);
+    let (bx, resp, border) = choice_row(ui, text, enabled);
     let checked = value == Some(true);
     ui.painter().rect_filled(bx, CornerRadius::same(2), if checked && enabled { t.accent_strong } else { t.input });
     ui.painter().rect_stroke(bx, CornerRadius::same(2), Stroke::new(1.0, border), StrokeKind::Inside);
@@ -1045,7 +1092,7 @@ fn check_row(ui: &mut Ui, label: &str, value: Option<bool>, enabled: bool) -> (b
 /// Radio button in the style of [`check`], with a disabled state. Returns true when clicked.
 pub fn radio(ui: &mut Ui, label: &str, selected: bool, enabled: bool) -> bool {
     let t = Tokens::get(ui.ctx());
-    let (bx, resp, border) = choice_row(ui, label, enabled);
+    let (bx, resp, border) = choice_row(ui, tl!(label), enabled);
     let c = bx.center();
     ui.painter().circle(c, 6.0, if selected && enabled { t.accent_strong } else { t.input }, Stroke::new(1.0, border));
     if selected {
@@ -1170,8 +1217,8 @@ fn spin_generic(
             && let Some(p) = sresp.interact_pointer_pos()
             && let Some(v) = value
         {
-            let nv = if up.contains(p) { v + step } else { v - step };
-            out = Some(SpinPick::Value(nv.max(min)));
+            let modifiers = ui.input(|i| i.modifiers);
+            out = Some(SpinPick::Value(spinner_step(v, step, min, up.contains(p), modifiers)));
         }
         let fw = if presets.is_empty() { width - 15.0 } else { width - 34.0 };
         if let Some(v) = field(ui, fw) {
@@ -1196,6 +1243,14 @@ fn spin_generic(
         }
     });
     out
+}
+
+/// Spinner buttons follow the same modifier sizes as ↑/↓ in a focused number field:
+/// Shift ×10, Ctrl/Cmd ÷10, otherwise the caller's normal step.
+fn spinner_step(value: f64, step: f64, min: f64, up: bool, modifiers: egui::Modifiers) -> f64 {
+    let multiplier = STEPS.iter().find(|(m, _)| modifiers.matches_logically(*m)).map_or(1.0, |(_, factor)| *factor);
+    let delta = step * multiplier;
+    (value + if up { delta } else { -delta }).max(min)
 }
 
 /// Drag phase of a live slider/handle: previews while dragging, commits on release.
@@ -1825,4 +1880,22 @@ pub fn text_presets(ui: &mut Ui, id: impl std::hash::Hash + std::fmt::Debug, val
         });
     });
     out
+}
+
+#[cfg(test)]
+mod spinner_modifier_tests {
+    use super::*;
+
+    #[test]
+    fn shift_steps_stroke_weight_by_ten_points() {
+        assert_eq!(spinner_step(14.0, 1.0, 0.0, true, egui::Modifiers::SHIFT), 24.0);
+        assert_eq!(spinner_step(14.0, 1.0, 0.0, false, egui::Modifiers::SHIFT), 4.0);
+    }
+
+    #[test]
+    fn unmodified_and_command_steps_keep_existing_behavior() {
+        assert_eq!(spinner_step(14.0, 1.0, 0.0, true, egui::Modifiers::NONE), 15.0);
+        assert_eq!(spinner_step(14.0, 1.0, 0.0, false, egui::Modifiers::COMMAND), 13.9);
+        assert_eq!(spinner_step(0.0, 1.0, 0.0, false, egui::Modifiers::SHIFT), 0.0);
+    }
 }

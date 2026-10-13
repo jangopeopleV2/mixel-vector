@@ -155,6 +155,7 @@ fn lines_are_lwpolylines_curves_splines_and_fills_hatches() {
     // The ellipse: four cubics through clamped knots.
     let spline = &e[3];
     assert_eq!((get(spline, 71), get(spline, 73)), (Some("3"), Some("13")));
+    assert_eq!(get(spline, 70), Some("9"), "closed planar spline (#1299): 1 = closed, 8 = planar");
     assert_eq!(all(spline, 40), [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0]);
     // R14 has lightweight polylines but no lineweights: the stroke is a polyline width.
     let r14 = export(&d, &DxfOptions { version: DxfVersion::R14, ..opts(&d) }).unwrap();
@@ -172,6 +173,60 @@ fn lines_are_lwpolylines_curves_splines_and_fills_hatches() {
     assert_eq!(k.iter().filter(|k| *k == "POLYLINE").count(), 3);
     assert!(k.iter().filter(|k| *k == "VERTEX").count() > 20, "the ellipse is flattened");
     assert!(r12.warnings.iter().any(|w| w.contains("R12 has no fills")), "{:?}", r12.warnings);
+}
+
+#[test]
+fn spline_closed_flags_follow_path_intent_across_versions_without_changing_geometry() {
+    let cases = [(true, true), (true, false), (false, false), (false, true)];
+    let make_doc = |keep_closure: bool| {
+        doc_with(|d| {
+            cases
+                .iter()
+                .map(|&(closed, returns)| {
+                    let start = Point::new(20.0, 20.0);
+                    let mut b = kurbo::BezPath::new();
+                    b.move_to(start);
+                    b.curve_to((80.0, 0.0), (80.0, 80.0), (20.0, 80.0));
+                    if returns {
+                        b.curve_to((0.0, 80.0), (0.0, 20.0), (20.0, 20.0));
+                    }
+                    if closed {
+                        if keep_closure {
+                            b.close_path();
+                        } else if !returns {
+                            // The open reference has the same final straight segment.
+                            b.line_to(start);
+                        }
+                    }
+                    path(d, PathData::from_bezpath(&b), Paint::None, Paint::solid(Color::rgb(0.0, 0.0, 0.0)), 2.0)
+                })
+                .collect()
+        })
+    };
+    let closed = make_doc(true);
+    let open = make_doc(false);
+    for version in DxfVersion::ALL {
+        let out = export(&closed, &DxfOptions { version, ..opts(&closed) }).unwrap();
+        let actual = entities(&out);
+        if version == DxfVersion::R12 {
+            let polys: Vec<_> = actual.iter().filter(|e| kind(e) == "POLYLINE").collect();
+            assert_eq!(polys.len(), cases.len());
+            for (poly, &(closed, _)) in polys.iter().zip(&cases) {
+                assert_eq!(get(poly, 70), Some(if closed { "1" } else { "0" }));
+            }
+            assert!(!actual.iter().any(|e| kind(e) == "SPLINE"));
+            continue;
+        }
+        let reference = entities(&export(&open, &DxfOptions { version, ..opts(&open) }).unwrap());
+        assert_eq!(actual.len(), cases.len());
+        for ((spline, reference), &(closed, _)) in actual.iter().zip(&reference).zip(&cases) {
+            assert_eq!(kind(spline), "SPLINE");
+            assert_eq!(get(spline, 70), Some(if closed { "9" } else { "8" }), "{version:?}");
+            let mut normalized = spline.clone();
+            normalized.iter_mut().filter(|p| p.0 == 70).for_each(|p| p.1 = "8".into());
+            assert_eq!(&normalized, reference, "all other entity properties, knots and controls: {version:?}");
+        }
+    }
 }
 
 #[test]
@@ -311,11 +366,13 @@ fn text_doc(text: &str, size: f64) -> Document {
 
 #[test]
 fn type_is_text_or_outlines() {
-    let d = text_doc("Plan A", 20.0);
+    // Both contours of Noto Sans O are curved. A multi-glyph run can normalize
+    // straight contours ahead of curved ones, independently of character order.
+    let d = text_doc("O", 20.0);
     let editable = export(&d, &DxfOptions { preserve: Preserve::Editability, ..opts(&d) }).unwrap();
     let e = entities(&editable);
     assert_eq!(e.len(), 1);
-    assert_eq!((kind(&e[0]), get(&e[0], 1)), ("TEXT", Some("Plan A")));
+    assert_eq!((kind(&e[0]), get(&e[0], 1)), ("TEXT", Some("O")));
     assert!((all(&e[0], 40)[0] - 14.0).abs() < 1e-6, "the cap height of 20 pt type");
     assert_eq!((all(&e[0], 10)[0], all(&e[0], 20)[0]), (10.0, 50.0), "the baseline start, y up");
     let family = CharStyle::default().font_family;
@@ -327,6 +384,7 @@ fn type_is_text_or_outlines() {
         assert!(k.iter().any(|k| k == "HATCH"), "{k:?}");
         assert!(k.iter().all(|k| matches!(k.as_str(), "HATCH" | "LWPOLYLINE" | "SPLINE")), "{k:?}");
         assert_eq!(k.first().map(String::as_str), Some("SPLINE"), "a glyph's outline before its hatch");
+        assert_eq!(k, ["SPLINE", "SPLINE", "HATCH"], "the curved outer and inner glyph boundaries precede their fill");
     }
 }
 
@@ -354,7 +412,7 @@ fn images_link_png_or_jpeg_files() {
             link: None,
             placement: Default::default(),
         };
-        vec![Node::new(d.alloc_id(), NodeKind::Image(im))]
+        vec![Node::new(d.alloc_id(), NodeKind::Image(Box::new(im)))]
     });
     d.images.insert("raster-1".into(), ImageBlob { mime: "image/png".into(), bytes: Arc::new(png), proxy: None });
     let out = export(&d, &opts(&d)).unwrap();

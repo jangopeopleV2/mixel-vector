@@ -14,7 +14,7 @@ fn style(size: f64) -> CharStyle {
 }
 
 fn serif(size: f64) -> CharStyle {
-    CharStyle { font_family: "Source Serif 4".into(), ..style(size) }
+    CharStyle { font_family: "Noto Serif".into(), ..style(size) }
 }
 
 fn point(text: &str, st: CharStyle) -> TextObject {
@@ -39,25 +39,25 @@ const LOREM: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, se
 #[test]
 fn bundled_families_and_styles() {
     let f = db().families();
-    for fam in ["Source Sans 3", "Source Serif 4", "Inter", "JetBrains Mono"] {
+    for fam in ["Noto Sans", "Noto Serif", "Inter", "JetBrains Mono"] {
         assert!(f.iter().any(|x| x == fam), "{fam} missing from {f:?}");
     }
-    let s = db().styles("Source Sans 3");
+    let s = db().styles("Noto Sans");
     assert_eq!(s.first().map(String::as_str), Some("Regular"), "{s:?}");
-    assert!(s.iter().any(|x| x == "Bold") && s.iter().any(|x| x == "Italic") && s.iter().any(|x| x == "Semibold"), "{s:?}");
+    assert!(s.iter().any(|x| x == "Bold") && s.iter().any(|x| x == "Italic") && s.iter().any(|x| x == "SemiBold"), "{s:?}");
 }
 
 #[test]
 fn style_lookup_and_fallback() {
-    let f = db().face("Inter", "Semibold").unwrap();
+    let f = db().face("Inter", "SemiBold").unwrap();
     assert_eq!((f.family.as_str(), f.style.as_str()), ("Inter", "SemiBold"));
     let f = db().face("inter", "Bold").unwrap();
     assert_eq!(f.style, "SemiBold", "closest weight");
     let f = db().face("No Such Font", "Regular").unwrap();
-    assert_eq!((f.family.as_str(), f.style.as_str()), ("Source Sans 3", "Regular"));
+    assert_eq!((f.family.as_str(), f.style.as_str()), ("Noto Sans", "Regular"));
     let f = db().face("No Such Font", "Bold").unwrap();
     assert_eq!(f.style, "Bold");
-    assert_eq!(db().face("Source Sans 3", "Italic").unwrap().style, "Italic");
+    assert_eq!(db().face("Noto Sans", "Italic").unwrap().style, "Italic");
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn glyph_count_and_advances() {
 
 #[test]
 fn ligatures_and_kerning() {
-    // "fi" forms a ligature in Source Serif 4: one glyph covering two bytes.
+    // "fi" forms a ligature in Noto Serif: one glyph covering two bytes.
     let l = layout(db(), &point("fi", serif(20.0)));
     assert_eq!(l.glyphs.len(), 1);
     assert_eq!(l.glyphs[0].len, 2);
@@ -390,7 +390,7 @@ fn on_path_circle_and_overflow() {
 
 #[test]
 fn fallback_font_per_character() {
-    let primary = db().face("Source Sans 3", "Regular").unwrap();
+    let primary = db().face("Noto Sans", "Regular").unwrap();
     // Find a character the primary lacks but another bundled font has.
     let c = ['\u{2500}', '\u{2192}', '\u{25B6}', '\u{2588}', '\u{21E5}', '\u{2318}']
         .into_iter()
@@ -691,7 +691,7 @@ fn character_alignment_on_the_icf_lines_small_characters_up_with_the_largest_fac
     };
     let near = |a: f64, b: f64| (a - b).abs() < 0.01;
     // No ideographs: the ICF is the em box.
-    assert_eq!(db().face("Source Sans 3", "Regular").unwrap().icf_margins(), crate::IcfMargins::default());
+    assert_eq!(db().face("Noto Sans", "Regular").unwrap().icf_margins(), crate::IcfMargins::default());
     let Some(face) = db().face("Shippori Mincho", "Regular").filter(|f| f.family == "Shippori Mincho") else {
         return; // no Japanese font here
     };
@@ -727,4 +727,59 @@ fn burasagari_leaves_latin_commas_and_full_stops_inside_the_line() {
             assert_eq!(lay(text, b), none, "{text} {b:?}");
         }
     }
+}
+
+/// With craft-fonts and no installed fonts (the web), Thai is set in Noto Sans Thai, not as empty
+/// boxes. Skipped when built without craft-fonts or with a checkout that has no Thai font.
+#[test]
+fn thai_without_installed_fonts_takes_the_craft_fonts_thai_font() {
+    if !crate::CRAFT_FONTS.iter().any(|f| f.is_thai()) {
+        eprintln!("skipping: no Thai font in craft-fonts (set CRAFT_FONTS_DIR to a checkout that has one)");
+        return;
+    }
+    let l = layout(db(), &point("ภาษาไทย", style(20.0)));
+    assert!(!l.glyphs.is_empty() && l.glyphs.iter().all(|g| g.gid != 0), "no .notdef");
+    let families: Vec<String> = l.glyphs.iter().filter_map(|g| db().face_by_id(g.font_id)).map(|f| f.family.clone()).collect();
+    assert!(families.iter().all(|f| f == "Noto Sans Thai"), "{families:?}");
+}
+
+/// Thai is written without spaces between words: area type breaks its lines between words (as a
+/// model of Thai words finds them), never inside a word nor before a vowel or tone mark.
+#[test]
+fn thai_lines_break_between_words() {
+    let text = "สวัสดีครับ ภาษาไทยง่ายนิดเดียว";
+    // Narrower than the shortest words: each line holds one word.
+    let l = layout(db(), &area(text, style(12.0), Rect::new(0.0, 0.0, 70.0, 2000.0), Justify::Left));
+    let lines: Vec<&str> = l.lines.iter().map(|ln| &text[ln.start..ln.end]).collect();
+    assert!(lines.len() >= 3, "{lines:?}");
+    // Its words: สวัสดี ครับ, ภาษา ไทย ง่าย นิดเดียว ("hello", "the Thai language is very easy").
+    let words = ["สวัสดี", "ครับ ", "ภาษา", "ไทย", "ง่าย", "นิดเดียว"];
+    let ends: Vec<usize> = words
+        .iter()
+        .scan(0, |at, w| {
+            *at += w.len();
+            Some(*at)
+        })
+        .collect();
+    assert_eq!(ends.last(), Some(&text.len()));
+    for ln in &l.lines {
+        assert!(ends.contains(&ln.end), "a line ends inside a word: {lines:?}");
+    }
+    for w in l.lines.windows(2) {
+        assert_eq!(w[0].end, w[1].start, "lines tile the text");
+    }
+    let mark = |c: char| matches!(c, '\u{0E31}' | '\u{0E34}'..='\u{0E3A}' | '\u{0E47}'..='\u{0E4E}');
+    assert!(lines.iter().all(|s| s.chars().next().is_some_and(|c| !mark(c))), "a line starts with a mark: {lines:?}");
+}
+
+/// The desktop's dictionaries keep loanwords whole that a smaller model splits: โปรแกรม
+/// ("program").
+#[test]
+fn thai_loanwords_stay_whole() {
+    let text = "ยินดีต้อนรับสู่โปรแกรมวาดภาพเวกเตอร์";
+    let l = layout(db(), &area(text, style(12.0), Rect::new(0.0, 0.0, 70.0, 2000.0), Justify::Left));
+    let lines: Vec<&str> = l.lines.iter().map(|ln| &text[ln.start..ln.end]).collect();
+    // No line ends inside the word, whatever the Thai font's widths put beside it.
+    let word = text.find("โปรแกรม").unwrap();
+    assert!(l.lines.iter().all(|ln| ln.end <= word || ln.end >= word + "โปรแกรม".len()), "{lines:?}");
 }

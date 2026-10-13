@@ -27,7 +27,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Make Pixel Perfect",
             ["Object"],
             None,
-            "{ids?} snap each object's edges to the pixel grid (odd stroke weights on half pixels) and round stroke weights",
+            "{ids?|id?} snap each object's edges to the pixel grid (odd stroke weights on half pixels) and round stroke weights",
             has_selection,
             pixel_perfect
         ),
@@ -290,7 +290,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
                     spot.insert(name.clone());
                 }
             }
-            if n.mask.is_some() {
+            if n.extras().mask.is_some() {
                 *counts.entry("opacityMasks").or_default() += 1;
             }
             if !n.appearance.effects.is_empty() {
@@ -398,7 +398,7 @@ mod tests {
             (i["objects"]["paths"].as_u64(), i["objects"]["textObjects"].as_u64(), i["objects"]["gradients"].as_u64()),
             (Some(1), Some(1), Some(1))
         );
-        assert_eq!(i["fonts"][0], "Source Sans 3 Regular");
+        assert_eq!(i["fonts"][0], "Noto Sans Regular");
         assert_eq!(i["document"]["artboards"][0]["width"], 200.0);
         s.execute("select.set", &json!({"ids": [r]})).unwrap();
         let i = s.execute("document.info", &json!({"selectionOnly": true})).unwrap();

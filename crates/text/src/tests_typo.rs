@@ -212,6 +212,124 @@ fn area_flow_inside_circle_keeps_glyphs_inside() {
     assert!(w(l.lines.len() / 2) > w(0));
 }
 
+/// Lays `t` out as [`layout`] does, on a thread of its own, and fails the test when that panics or
+/// takes more than 20 s.
+fn layout_soon(t: &TextObject) -> TextLayout {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let (t, text) = (t.clone(), t.plain_text());
+    std::thread::spawn(move || tx.send(layout(db(), &t)).ok());
+    rx.recv_timeout(std::time::Duration::from_secs(20)).unwrap_or_else(|e| panic!("laying out {text:?}: {e}"))
+}
+
+/// Each line's baseline, left and right edges, and byte range.
+fn line_places(l: &TextLayout) -> Vec<(f64, f64, f64, usize, usize)> {
+    l.lines.iter().map(|li| (li.baseline, li.x0, li.x1, li.start, li.end)).collect()
+}
+
+/// A frame or text wrap shape with a coordinate beyond a billion points either way, or one that
+/// isn't finite, is left out: the frame holds no text, and the wrap shape is ignored.
+#[test]
+fn frames_and_wrap_shapes_beyond_a_billion_points_are_left_out() {
+    // A box from x0 to x1 and from 0 to `height` whose top edge has a control point at x = `far`,
+    // on the edge's own line.
+    let boxed = |x0: f64, x1: f64, height: f64, far: f64| {
+        let mut p = BezPath::new();
+        p.move_to((x0, 0.0));
+        p.curve_to((x0, 0.0), (far, 0.0), (x1, 0.0));
+        p.line_to((x1, height));
+        p.line_to((x0, height));
+        p.close_path();
+        p
+    };
+    let rectangle = layout(db(), &area("Hi there", style(12.0), Rect::new(0.0, 0.0, 100.0, 40.0), Justify::Left));
+    let within = layout_soon(&area_path("Hi there", style(12.0), &boxed(0.0, 100.0, 40.0, 1e9), Justify::Left));
+    assert_eq!(line_places(&within), line_places(&rectangle));
+    let mut beyond = [8e115, 2e9, f64::INFINITY].map(|far| boxed(0.0, 100.0, 40.0, far)).to_vec();
+    beyond.push(Rect::new(0.0, 0.0, 100.0, f64::NAN).to_path(0.1));
+    for frame in &beyond {
+        let l = layout_soon(&area_path("Hi there", style(12.0), frame, Justify::Left));
+        assert!(l.lines.is_empty() && l.glyphs.is_empty() && l.overflow, "{frame:?}");
+    }
+    // Text wrapped around the right half of a 300 by 200 frame.
+    let mut t = area(COPY, style(12.0), Rect::new(0.0, 0.0, 300.0, 200.0), Justify::Left);
+    let unwrapped = layout(db(), &t);
+    let mut wrapped = |path: BezPath| {
+        t.wrap = vec![vectorcraft_doc::WrapShape { path: PathData::from_bezpath(&path), wrap: Default::default() }];
+        layout_soon(&t)
+    };
+    let half = wrapped(Rect::new(150.0, 0.0, 300.0, 200.0).to_path(0.1));
+    assert_ne!(line_places(&half), line_places(&unwrapped));
+    assert_eq!(line_places(&wrapped(boxed(150.0, 300.0, 200.0, 1e9))), line_places(&half));
+    for far in [8e115, 2e9, f64::INFINITY] {
+        assert_eq!(line_places(&wrapped(boxed(150.0, 300.0, 200.0, far))), line_places(&unwrapped), "{far}");
+    }
+    assert_eq!(line_places(&wrapped(Rect::new(150.0, 0.0, 300.0, f64::NAN).to_path(0.1))), line_places(&unwrapped));
+}
+
+/// Layout steps a line down a frame (or a row or column of one) at most 100,000 times to find room
+/// for it: in a frame taller than 100,000 leads, a step is a 100,000th of the frame's height.
+#[test]
+fn tall_frames_are_searched_for_room_in_at_most_100000_steps() {
+    // A triangle from y = -1e9 to 1e9, `base` wide at the bottom.
+    let triangle = |base: f64| {
+        let mut p = BezPath::new();
+        p.move_to((0.0, -1e9));
+        p.line_to((base / 2.0, 1e9));
+        p.line_to((-base / 2.0, 1e9));
+        p.close_path();
+        p
+    };
+    // No line fits in this triangle: it is at most 0.5 pt wide, and a line needs a span wider than
+    // 1 pt or its ascent, whichever is more. A lead of 0.5 pt type counts as 1 pt.
+    let none = layout_soon(&area_path("Hi", style(0.5), &triangle(0.5), Justify::Left));
+    assert!(none.lines.is_empty() && none.overflow);
+    // This one is wide enough for 12 pt type from about y = -7.6e8 down.
+    let some = layout_soon(&area_path("Hi", style(12.0), &triangle(100.0), Justify::Left));
+    assert!(!some.overflow && some.lines.len() == 1);
+    // At the height of the line's top, the line's left and right edges lie inside the triangle.
+    let line = &some.lines[0];
+    let half_width = (line.baseline - line.ascent + 1e9) / 2e9 * 50.0;
+    assert!(line.x0 >= -half_width - 1e-6 && line.x1 <= half_width + 1e-6, "{line:?}");
+}
+
+/// A paragraph whose Space Before puts it 1e300 pt above a triangle frame that comes to a point at
+/// its top overflows. At that height a step of one lead leaves the baseline where it is, and
+/// layout takes at most 100,000 such steps.
+#[test]
+fn a_paragraph_spaced_far_above_its_frame_overflows() {
+    let mut triangle = BezPath::new();
+    triangle.move_to((0.0, 0.0));
+    triangle.line_to((500.0, 1000.0));
+    triangle.line_to((-500.0, 1000.0));
+    triangle.close_path();
+    let mut t = area_path("Hi\nthere", style(12.0), &triangle, Justify::Left);
+    let far = vectorcraft_doc::ParaStyle { space_before: -1e300, ..Default::default() };
+    t.set_paragraph_styles(vec![t.para.clone(), far]);
+    let l = layout_soon(&t);
+    assert!(l.overflow && l.lines.len() == 1, "{:?}", line_places(&l));
+}
+
+/// Type on a path whose path has a coordinate beyond a billion points either way, or one that isn't
+/// finite, holds no text.
+#[test]
+fn type_on_a_path_beyond_a_billion_points_holds_no_text() {
+    // An S-shaped curve from (0, 0) to (3s, 0) with control points (s, s) and (2s, -s).
+    let on = |s: f64| {
+        let mut p = BezPath::new();
+        p.move_to((0.0, 0.0));
+        p.curve_to((s, s), (2.0 * s, -s), (3.0 * s, 0.0));
+        let mut t = TextObject::point(Point::ZERO, "On a path", style(8.0));
+        t.kind = TextKind::OnPath { path: PathData::from_bezpath(&p), start: 0.0, end: None };
+        t
+    };
+    let within = layout_soon(&on(1e9 / 3.0));
+    assert!(!within.overflow && within.glyphs.len() == 9);
+    for s in [1e115, 1e9, f64::INFINITY] {
+        let l = layout_soon(&on(s));
+        assert!(l.glyphs.is_empty() && l.overflow, "{s}");
+    }
+}
+
 #[test]
 fn justify_all_line_widths_equal() {
     let t = area(COPY, style(12.0), Rect::new(0.0, 0.0, 240.0, 800.0), Justify::JustifyAll);
@@ -266,8 +384,12 @@ fn every_line_composer_is_more_even() {
 /// paragraph with a Japanese comma or full stop is composed line by line.
 #[test]
 fn burasagari_keeps_the_every_line_composer_for_latin_text() {
-    // A measure where the two composers break the copy differently.
-    let mut t = area(&COPY.repeat(2), style(12.0), Rect::new(0.0, 0.0, 300.0, 4000.0), Justify::JustifyLeft);
+    // A measured ragged line that leaves a lone last word under the greedy
+    // composer, so choosing the every-line composer observably balances it.
+    const S: &str = "Destroy all creatures with toughness X or less.";
+    let width = natural_width("Destroy all creatures with toughness X or", 12.0) + 2.0;
+    assert!(width < natural_width(S, 12.0), "the sentence needs two lines");
+    let mut t = area(S, style(12.0), Rect::new(0.0, 0.0, width, 400.0), Justify::Left);
     let ends = |t: &TextObject, c: Composer| {
         let l = layout_with(db(), t, &LayoutOptions { composer: Some(c), ..Default::default() });
         l.lines.iter().map(|li| li.glyph_end).collect::<Vec<_>>()
@@ -394,8 +516,8 @@ fn hyphenation_rules() {
 
 #[test]
 fn hyphenated_layout_adds_hyphens() {
-    let text = "Extraordinarily comprehensive typographical considerations notwithstanding everything.";
-    let mut t = area(text, style(14.0), Rect::new(0.0, 0.0, 120.0, 600.0), Justify::Left);
+    let mut t = hyphenation_fixture();
+    let width = natural_width("typogra-", 14.0) + 1.0;
     let plain = layout(db(), &t);
     t.para.hyphenate = true;
     let hy = layout(db(), &t);
@@ -403,7 +525,7 @@ fn hyphenated_layout_adds_hyphens() {
     assert_eq!(hyphens(&plain), 0);
     assert!(hyphens(&hy) > 0, "some words hyphenated");
     for li in &hy.lines {
-        assert!(li.x1 - li.x0 <= 120.0 + 1e-6, "{li:?}");
+        assert!(li.x1 - li.x0 <= width + 1e-6, "{li:?}");
     }
     // Hyphenation fills lines better: no more lines than without it.
     assert!(hy.lines.len() <= plain.lines.len());
@@ -415,24 +537,28 @@ fn hyphenated_layout_adds_hyphens() {
     }
 }
 
+/// A known pattern with its longest hyphenated prefix fitting, but the whole
+/// word overflowing. Measuring the bundled face avoids font-specific slack.
+fn hyphenation_fixture() -> TextObject {
+    let width = natural_width("typogra-", 14.0) + 1.0;
+    assert_eq!(hyphen::hyphenate_word("typography"), "typo-gra-phy");
+    assert!(width < natural_width("typography", 14.0), "the word must need a break");
+    area("typography typography typography", style(14.0), Rect::new(0.0, 0.0, width, 600.0), Justify::Left)
+}
+
 /// Preferences › Hyphenation › Exceptions (#394): listing a word stops the layout from breaking it.
 #[test]
 fn hyphenation_exceptions_keep_listed_words_whole_in_layout() {
-    // Same copy as `hyphenated_layout_adds_hyphens` (known to produce soft hyphens at 120pt width).
-    let text = "Extraordinarily comprehensive typographical considerations notwithstanding everything.";
-    let mut t = area(text, style(14.0), Rect::new(0.0, 0.0, 120.0, 600.0), Justify::Left);
+    let mut t = hyphenation_fixture();
     t.para.hyphenate = true;
     let with_breaks = layout(db(), &t);
     let hyphens = |l: &TextLayout| l.glyphs.iter().filter(|g| g.len == 0).count();
     assert!(hyphens(&with_breaks) > 0, "pattern produces soft hyphens");
-    hyphen::with_hyphenation_exceptions_for_test(
-        "extraordinarily, comprehensive, typographical, considerations, notwithstanding, everything",
-        || {
-            let blocked = layout(db(), &t);
-            assert_eq!(hyphens(&blocked), 0, "every long word listed: no soft hyphens");
-            assert!(blocked.lines.len() >= with_breaks.lines.len());
-        },
-    );
+    hyphen::with_hyphenation_exceptions_for_test("typography", || {
+        let blocked = layout(db(), &t);
+        assert_eq!(hyphens(&blocked), 0, "every long word listed: no soft hyphens");
+        assert!(blocked.lines.len() >= with_breaks.lines.len());
+    });
 }
 
 #[test]
@@ -676,7 +802,7 @@ fn vertical_align_with_top_to_top_leading() {
 
 #[test]
 fn opentype_ligature_switches() {
-    let serif = CharStyle { font_family: "Source Serif 4".into(), ..style(20.0) };
+    let serif = CharStyle { font_family: "Noto Serif".into(), ..style(20.0) };
     let t = TextObject::point(Point::ZERO, "fi", serif.clone());
     assert_eq!(layout(db(), &t).glyphs.len(), 1, "fi ligature by default");
     let off = LayoutOptions { features: OtFeatures { ligatures: false, ..Default::default() }, ..Default::default() };
@@ -705,7 +831,7 @@ fn opentype_ligature_switches() {
 
 #[test]
 fn face_charmap_for_glyphs_panel() {
-    let f = db().face("Source Sans 3", "Regular").unwrap();
+    let f = db().face("Noto Sans", "Regular").unwrap();
     let chars = f.chars();
     assert!(chars.len() > 200, "{}", chars.len());
     assert!(chars.windows(2).all(|w| w[0].0 < w[1].0));
@@ -748,4 +874,79 @@ fn layout_10k_area_text_is_fast() {
         let budget = if cfg!(debug_assertions) { 400.0 } else { 10.0 };
         assert!(per < budget, "{justify:?} {composer:?}: {per} ms");
     }
+}
+
+/// Proportional Metrics (#966): in horizontal type full-width glyphs take the font's proportional
+/// widths (`palt`), and Japanese composition takes nothing more off the punctuation `palt`
+/// re-spaced (the flush bracket at a paragraph's start, consecutive punctuation, half width at a
+/// line's end); punctuation it leaves full width is trimmed as before (vertical type: see
+/// `tests_vertical`). Needs craft-fonts' Shippori Mincho, whose `palt` covers kana and most brackets but not
+/// 〘〙 (skipped without it).
+#[test]
+fn proportional_metrics_set_full_width_glyphs_on_their_proportional_widths() {
+    use vectorcraft_doc::Mojikumi;
+    if db().face("Shippori Mincho", "Regular").is_none_or(|f| f.family != "Shippori Mincho") {
+        eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
+        return;
+    }
+    let st = |on: bool| CharStyle { size: 20.0, font_family: "Shippori Mincho".into(), proportional_metrics: on, ..CharStyle::default() };
+    // Right-aligned in a frame ten ems wide, so a line's end trim moves the line.
+    let lay = |text: &str, on: bool, m: Mojikumi| {
+        let mut t = area(text, st(on), Rect::new(0.0, 0.0, 200.0, 200.0), Justify::Right);
+        t.para.mojikumi = m;
+        layout(db(), &t)
+    };
+    let adv = |l: &TextLayout| l.glyphs.iter().map(|g| g.advance).collect::<Vec<_>>();
+    let x0 = |l: &TextLayout| l.glyphs.iter().map(|g| g.outline.bounding_box().x0).collect::<Vec<_>>();
+    let near = |a: &[f64], b: &[f64]| a.len() == b.len() && a.iter().zip(b).all(|(a, b)| (a - b).abs() < 0.01);
+    let off = adv(&lay("「あ漢」", false, Mojikumi::None));
+    let on = adv(&lay("「あ漢」", true, Mojikumi::None));
+    assert!(off.iter().all(|a| (a - 20.0).abs() < 0.01), "{off:?}");
+    assert!(on[0] < 15.0 && on[1] < 19.0 && on[3] < 15.0, "kana and brackets narrower: {on:?}");
+    assert!((on[2] - 20.0).abs() < 0.01, "the kanji keeps its em: {on:?}");
+    // Re-spaced punctuation: Line-end Punctuation Half Width changes nothing, at the paragraph's
+    // start (「), between punctuation (」、) or at the line's end (」).
+    for text in ["「あ」、漢", "漢「あ」"] {
+        let (half, none) = (lay(text, true, Mojikumi::LineEndHalf), lay(text, true, Mojikumi::None));
+        assert!(near(&adv(&half), &adv(&none)), "{text}: {:?} {:?}", adv(&half), adv(&none));
+        assert!(near(&x0(&half), &x0(&none)), "{text}: {:?} {:?}", x0(&half), x0(&none));
+    }
+    // Punctuation `palt` leaves full width: flush at the paragraph's start, half width at the end.
+    let (half, none) = (lay("〘あ〙", true, Mojikumi::LineEndHalf), lay("〘あ〙", true, Mojikumi::None));
+    assert!((none.glyphs[0].advance - 20.0).abs() < 0.01 && (half.glyphs[0].advance - 10.0).abs() < 0.01, "{:?}", adv(&half));
+    let moved = x0(&half)[1] - x0(&none)[1];
+    assert!((moved - 10.0).abs() < 0.01, "〙's empty half goes past the line's end: あ moved {moved}");
+}
+
+/// The arrows pass a Thai consonant with its vowel and tone marks whole (น้ำ: no, mai tho, sara am),
+/// as an accented letter written with a combining mark; plain text moves a character at a time.
+#[test]
+fn caret_moves_over_whole_clusters() {
+    let s = "กน\u{0E49}\u{0E33}e\u{0301}x";
+    let stops: Vec<usize> = std::iter::successors(Some(0), |&i| (i < s.len()).then(|| edit::next_cluster(s, i))).collect();
+    assert_eq!(stops, [0, 3, 12, 15, 16]);
+    let back: Vec<usize> = std::iter::successors(Some(s.len()), |&i| (i > 0).then(|| edit::prev_cluster(s, i))).collect();
+    assert_eq!(back, [16, 15, 12, 3, 0]);
+    // Inside a cluster (a caret left there by a click), the arrows go to its edges.
+    assert_eq!((edit::prev_cluster(s, 6), edit::next_cluster(s, 6)), (3, 12));
+    assert_eq!((edit::next_cluster("", 0), edit::prev_cluster("ab", 99)), (0, 1));
+}
+
+/// Word steps and double-click stop between Thai words, which no space separates: ภาษา|ไทย|ง่าย.
+#[test]
+fn thai_words_are_words_to_the_caret() {
+    let s = "ภาษาไทยง่าย ok";
+    let (thai, easy) = ("ภาษา".len(), "ภาษาไทย".len());
+    let end = "ภาษาไทยง่าย".len();
+    assert_eq!(edit::next_word(s, 0), thai);
+    assert_eq!(edit::next_word(s, thai), easy);
+    assert_eq!(edit::next_word(s, easy), end);
+    assert_eq!(edit::prev_word(s, end), easy);
+    assert_eq!(edit::prev_word(s, easy), thai);
+    assert_eq!(edit::prev_word(s, thai), 0);
+    assert_eq!(edit::word_at(s, thai + 3), thai..easy, "double-click inside ไทย");
+    assert_eq!(edit::word_at(s, 0), 0..thai);
+    // Latin keeps its words.
+    assert_eq!(edit::word_at(s, s.len() - 1), end + 1..s.len());
+    assert_eq!(edit::next_word("hello world", 0), 5);
 }

@@ -320,19 +320,19 @@ mod tests {
     fn list_flag_missing_replace_and_select() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
-        let a = s.execute("text.create", &json!({"x": 10, "y": 20, "text": "Serif", "font": "Source Serif 4"})).unwrap()["id"].as_u64().unwrap();
+        let a = s.execute("text.create", &json!({"x": 10, "y": 20, "text": "Serif", "font": "Noto Serif"})).unwrap()["id"].as_u64().unwrap();
         let b = s.execute("text.create", &json!({"x": 10, "y": 60, "text": "Gone", "font": "No Such Font Family"})).unwrap()["id"].as_u64().unwrap();
         let list = s.execute("text.fonts", &json!({})).unwrap();
         let missing: Vec<&str> = list.as_array().unwrap().iter().filter(|f| f["missing"] == true).map(|f| f["family"].as_str().unwrap()).collect();
         assert_eq!(missing, ["No Such Font Family"]);
         assert_eq!(s.execute("select.font", &json!({"family": "No Such Font Family"})).unwrap()["count"], 1);
         assert_eq!(s.doc().unwrap().selection.objects, [NodeId(b)]);
-        let r = s.execute("text.replaceFont", &json!({"from": {"family": "No Such Font Family"}, "to": {"family": "Source Sans 3"}})).unwrap();
+        let r = s.execute("text.replaceFont", &json!({"from": {"family": "No Such Font Family"}, "to": {"family": "Noto Sans"}})).unwrap();
         assert_eq!(r["runs"], 1);
         let fams: Vec<String> =
             s.execute("text.fonts", &json!({})).unwrap().as_array().unwrap().iter().map(|f| f["family"].as_str().unwrap().to_string()).collect();
-        assert_eq!(fams, ["Source Sans 3", "Source Serif 4"]);
-        assert!(s.execute("text.replaceFont", &json!({"from": {"family": "Source Serif 4"}, "to": {"family": "Nope"}})).is_err());
+        assert_eq!(fams, ["Noto Sans", "Noto Serif"]);
+        assert!(s.execute("text.replaceFont", &json!({"from": {"family": "Noto Serif"}, "to": {"family": "Nope"}})).is_err());
         let _ = a;
     }
 }
@@ -345,10 +345,10 @@ mod open_tests {
     fn list_says_how_each_font_resolved() {
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
-        // "Black Wide" is a style no Source Sans 3 has, bundled or installed, so it is always a
+        // "Black Wide" is a style no Noto Sans has, bundled or installed, so it is always a
         // substitute (the installed family can hold a real Black).
         for (text, font, style) in
-            [("Exact", "Source Sans 3", "Semibold"), ("Closest", "Source Sans 3", "Black Wide"), ("Gone", "No Such Font Family", "Regular")]
+            [("Exact", "Noto Sans", "Semibold"), ("Closest", "Noto Sans", "Black Wide"), ("Gone", "No Such Font Family", "Regular")]
         {
             s.execute("text.create", &json!({"x": 10, "y": 20, "text": text, "font": font, "style": style})).unwrap();
         }
@@ -369,7 +369,7 @@ mod open_tests {
         let row = |style: &str| rows.iter().find(|r| r.0 == style).cloned().unwrap();
         assert_eq!(row("Semibold").1, "exact");
         assert_eq!(row("Black Wide").1, "substitute", "{rows:?}");
-        assert_eq!(row("Black Wide").2, "Source Sans 3");
+        assert_eq!(row("Black Wide").2, "Noto Sans");
         assert_eq!((row("Regular").1.as_str(), row("Regular").2.as_str()), ("missing", vectorcraft_text::FALLBACK_FAMILY));
         s.execute("text.create", &json!({"x": 10, "y": 90, "text": "Ab 雅楽", "font": "Inter"})).unwrap();
         let inter = s.execute("text.fonts", &json!({})).unwrap().as_array().unwrap().iter().find(|f| f["family"] == "Inter").cloned().unwrap();

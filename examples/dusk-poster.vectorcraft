@@ -6517,7 +6517,7 @@
                   {
                     "text": "DUSK",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Bold",
                       "size": 110.0,
                       "tracking": 180.0,
@@ -6583,7 +6583,7 @@
                   {
                     "text": "Made in VectorCraft — vectors, pure Rust",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Regular",
                       "size": 18.0,
                       "tracking": 0.0,

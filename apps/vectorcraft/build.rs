@@ -16,7 +16,7 @@ fn main() -> Result<(), String> {
         .set("ProductName", "MIXEL Vector")
         .set("FileDescription", "MIXEL Vector vector illustration editor")
         .set("CompanyName", "MIXEL")
-        .set("LegalCopyright", "Copyright (c) the MIXEL Vector authors. MIT OR Apache-2.0.")
+        .set("LegalCopyright", "Copyright (c) the VectorCraft authors. MIT OR Apache-2.0. MIXEL Vector modifications by MIXEL contributors.")
         .set("OriginalFilename", "vectorcraft.exe")
         .set("InternalName", "vectorcraft");
     if let Err(e) = res.compile() {

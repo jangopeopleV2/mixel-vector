@@ -72,3 +72,25 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+MIXEL font replacement (2026-10-13)
+
+The Source Sans 3 and Source Serif 4 font files in the historical upstream list
+above are retired and are not embedded or distributed in MIXEL Vector. Their
+original notices and licence texts remain for attribution history.
+
+MIXEL Vector instead bundles Noto Sans Regular, SemiBold, Bold and Italic and
+Noto Serif Regular by The Noto Project Authors, under the SIL Open Font License
+1.1. See assets/fonts/OFL-Noto.txt and ASSETS.md for the complete licence and
+pinned official source URLs. The replacement files are unmodified. The UI uses
+the previously credited Inter fonts.
+
+MIXEL UI symbol fallback (2026-10-13)
+
+The previously credited, unmodified JetBrains Mono Regular face also provides
+UI symbols missing from the proportional fonts. It remains under SIL Open Font
+License 1.1, with the original complete assets/fonts/OFL-JetBrainsMono.txt.
+The font and licence bytes match pinned official source commit
+19371302b95d218af43299bce79ddbddd0bc364d; see its attribution sidecar and
+ASSETS.md. No new font binary or modified glyph is distributed.

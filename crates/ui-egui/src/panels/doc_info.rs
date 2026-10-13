@@ -188,7 +188,7 @@ mod tests {
             set_pstate(ui.ctx(), "docinfo-category", "fonts".to_string());
             show(app, ui);
         });
-        assert!(filtered.contains("Source Sans 3 Regular") && !filtered.contains("Color Mode"), "{filtered}");
+        assert!(filtered.contains("Noto Sans Regular") && !filtered.contains("Color Mode"), "{filtered}");
         // Save…: written through the host.
         let written: std::rc::Rc<std::cell::RefCell<Vec<u8>>> = Default::default();
         let w = written.clone();

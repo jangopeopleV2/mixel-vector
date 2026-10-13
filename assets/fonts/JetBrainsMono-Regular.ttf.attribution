@@ -1,0 +1,8 @@
+asset:        JetBrainsMono-Regular.ttf
+title:        JetBrains Mono Regular UI symbol fallback
+author:       The JetBrains Mono Project Authors (Philipp Nurullin, Konstantin Bulenkov)
+source:       https://raw.githubusercontent.com/JetBrains/JetBrainsMono/19371302b95d218af43299bce79ddbddd0bc364d/fonts/ttf/JetBrainsMono-Regular.ttf
+license:      OFL-1.1
+license-file: assets/fonts/OFL-JetBrainsMono.txt
+recorded:     2026-10-13 by Codex for MIXEL
+notes:        Existing unmodified bundled version 2.305; no new font file. SHA-256 e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1. Official pinned bytes and complete OFL text verified identical. Supplies U+25BE after proportional UI defaults while remaining the first monospace face.

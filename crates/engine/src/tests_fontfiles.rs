@@ -65,9 +65,9 @@ fn missing_fonts_are_listed_symbols_included() {
         Ok(())
     })
     .unwrap();
-    // A style no Source Sans 3 has, bundled or installed.
-    text(&mut s, 60.0, "Source Sans 3", "Black Wide");
-    text(&mut s, 100.0, "Source Sans 3", "Semibold");
+    // A style no Noto Sans has, bundled or installed.
+    text(&mut s, 60.0, "Noto Sans", "Black Wide");
+    text(&mut s, 100.0, "Noto Sans", "Semibold");
     let id = text(&mut s, 140.0, "Symbol Only Family", "Bold");
     s.execute("select.set", &json!({"ids": [id]})).unwrap();
     s.execute("symbol.new", &json!({})).unwrap();
@@ -84,9 +84,9 @@ fn missing_fonts_are_listed_symbols_included() {
         .collect();
     assert_eq!(
         rows,
-        [("No Such Font Family", "Regular", "missing"), ("Source Sans 3", "Black Wide", "substitute"), ("Symbol Only Family", "Bold", "missing")]
+        [("No Such Font Family", "Regular", "missing"), ("Noto Sans", "Black Wide", "substitute"), ("Symbol Only Family", "Bold", "missing")]
     );
-    assert_eq!((r["count"].as_u64(), r["fonts"][1]["resolved"]["family"].as_str()), (Some(3), Some("Source Sans 3")));
+    assert_eq!((r["count"].as_u64(), r["fonts"][1]["resolved"]["family"].as_str()), (Some(3), Some("Noto Sans")));
     assert!(r.get("fontsNextToDocument").is_none(), "an unsaved document has no folder");
     let listed = s.execute("text.fonts", &json!({})).unwrap();
     assert!(!listed.as_array().unwrap().iter().any(|f| f["family"] == "Symbol Only Family"), "Find Font lists the layers' type only");
@@ -158,7 +158,7 @@ fn a_search_finds_a_missing_fonts_file_by_its_names() {
     let root = folder("find");
     std::fs::create_dir_all(root.join("x/y")).unwrap();
     std::fs::write(root.join("x/y/Findme.otf"), vectorcraft_testkit::fonts::renamed("Findme Sans 3")).unwrap();
-    std::fs::write(root.join("other.ttf"), bundled("SourceSerif4-Regular.ttf")).unwrap();
+    std::fs::write(root.join("other.ttf"), bundled("NotoSerif-Regular.ttf")).unwrap();
     std::fs::write(root.join("readme.txt"), "Findme Sans 3").unwrap();
     let mut s = session_for(&root);
     s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
@@ -181,7 +181,7 @@ fn a_search_finds_a_missing_fonts_file_by_its_names() {
     let r = finished(&mut s);
     assert_eq!((&r["state"], &r["fonts"][0]["files"]), (&json!("done"), &json!([found])), "{r}");
     // Fonts that are available aren't looked for.
-    let r = s.execute("text.findFontFiles", &json!({"folder": root, "fonts": [{"family": "Source Sans 3"}]}));
+    let r = s.execute("text.findFontFiles", &json!({"folder": root, "fonts": [{"family": "Noto Sans"}]}));
     assert!(matches!(r, Err(EngineError::BadParams { .. })), "{r:?}");
     // Stopped by a new search, or by `stop`.
     s.execute("text.findFontFiles", &json!({"folder": root})).unwrap();

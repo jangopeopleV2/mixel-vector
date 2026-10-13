@@ -19,10 +19,9 @@ fn fs_type_flags_decide_the_embedding() {
     assert_eq!(Embedding::from_fs_type(0x0108), Embedding::Whole, "no subsetting");
 }
 
-/// The bundled Source Sans 3 Regular renamed `family` (13 characters, as long as the original
-/// name) with OS/2 `fsType` set to `fs_type`.
+/// The bundled Noto Sans Regular with a rebuilt family name and OS/2 embedding flags.
 fn licensed_font(family: &str, fs_type: u16) -> Vec<u8> {
-    let mut data = include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf").to_vec();
+    let mut data = include_bytes!("../../../assets/fonts/NotoSans-Regular.ttf").to_vec();
     let table = |data: &[u8], tag: &[u8; 4]| {
         let f = skrifa::FontRef::new(data).unwrap();
         let r = f.table_directory.table_records().iter().find(|r| r.tag().to_be_bytes() == *tag).unwrap();
@@ -30,17 +29,7 @@ fn licensed_font(family: &str, fs_type: u16) -> Vec<u8> {
     };
     let (os2, _) = table(&data, b"OS/2");
     data[os2 + 8..os2 + 10].copy_from_slice(&fs_type.to_be_bytes());
-    let (name, len) = table(&data, b"name");
-    assert_eq!(family.len(), "Source Sans 3".len());
-    let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
-    for (from, to) in [(utf16("Source Sans 3"), utf16(family)), (b"Source Sans 3".to_vec(), family.as_bytes().to_vec())] {
-        let mut i = name;
-        while let Some(at) = data[i..name + len].windows(from.len()).position(|w| w == from) {
-            data[i + at..i + at + to.len()].copy_from_slice(&to);
-            i += at + to.len();
-        }
-    }
-    data
+    crate::test_fonts::renamed_font(&data, &[("Noto Sans", family)]).unwrap()
 }
 
 /// A font file goes with a document (File → Package) only when exports may embed it: not when
@@ -57,7 +46,7 @@ fn fonts_exports_may_not_embed_are_not_embeddable() {
 
 #[test]
 fn a_subset_holds_only_the_glyphs_used_and_maps_their_characters() {
-    let face = FontDb::global().face("Source Sans 3", "Regular").unwrap();
+    let face = FontDb::global().face("Noto Sans", "Regular").unwrap();
     assert_eq!(face.embedding(), Embedding::Subset);
     let e = face.embed(&['H', 'e', 'l', 'l', 'o', ' ']).unwrap();
     assert!(e.subset && !e.cff);

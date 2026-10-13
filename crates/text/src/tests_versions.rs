@@ -19,7 +19,9 @@ fn db() -> FontDb {
 
 fn width(db: &FontDb, version: Option<&str>) -> f64 {
     let st = CharStyle { font_family: FAMILY.into(), font_version: version.map(Into::into), size: 100.0, ..CharStyle::default() };
-    layout(db, &TextObject::point(Point::ZERO, "Hamburgefonstiv", st)).glyphs.iter().map(|g| g.advance).sum()
+    // Noto Sans and Inter differ by more than 80 pt across these twelve capitals
+    // at 100 pt: a requested version must select its actual glyph metrics.
+    layout(db, &TextObject::point(Point::ZERO, "IIIIIIIIIIII", st)).glyphs.iter().map(|g| g.advance).sum()
 }
 
 #[test]

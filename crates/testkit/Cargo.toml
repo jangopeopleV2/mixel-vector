@@ -17,6 +17,7 @@ vectorcraft-engine = { workspace = true }
 vectorcraft-render = { workspace = true }
 vectorcraft-format = { workspace = true }
 vectorcraft-svg = { workspace = true }
+vectorcraft-text = { workspace = true, features = ["test-fonts"] }
 kurbo = { workspace = true }
 serde_json = { workspace = true }
 proptest = { workspace = true }

@@ -25,6 +25,9 @@ kurbo = { workspace = true }
 image = { workspace = true }
 flate2 = { workspace = true }
 ruzstd = { workspace = true }
+# Live effects' params, as the art styles that name them give them.
+serde_json = { workspace = true }
 
 [dev-dependencies]
+vectorcraft-text = { workspace = true, features = ["test-fonts"] }
 vectorcraft-testkit = { workspace = true }

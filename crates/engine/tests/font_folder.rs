@@ -33,7 +33,7 @@ fn a_found_font_is_copied_without_replacing_a_file_and_its_type_redraws() {
     assert!(vectorcraft_text::system_font_dirs().contains(&fonts));
     let file = root.join("Downloads").join("Deep").join("Findme.otf");
     std::fs::write(&file, vectorcraft_testkit::fonts::renamed("Findme Sans 3")).unwrap();
-    let serif = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/fonts/SourceSerif4-Regular.ttf");
+    let serif = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/fonts/NotoSerif-Regular.ttf");
     std::fs::copy(serif, root.join("other.ttf")).unwrap();
 
     let mut s = Session::new();

@@ -205,6 +205,7 @@
 	Author Title:	作者职务：
 	Author:	作者：
 	Auto	自动
+	Auto Color	自动颜色
 	Automatic	自动
 	Auto Size New Area Type	自动调整新区域文字大小
 	Auto Spell Check	自动拼写检查
@@ -1071,12 +1072,31 @@
 	Graph	图表
 	Graph Data	图表数据
 	Graph Type	图表类型
+	Graph Design	图表设计
+	Graph Marker	图表标记
+	New Design	新建设计
+	Delete Design	删除设计
+	Paste Design	粘贴设计
+	Select Unused	选择未使用项
+	Import Data…	导入数据…
+	Transpose	转置
+	Switch x/y	切换 x/y
+	Number of Decimals:	小数位数：
+	Column Width:	列宽：
+	No Legend	无图例
+	Standard Legend	标准图例
+	Legends in Wedges	楔形中的图例
+	Ratio	比例
+	Even	平均
+	Stacked	堆积
 	Graphic Style	图形样式
 	Graphic Style Libraries	图形样式库
 	Graphic Style Libraries Menu	图形样式库菜单
 	Graphic Style Library	图形样式库
 	Graphic Style Options	图形样式选项
 	Graphic Style Options…	图形样式选项…
+	Symbol Options	符号选项
+	Symbol Options…	符号选项…
 	Graphic Styles	图形样式
 	Graphic Styles Options	图形样式选项
 	Graphics	图形
@@ -1172,6 +1192,7 @@
 	Identify Objects By	对象识别方式
 	Ignore	忽略
 	Ignore Artboards (all the art as one page)	忽略画板 (所有图稿作为一页)
+	Ignore Color	忽略颜色
 	Ignore White	忽略白色
 	Palette:	调板：
 	Limited	有限
@@ -1494,6 +1515,7 @@
 	Move Plane to Match Object	移动平面以符合对象
 	Move Slices	移动切片
 	Move Spine Point	移动脊线点
+	Reshape Spine Segment	整形脊线线段
 	Move Swatch	移动色板
 	Move Up	上移
 	Move…	移动…
@@ -1817,7 +1839,7 @@
 	Paragraph Style Options	段落样式选项
 	Paragraph Styles	段落样式
 	Paragraph Symbol	段落符号
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	ArtCraft 的一部分。MIT OR Apache-2.0。字体：Source Sans 3、Inter、JetBrains Mono (OFL)。图标：Lucide (ISC) + MIXEL Vector。
+	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基于 ArtCraft 团队的工作。MIT OR Apache-2.0。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。图标：Lucide (ISC) + MIXEL Vector。
 	Password	口令
 	Paste	粘贴
 	Paste in Back	贴在后面
@@ -1976,6 +1998,11 @@
 	Proof Colors	校样颜色
 	Proof Setup	校样设置
 	Properties	属性
+	Proportional Metrics	比例度量
+	Digits	数字
+	Arabic	阿拉伯数字
+	Hindi	印地数字
+	Farsi	波斯数字
 	Proportional Oldstyle	比例旧式数字
 	Pucker & Bloat…	缩拢与膨胀…
 	Pucker Tool	收缩工具
@@ -2066,6 +2093,9 @@
 	Rectangle: Sunshine	矩形：阳光
 	Rectangle…	矩形…
 	Rectangular Grid	矩形网格
+# Rectangular Grid click dialog.
+	Horizontal Dividers:	水平分隔线：
+	Vertical Dividers:	垂直分隔线：
 	Rectangular Grid Tool	矩形网格工具
 	Red	红
 	Redefine Character Style	重新定义字符样式
@@ -2075,6 +2105,9 @@
 	Redefine Symbol	重新定义符号
 	Redefine {kind} Style	重新定义{kind}样式
 	Redo	重做
+	List Folder	列出文件夹
+	Begin Undo Group	开始还原组
+	End Undo Group	结束还原组
 	Redo {name}	重做 {name}
 	Redo {}	重做 {}
 	Reduce Colors	减少颜色
@@ -2125,6 +2158,13 @@
 	Relinked {n} image(s); not in that folder: {}	已重新链接 {n} 张图像；不在该文件夹中：{}
 	Relinked {} image(s)	已重新链接 {} 张图像
 	Relink…	重新链接…
+	Find Linked Files	查找链接文件
+	Find Linked Files in Folder…	在文件夹中查找链接文件…
+	Choose the file to relink each linked file to. Files with the size and contents saved with the link come first.	请为每个链接文件选择要重新链接到的文件。大小和内容与链接中保存的相同的文件排在最前面。
+	Same file	相同文件
+	Same size	相同大小
+	Don't Relink	不重新链接
+	Copy into the document's folder	复制到文档所在的文件夹
 	Reload Plug-ins	重新载入增效工具
 	Remove	移除
 	Remove Anchor Points	移除锚点
@@ -2363,6 +2403,7 @@
 	Select an image to see its Link Info.	选择图像以查看其链接信息。
 	Select an image to trace	选择要描摹的图像
 	Select Anchors	选择锚点
+	Select Segments	选择路径段
 	Select Appearance Item	选择外观项目
 	Select art and choose Object › Pattern › Make.	选择图稿并选择“对象 › 图案 › 创建”。
 	Select art and click New Symbol to make one.	选择图稿并单击“新建符号”以创建。
@@ -2405,7 +2446,6 @@
 	Set base color to the current color	将基色设为当前颜色
 	Set Bounds	设置边界
 	Set Current Layer	设为当前图层
-	Set Key Object	设为关键对象
 	Set Keyboard Shortcut	设置键盘快捷键
 	Set Mesh Point Color	设置网格点颜色
 	Set Preference	设置首选项
@@ -2521,6 +2561,7 @@
 	Size Tile to Art	使拼贴适合图稿
 	Size/Leading	字号/行距
 	Size:	尺寸：
+	Ridges per segment:	每段起伏数：
 	Size: {size}  Tracking: {tracking}	大小：{size}  字距：{tracking}
 	Skew	倾斜
 	Skin Tone Ramps	肤色渐变
@@ -2575,7 +2616,7 @@
 	Sort by Name	按名称排序
 	Sort by Status	依状态排序
 	Source code on GitHub	GitHub 源代码
-	Source Sans 3	Source Sans 3
+	Noto Sans	Noto Sans
 	Space After Paragraph	段后间距
 	Space Before Paragraph	段前间距
 	Spaces	空格
@@ -2591,6 +2632,8 @@
 	Spiral Tool	螺旋工具
 	Split Freeform Line	分割自由曲线
 	Split Into Grid	分割为网格线
+	Total:	总计：
+	Add Guides	添加参考线
 	Split Into Grid…	分割为网格…
 	Split Path	分割路径
 	spot	专色
@@ -2789,6 +2832,9 @@
 	Tool Options…	工具选项…
 	Toolbar: Advanced / Basic	工具栏：高级 / 基本
 	Toolbar: Single/Double Column	工具列：单列/双列
+	Toolbar: Add Tool	工具栏：添加工具
+	Toolbar: Remove Tool	工具栏：移除工具
+	Toolbar: Reset	工具栏：重置
 	Toolbars	工具栏
 	Tools	工具
 	Top	上
@@ -2896,6 +2942,8 @@
 	Update Changed Links	更新已更改的链接
 	{count} linked image(s) changed on disk. Show the new versions?	有 {count} 个链接图像已在磁盘上更改。要显示新版本吗？
 @msg	Updated {_1} linked file(s) changed on disk	已更新 {_1} 个在磁盘上更改的链接文件
+@msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	链接的图片在找到其文件之前显示文件中存储的低分辨率预览：请在“链接”面板中重新链接
+@msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	框架高度不足以容纳所显示字体一行的区域文字已加高框架 ({_1})：否则文字不会显示
 	Update Modified Links	更新已修改的链接
 	Updated {} image(s)	已更新 {} 张图像
 	UPPERCASE	大写
@@ -2947,6 +2995,38 @@
 	V:	V：
 	Variable Width Profile	变量宽度配置文件
 	Variables	变量
+	New Variable	新建变量
+	Delete Variable	删除变量
+	List Variables	列出变量
+	Bind Variable	绑定变量
+	Unbind Variable	解除变量绑定
+	New Data Set	新建数据集
+	Delete Data Set	删除数据集
+	List Data Sets	列出数据集
+	Select Data Set	选择数据集
+	Next Data Set	下一个数据集
+	Previous Data Set	上一个数据集
+	Data Sets	数据集
+	New Variable…	新建变量…
+	New Data Set…	新建数据集…
+	Edit Data Set…	编辑数据集…
+	Data Set	数据集
+	Kind	类型
+	Variable	变量
+	no document	没有文档
+	no data set to edit	没有可编辑的数据集
+	Make Text Dynamic	使文本动态化
+	Make Visibility Dynamic	使可见性动态化
+	Capture Data Set	捕获数据集
+	Update Data Set	更新数据集
+	Rename Data Set…	重命名数据集…
+	Variable Options…	变量选项…
+	Select Bound Object	选择绑定的对象
+	Select All Bound Objects	选择所有绑定的对象
+	Multiple objects	多个对象
+	New Name	新名称
+	no variable to rename	没有可重命名的变量
+	no data set to rename	没有可重命名的数据集
 	Variation:	变化：
 	Vector Effects	矢量效果
 	Vector Halftone	矢量半色调
@@ -2964,6 +3044,7 @@
 	Vertical %	垂直 %
 	Vertical Align Bottom	垂直底对齐
 	Vertical Align Center	垂直居中对齐
+	Horizontal & Vertical Align Center	水平和垂直居中对齐
 	Vertical Align Top	垂直顶对齐
 	Vertical Area Type Tool	直排区域文字工具
 	Vertical Distribute Bottom	垂直分布下缘
@@ -3052,6 +3133,7 @@
 	{warning}: click to correct to the closest color ({hex})	{warning}：单击以修正为最接近的颜色 ({hex})
 	“{file}” is protected by a password.	“{file}”受密码保护。
 	● Recording	● 录制中
+imageTrace	Outline	轮廓
 @plural	{n} item|{n} items	{n} 个项目
 @plural	Color Table ({n} color)|Color Table ({n} colors)	颜色表 ({n} 色)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	要删除这 {n} 个图形样式吗？
@@ -3200,7 +3282,7 @@
 	X:	X：
 	Y:	Y：
 	Text Displayed in Cell	单元格中显示的文本
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	ArtCraft 的一部分。MIT 或 Apache-2.0 许可。字体：Source Sans 3、Inter、JetBrains Mono、Noto Sans SC (OFL)。图标：Lucide (ISC)+ MIXEL Vector。
+	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基于 ArtCraft 团队的工作。MIT 或 Apache-2.0 许可。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono、Noto Sans SC (OFL)。图标：Lucide (ISC)+ MIXEL Vector。
 	RGB	RGB
 	Pattern Swatches	图案色板
 	Default Graphic Style	默认图形样式
@@ -3376,6 +3458,7 @@
 	Graphics: {adapter}	显卡：{adapter}
 	Japanese	日文
 	Latin	拉丁文
+	Thai	泰文
 	Layer Options	图层选项
 	Layers Panel Options	图层面板选项
 	Monospaced	等宽
@@ -3394,6 +3477,7 @@
 	Hide Others	隐藏其他
 	High Performance (discrete)	高性能 (独立显卡)
 	Highlight Rows	突出显示行
+	Highlight Variable	突出显示变量
 	Lock Others	锁定其他
 	Merge Selected	合并所选图层
 	Move Rows	移动行
@@ -3484,6 +3568,7 @@ axis	Horizontal	水平
 axis	Vertical	垂直
 axis	Both	两者
 	Drag to move	拖动以移动
+	Drag to move out of the set	拖动以移出该组合
 	Drag to float as a toolbar	拖动使其浮动为工具栏
 	Put back in the toolbar	放回工具栏
 	Float Panel	浮动面板
@@ -3505,6 +3590,8 @@ axis	Both	两者
 	Images: link to the file instead of only embedding it.	图像：链接到文件，而不只是嵌入。
 	MIXEL Vector documents: one locked object, updated when the file changes.	MIXEL Vector 文档：一个锁定对象，文件更改时随之更新。
 	A file dialog is open: choose there first	文件对话框已打开：请先在其中选择
+	The document was closed while its file dialog was open	文件对话框打开期间，文档已关闭
+	The dialog was closed before its file dialog answered	文件对话框给出结果之前，对话框已关闭
 	Expand Shaper Group	扩展 Shaper 组
 	Release Shaper Group	释放 Shaper 组
 	Select Shaper Face	选择 Shaper 区域
@@ -3607,3 +3694,159 @@ effect	Horizontal	水平
 effect	Vertical	垂直
 	Edge	边缘
 	System Title Bar	系统标题栏
+	Value Axis	数值轴
+	On Left Side	左侧
+	On Right Side	右侧
+	On Both Sides	两侧
+	Short	短
+	Full Width	全宽
+	Distort	扭曲
+	Diffuse Glow…	扩散亮光…
+	Glass…	玻璃…
+	Ocean Ripple…	海洋波纹…
+	Diffuse Glow	扩散亮光
+	Glass	玻璃
+	Ocean Ripple	海洋波纹
+	Graininess	颗粒
+	Glow Amount	发光量
+	Clear Amount	清除数量
+	Ripple Size	波纹大小
+	Ripple Magnitude	波纹幅度
+	Blocks	块状
+	Frosted	磨砂
+	Tiny Lens	小镜头
+	Rename Data Set	重命名数据集
+	Rename Variable	重命名变量
+	Variable Options	变量选项
+	Edit Data Set	编辑数据集
+	Define a variable first	请先定义一个变量
+	Text	文本
+	Visibility	可见性
+# Shared panel docking
+	Activate Panel	激活面板
+	Change Panel Layout	更改面板布局
+	Close Panel	关闭面板
+	Move Panel	移动面板
+	Group with	组合到
+	Resize panels	调整面板大小
+	Resize panel window	调整面板窗口大小
+
+# Revolve profile guidance.
+
+# Interactive Revolve controls.
+	Lighting	照明
+	Revolve angle	旋转成形角度
+	Axis side	轴的位置
+	Rotation X	X 轴旋转
+	Rotation Y	Y 轴旋转
+	Rotation Z	Z 轴旋转
+	Shading	明暗处理
+	Direction	方向
+	Elevation	仰角
+	Ambient	环境光
+	Segments	分段数
+	Show axis	显示轴
+	Reset all	全部重置
+	Reset to default	重置为默认值
+	Reset all Revolve settings to their defaults.	将所有旋转成形设置重置为默认值。
+	Drag values or labels. Double-click a value to type.	拖动数值或标签。双击数值即可输入。
+	Drag rings to rotate. Shift snaps to 15°.	拖动圆环旋转。按住 Shift 以 15° 为步长调整。
+	Drag the light, or its rings. Shift snaps to 15°.	拖动光源或圆环。按住 Shift 以 15° 为步长调整。
+lighting	Light	光源
+	Keep visible surfaces only when expanding	扩展时仅保留可见表面
+	Trim covered geometry on Expand Appearance. Live preview keeps the full surface. Transparent paints and surfaces exceeding visibility limits retain all faces.	扩展外观时裁剪被遮挡的几何区域。实时预览保留完整表面。透明绘制或超出可见性处理限制的表面保留所有面。
+	Accented Edges…	强化的边缘…
+	Angled Strokes…	成角的线条…
+	Crosshatch…	阴影线…
+	Dark Strokes…	深色线条…
+	Ink Outlines…	墨水轮廓…
+	Spatter…	喷溅…
+	Sprayed Strokes…	喷色描边…
+	Sumi-e…	水墨画…
+	Accented Edges	强化的边缘
+	Angled Strokes	成角的线条
+	Crosshatch	阴影线
+	Dark Strokes	深色线条
+	Ink Outlines	墨水轮廓
+	Spatter	喷溅
+	Sprayed Strokes	喷色描边
+	Sumi-e	水墨画
+	Direction Balance	方向平衡
+	Stroke Length	描边长度
+	Sharpness	锐化程度
+	Strength	力度
+	Balance	平衡
+	Black Intensity	黑色强度
+	White Intensity	白色强度
+	Dark Intensity	深色强度
+	Spray Radius	喷色半径
+	Stroke Direction	描边方向
+	Stroke Width	描边宽度
+	Stroke Pressure	描边压力
+	Right Diagonal	右对角线
+	Left Diagonal	左对角线
+	Vertical Guide	垂直参考线
+	Horizontal Guide	水平参考线
+	Move Guide to Layer	将参考线移至图层
+	Linux Display Server	Linux 显示服务器
+	X11 (XWayland)	X11 (XWayland)
+	Ruler Origin	标尺原点
+	Reset Ruler Origin	重置标尺原点
+	Artistic	艺术效果
+	Film Grain…	胶片颗粒…
+	Highlight Area	高光区域
+	Concentric Dividers:	同心分隔线：
+	Radial Dividers:	径向分隔线：
+# Grid tool options (the Rectangular Grid and Polar Grid click dialogs).
+	Skew:	倾斜：
+	Inside	内侧
+	Outside	外侧
+	Use Outside Rectangle As Frame	使用外部矩形作为框架
+	Create Compound Path From Ellipses	从椭圆形创建复合路径
+	Fill Grid	网格填色
+	Select two or more objects, or a group	请选择两个或更多对象，或一个组
+# 3D and Materials › Extrude & Bevel, Inflate and Rotate: options, Position presets and bevel shapes.
+	Back	背面
+	Both sides	双面
+	Classic	经典
+	Cove	凹圆
+	Depth	深度
+	Front	正面
+	Isometric Bottom	等角底部
+	Isometric Left	等角左侧
+	Isometric Right	等角右侧
+	Isometric Top	等角顶部
+	Off-Axis Back	离轴背面
+	Off-Axis Bottom	离轴底部
+	Off-Axis Front	离轴正面
+	Off-Axis Left	离轴左侧
+	Off-Axis Right	离轴右侧
+	Off-Axis Top	离轴顶部
+	Ogee	反曲线
+	Reset all 3D settings to their defaults.	将所有 3D 设置重置为默认值。
+	Step	阶梯
+	Taper	锥化
+	Twist	扭转
+	Volume	体积
+3d	Cap	封口
+3d	Solid	实心
+3d	Hollow	空心
+3d	Bevel	斜角
+3d	Rounded	圆角
+3d	Space	间距
+	Bevel Shape	斜角形状
+	Bevel Inside	斜角向内
+	Bevel both sides	双面斜角
+	Presets	预设
+@msg	An object takes one 3D effect. Edit the existing effect's options, or remove it first.	一个对象只能应用一种 3D 效果。请编辑现有效果的选项，或先将其移去。
+@msg	{label} currently requires a path or compound path. Convert type, images and groups to paths first.	{label}目前需要路径或复合路径。请先将文字、图像和编组转换为路径。
+@msg	{label} requires a shape with at least two anchors	{label}需要至少有两个锚点的形状
+@msg	The shape is too complex for a 3D effect	形状过于复杂，无法应用 3D 效果
+@msg	The 3D surface is too complex; simplify the shape	3D 表面过于复杂；请简化形状
+	Transform Objects	变换对象
+@msg	unknown parameter `{key}`; did you mean `{near}`?	未知参数 `{key}`；您是否想输入 `{near}`？
+@msg	unknown parameter `{key}`; the command takes no parameters	未知参数 `{key}`；该命令没有参数
+@msg	unknown parameter `{key}`; the command takes: {keys}	未知参数 `{key}`；该命令接受：{keys}
+	Load EPS into Clipboard	将 EPS 载入剪贴板
+@msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的图像过大，无法绘制
+	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	模拟会按叠印预览显示的效果打印叠印；分色始终保留叠印。预设会在打印前拼合透明度（PostScript 文件始终拼合透明度）。

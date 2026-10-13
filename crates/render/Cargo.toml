@@ -30,6 +30,7 @@ log = { workspace = true }
 vello_cpu = { workspace = true, features = ["multithreading"] }
 
 [dev-dependencies]
+vectorcraft-text = { workspace = true, features = ["test-fonts"] }
 vectorcraft-testkit = { workspace = true }
 # Decoders the export tests read their files back with.
 image = { workspace = true, features = ["tga"] }

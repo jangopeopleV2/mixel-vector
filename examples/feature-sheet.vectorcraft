@@ -1096,7 +1096,7 @@
                   {
                     "text": "Pathfinder · exact booleans",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Semibold",
                       "size": 30.0,
                       "tracking": 40.0,
@@ -3706,7 +3706,7 @@
                   {
                     "text": "Gradient Mesh",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Semibold",
                       "size": 30.0,
                       "tracking": 40.0,
@@ -4403,7 +4403,7 @@
                   {
                     "text": "Repeat · radial, live",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Semibold",
                       "size": 30.0,
                       "tracking": 40.0,
@@ -6037,7 +6037,7 @@
                               {
                                 "text": "WARP",
                                 "style": {
-                                  "font_family": "Source Sans 3",
+                                  "font_family": "Noto Sans",
                                   "font_style": "Bold",
                                   "size": 150.0,
                                   "tracking": 40.0,
@@ -6120,7 +6120,7 @@
                   {
                     "text": "Envelope Distort",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Semibold",
                       "size": 30.0,
                       "tracking": 40.0,

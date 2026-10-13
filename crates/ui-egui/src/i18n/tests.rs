@@ -26,6 +26,15 @@ fn tags_map_to_languages() {
     for tag in ["uk", "uk-UA", "uk_UA.UTF-8", "UK-ua", "uk_UA.UTF-8@euro"] {
         assert_eq!(lang_from_tag(tag), Some(uk()), "{tag}");
     }
+    for tag in ["hu", "hu-HU", "hu_HU.UTF-8", "HU-hu"] {
+        assert_eq!(lang_from_tag(tag), Some(hu()), "{tag}");
+    }
+    for tag in ["ko", "ko-KR", "ko_KR.UTF-8", "KO-kr"] {
+        assert_eq!(lang_from_tag(tag), Some(ko()), "{tag}");
+    }
+    for tag in ["vi", "vi-VN", "vi_VN.UTF-8", "VI-vn"] {
+        assert_eq!(lang_from_tag(tag), Some(vi()), "{tag}");
+    }
     // Traditional Chinese: by region, by script, and with a region after the script.
     assert_eq!(lang_from_tag("zh_TW.UTF-8"), Some(ZH()));
     assert_eq!(lang_from_tag("zh-TW"), Some(ZH()));
@@ -161,8 +170,11 @@ fn bundled_catalogs_are_consistent() {
                 assert_eq!(src.ends_with('…'), tr.ends_with('…'), "{}: ellipsis mismatch: {src:?}", l.code);
             }
             if ctx == "@id" {
-                let known =
-                    crate::menus::UI_COMMANDS.iter().any(|c| c.0 == src) || vectorcraft_engine::cmd::command_specs().iter().any(|c| c.id == src);
+                // A command id, or an effect id: Effect menu items share `effect.apply` /
+                // `effect.dialog`, so the effect's own id is what tells them apart.
+                let known = crate::menus::UI_COMMANDS.iter().any(|c| c.0 == src)
+                    || vectorcraft_engine::cmd::command_specs().iter().any(|c| c.id == src)
+                    || vectorcraft_effects::effect_catalog().iter().any(|e| e.id == src);
                 assert!(known, "{}: unknown command id {src:?}", l.code);
             }
         }
@@ -245,7 +257,7 @@ fn language_command_sets_the_preference() {
 
 /// Chinese and Japanese characters (CJK punctuation, kana, ideographs, full-width forms).
 fn is_cjk(c: char) -> bool {
-    matches!(c as u32, 0x3000..=0x9FFF | 0xF900..=0xFAFF | 0xFF00..=0xFFEF | 0x20000..=0x2FFFF)
+    matches!(c as u32, 0x1100..=0x11FF | 0x3000..=0x9FFF | 0xAC00..=0xD7AF | 0xF900..=0xFAFF | 0xFF00..=0xFFEF | 0x20000..=0x2FFFF)
 }
 
 /// The UI fonts draw every character the catalogs use, in every family the UI draws text with
@@ -405,23 +417,62 @@ pub fn tl_literals() -> std::collections::BTreeSet<String> {
             } else if name.ends_with(".rs") && name != "lib.rs" && !name.starts_with("tests") {
                 let text = std::fs::read_to_string(&path).unwrap_or_default();
                 let code = text.split("#[cfg(test)]").next().unwrap_or("");
-                let mut rest = code;
-                while let Some(at) = rest.find("tl!(\"") {
-                    rest = &rest[at + 5..];
-                    let mut end = 0;
-                    let bytes = rest.as_bytes();
-                    while end < bytes.len() && !(bytes[end] == b'"' && (end == 0 || bytes[end - 1] != b'\\')) {
-                        end += 1;
-                    }
-                    let lit = rest.get(..end).unwrap_or("").replace("\\\"", "\"");
-                    if rest.get(end + 1..end + 2) == Some(")") {
-                        literals.insert(lit);
-                    }
-                }
+                literals.extend(tl_literals_in(code));
             }
         }
     }
     literals
+}
+
+/// Rustfmt may put whitespace around the argument of a long single-literal macro call.
+fn tl_literals_in(code: &str) -> std::collections::BTreeSet<String> {
+    let mut literals = std::collections::BTreeSet::new();
+    let mut rest = code;
+    while let Some(at) = rest.find("tl!") {
+        rest = &rest[at + 3..];
+        let Some(args) = rest.trim_start().strip_prefix('(') else { continue };
+        let Some(text) = args.trim_start().strip_prefix('"') else { continue };
+        let mut escaped = false;
+        let end = text.char_indices().find_map(|(i, c)| {
+            if escaped {
+                escaped = false;
+                None
+            } else if c == '\\' {
+                escaped = true;
+                None
+            } else {
+                (c == '"').then_some(i)
+            }
+        });
+        let Some(end) = end else { continue };
+        if text.get(end + 1..).is_some_and(|tail| tail.trim_start().starts_with(')')) {
+            literals.insert(text[..end].replace("\\\"", "\""));
+        }
+    }
+    literals
+}
+
+#[test]
+fn literal_scan_accepts_rustfmt_whitespace_and_preserves_escaped_quotes() {
+    let code = r#"
+        tl!("Compact");
+        tl!(
+            "Opening “{name}” keeps its content."
+        );
+        tl! ( "Quoted \"label\"" );
+        tl!(computed);
+        tl!("context", "Contextual label");
+    "#;
+    assert_eq!(tl_literals_in(code), ["Compact", "Opening “{name}” keeps its content.", "Quoted \"label\""].into_iter().map(str::to_owned).collect());
+}
+
+#[test]
+fn the_formatted_overwrite_warning_is_scanned_and_translated() {
+    let warning =
+        "Opening it left out what MIXEL Vector can't read yet ({what}), so replacing it loses that for good. Save under another name to keep it.";
+    assert!(tl_literals().contains(warning));
+    let catalog = Lang::from_code("pt-br").expect("pt-br registered").catalog();
+    assert!(catalog.plain(warning).is_some(), "the active warning keeps its translation");
 }
 
 /// `VECTORCRAFT_I18N_DUMP=<file> cargo test -p vectorcraft-ui-egui dump_source_strings` writes every
@@ -440,7 +491,7 @@ fn cs() -> Lang {
 }
 
 /// Languages whose catalogs leave [`MENU_KEEP_AS_IS`] in English.
-const KEEPS_MENU_NAMES: [&str; 9] = ["cs", "de", "es", "fr", "it", "ja", "pt-br", "ru", "uk"];
+const KEEPS_MENU_NAMES: [&str; 13] = ["cs", "de", "es", "fr", "hu", "it", "ja", "ko", "pl", "pt-br", "ru", "uk", "vi"];
 
 /// Menu labels the menu-complete catalogs (Czech, German, Spanish, Italian, Japanese, Brazilian Portuguese) show as they are: the product name, a format name, the built-in workspace
 /// names and the perspective grid presets (names, shown untranslated wherever else they appear).
@@ -592,6 +643,122 @@ fn it() -> Lang {
 
 fn ru() -> Lang {
     Lang::from_code("ru").expect("ru registered")
+}
+
+fn hu() -> Lang {
+    Lang::from_code("hu").expect("hu registered")
+}
+
+/// Hungarian uses its vector-illustration vocabulary, drops the word "tool" from tool names, keeps
+/// a count in the singular (one plural form), gives dialog buttons a verb while the File menu's
+/// Close keeps its noun through an `@id` row, and translates the reason inside a message too.
+#[test]
+fn hungarian_reads_as_hungarian() {
+    for (en, want) in [
+        ("Artboard Tool", "Rajztábla"),
+        ("Swatches", "Színminták"),
+        ("Pathfinder", "Útvonalkezelő"),
+        ("Stroke", "Körvonal"),
+        ("Fill", "Kitöltés"),
+        ("Direct Selection Tool", "Közvetlen kijelölés"),
+        ("Save As…", "Mentés másként…"),
+        ("Undo", "Visszavonás"),
+        ("Close", "Bezár"),
+    ] {
+        assert_eq!(tr(hu(), en), want);
+    }
+    assert_eq!(tr_id(hu(), "file.close", "Close"), "Bezárás");
+    assert_eq!(tr_id(hu(), "pathfinder.add", "Add"), "Egyesítés");
+    for n in [0, 1, 3, 21] {
+        assert_eq!(trn(hu(), n, "{n} Layer", "{n} Layers"), format!("{n} réteg"));
+    }
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(hu(), nested), "a parancs jelenleg nem érhető el: `object.group`: nincs kijelölés");
+}
+
+fn ko() -> Lang {
+    Lang::from_code("ko").expect("ko registered")
+}
+
+/// Korean uses the vector-illustration vocabulary its users know, has no plural forms, and
+/// translates the reason inside a message too.
+#[test]
+fn korean_reads_as_korean() {
+    for (en, want) in [
+        ("Artboard Tool", "아트보드 도구"),
+        ("Swatches", "견본"),
+        ("Pathfinder", "패스파인더"),
+        ("Stroke", "선"),
+        ("Fill", "칠"),
+        ("Direct Selection Tool", "직접 선택 도구"),
+        ("Save As…", "다른 이름으로 저장…"),
+        ("Undo", "실행 취소"),
+        ("Close", "닫기"),
+    ] {
+        assert_eq!(tr(ko(), en), want);
+    }
+    for n in [0, 1, 3, 21] {
+        assert_eq!(trn(ko(), n, "{n} Layer", "{n} Layers"), format!("레이어 {n}개"));
+    }
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(ko(), nested), "명령 `object.group`은(는) 지금 사용할 수 없습니다: 선택된 항목이 없습니다");
+}
+
+fn vi() -> Lang {
+    Lang::from_code("vi").expect("vi registered")
+}
+
+/// Vietnamese has one plural form and covers the complete interface and messages.
+#[test]
+fn vietnamese_reads_as_vietnamese() {
+    assert_eq!(vi().name(), "Tiếng Việt");
+    assert!(vi().complete_menus());
+    assert_eq!(Lang::from_pref("vi"), vi());
+    assert_eq!(Lang::from_pref("VI"), vi());
+    for (en, want) in [
+        ("Artboard Tool", "Công cụ Bảng vẽ"),
+        ("Swatches", "Mẫu màu"),
+        ("Stroke", "Nét"),
+        ("Fill", "Tô"),
+        ("Direct Selection Tool", "Công cụ Chọn trực tiếp"),
+        ("Save As…", "Lưu thành…"),
+        ("Undo", "Hoàn tác"),
+        ("Close", "Đóng"),
+    ] {
+        assert_eq!(tr(vi(), en), want);
+    }
+    for n in [0, 1, 3, 21] {
+        assert_eq!(trn(vi(), n, "{n} Layer", "{n} Layers"), format!("{n} lớp"));
+    }
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(vi(), nested), "lệnh `object.group` hiện không khả dụng: chưa chọn gì");
+}
+
+/// Ambiguous English terms keep their intended Vietnamese meaning across UI contexts.
+#[test]
+fn vietnamese_domain_terms_are_consistent() {
+    for (en, want) in [
+        ("All Scripts", "Tất cả hệ chữ"),
+        ("Pointillize", "Hiệu ứng chấm"),
+        ("Object Highlighting", "Đánh dấu đối tượng"),
+        ("Color Theme", "Bộ màu"),
+        ("Color Themes", "Bộ màu"),
+        ("Asset Export", "Xuất asset"),
+        ("Envelope Distort", "Biến dạng Envelope"),
+        ("Move Spine Point", "Di chuyển điểm trục"),
+        ("Dashed Line", "Đường nét đứt"),
+        ("Eyedropper Tool", "Công cụ Ống hút màu"),
+        ("Character Alignment", "Căn chỉnh ký tự"),
+    ] {
+        assert_eq!(tr(vi(), en), want, "{en}");
+    }
+    assert_eq!(tr(vi(), "Appearance"), "Diện mạo");
+    assert_eq!(tr_ctx(vi(), "theme", "Appearance"), "Giao diện");
+    assert_eq!(message(vi(), "no saved themes"), "chưa có bộ màu nào được lưu");
+    assert_eq!(message(vi(), r#"choice must be "merge" or "add", not `foo`"#), r#"lựa chọn phải là "merge" hoặc "add", không phải `foo`"#);
+    assert_eq!(message(vi(), "select a blend"), "hãy chọn một đối tượng hòa trộn");
+    assert_eq!(message(vi(), "select a repeat"), "hãy chọn một đối tượng lặp");
+    assert_eq!(message(vi(), "Replace Spine: select a blend and a path"), "Thay thế trục: chọn một đối tượng hòa trộn và một đường dẫn");
 }
 
 fn uk() -> Lang {
@@ -801,6 +968,50 @@ fn spaced_catalogs_keep_the_spaces_around_fragments() {
 fn czech_plurals_have_three_forms() {
     let forms: Vec<usize> = [0, 1, 2, 4, 5, 11, 21].into_iter().map(plural_czech).collect();
     assert_eq!(forms, [2, 0, 1, 1, 2, 2, 2]);
+    // Every Czech plural row has the three forms, and each count picks its own.
+    let (entries, _) = parse_entries(cs().0.source);
+    let mut count = 0;
+    for (ctx, src, translated) in entries {
+        if ctx != "@plural" {
+            continue;
+        }
+        count += 1;
+        let (one, other) = src.split_once('|').expect("one|other source");
+        let forms: Vec<_> = translated.split('|').collect();
+        assert_eq!(forms.len(), 3, "{src}");
+        for (n, form) in [(1, 0), (2, 1), (4, 1), (0, 2), (5, 2), (11, 2), (21, 2), (u64::MAX, 2)] {
+            assert_eq!(trn(cs(), n, one, other), forms[form].replace("{n}", &n.to_string()), "{src}: {n}");
+        }
+    }
+    assert!(count >= 13, "Czech plural rows missing");
+}
+
+/// Czech uses the vector-illustration vocabulary its users know, has three plural forms
+/// (one/few/other), and translates the reason inside a message too.
+#[test]
+fn czech_reads_as_czech() {
+    for (en, want) in [
+        ("Artboard Tool", "Nástroj Pracovní plocha"),
+        ("Swatches", "Vzorník"),
+        ("Pathfinder", "Operace s cestami"),
+        ("Stroke", "Tah"),
+        ("Fill", "Výplň"),
+        ("Direct Selection Tool", "Nástroj Přímý výběr"),
+        ("Save As…", "Uložit jako…"),
+        ("Undo", "Zpět"),
+    ] {
+        assert_eq!(tr(cs(), en), want);
+    }
+    for (n, word) in [(0, "vrstev"), (1, "vrstva"), (2, "vrstvy"), (4, "vrstvy"), (5, "vrstev"), (11, "vrstev")] {
+        assert_eq!(trn(cs(), n, "{n} Layer", "{n} Layers"), format!("{n} {word}"));
+    }
+    assert_eq!(tr_ctx(cs(), "axis", "Both"), "Obě");
+    // "Add" is Unite in Effect › Pathfinder (an `@id` row for the effect id); "Přidat" elsewhere.
+    assert_eq!(tr(cs(), "Add"), "Přidat");
+    assert_eq!(tr_id(cs(), "pathfinder.add", "Add"), "Sjednotit");
+    assert_eq!(tr_id(cs(), "pathfinder.intersect", "Intersect"), "Protnout");
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(cs(), nested), "příkaz `object.group` nyní není k dispozici: nic není vybráno");
 }
 
 #[test]
@@ -809,7 +1020,7 @@ fn russian_plurals_have_three_forms() {
     assert_eq!(forms, [2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 0]);
 }
 
-/// Czech, German, Spanish, French and Italian letters (and the punctuation their text uses) come from each family's own first font, not
+/// Czech, German, Spanish, French, Italian, Hungarian and Polish letters (and the punctuation their text uses) come from each family's own first font, not
 /// from a fallback further down the stack. (`has_glyph` can't tell: it counts characters of the
 /// face that draws missing glyphs, the first one, as missing.)
 #[test]
@@ -824,7 +1035,7 @@ fn latin_script_glyphs_are_available_without_system_fonts() {
             let first = first.unwrap();
             let mut font = fonts.fonts.font(&family);
             let chars = font.characters();
-            for ch in "áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ„“‚‘…–ñÑüÜ¿¡”àèìòùÀÈÌÒÙ«»’âêîôûçëïÿœæÂÊÎÔÛÇËÏŒÆäöÄÖß\u{a0}".chars()
+            for ch in "áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ„“‚‘…–ñÑüÜ¿¡”àèìòùÀÈÌÒÙ«»’âêîôûçëïÿœæÂÊÎÔÛÇËÏŒÆäöÄÖßőűŐŰąćęłńśźżĄĆĘŁŃŚŹŻ\u{a0}".chars()
             {
                 assert!(chars.get(&ch).is_some_and(|fonts| fonts.contains(&first)), "{first} ({family:?}) has no {ch}");
             }
@@ -923,8 +1134,75 @@ fn complete_languages_translate_every_message() {
     }
 }
 
+/// The parameter errors of Align, Distribute Spacing, Reflect and Shear, whose text the scan above
+/// doesn't read, are translated whole in each language of [`COMPLETE_MESSAGES`].
+#[test]
+fn align_reflect_and_shear_param_errors_are_translated() {
+    use serde_json::json;
+    let mut s = vectorcraft_engine::Session::new();
+    s.execute("file.new", &json!({})).unwrap();
+    for x in [0, 50] {
+        s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap();
+    }
+    s.execute("select.all", &json!({})).unwrap();
+    for (cmd, p) in [
+        ("object.align", json!({})),
+        ("object.align", json!({"horizontal": "middle"})),
+        ("object.align", json!({"vertical": "centre"})),
+        ("object.align", json!({"horizontal": "left", "to": "page"})),
+        ("object.align", json!({"horizontal": "left", "bounds": "visual"})),
+        ("object.distributeSpacing", json!({"axis": "diagonal"})),
+        ("object.distributeSpacing", json!({"spacing": "5"})),
+        ("object.reflect", json!({"axis": "diagonal"})),
+        ("object.shear", json!({"axis": "diagonal"})),
+    ] {
+        let e = s.execute(cmd, &p).unwrap_err();
+        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        for code in COMPLETE_MESSAGES {
+            let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
+            assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
+        }
+    }
+}
+
+/// The errors for a parameter key a command doesn't take (#1442), whose text the scan above
+/// doesn't read, are translated whole in each language of [`COMPLETE_MESSAGES`].
+#[test]
+fn unknown_parameter_errors_are_translated() {
+    use serde_json::json;
+    for (cmd, p) in [("file.new", json!({"widht": 300})), ("select.all", json!({"zzz": 1})), ("shape.line", json!({"colour": "red"}))] {
+        let e = vectorcraft_engine::check_params(cmd, &p).unwrap_err();
+        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        for code in COMPLETE_MESSAGES.iter().chain(&["pt-br"]) {
+            let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
+            assert!(!shown.contains("unknown parameter") && shown.contains(cmd), "{code}: {shown} ({msg})");
+        }
+    }
+}
+
+/// The parameter error of `select.key` for an id that isn't a selected top-level object, whose
+/// text [`message_literals`] doesn't read, is translated whole in each language of
+/// [`COMPLETE_MESSAGES`].
+#[test]
+fn select_key_param_error_is_translated() {
+    use serde_json::json;
+    let mut s = vectorcraft_engine::Session::new();
+    s.execute("file.new", &json!({})).unwrap();
+    let rectangle = |s: &mut vectorcraft_engine::Session, x: u64| {
+        s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"].clone()
+    };
+    let [a, b, unselected] = [0, 50, 100].map(|x| rectangle(&mut s, x));
+    s.execute("select.set", &json!({"ids": [a, b]})).unwrap();
+    let e = s.execute("select.key", &json!({"id": unselected})).unwrap_err();
+    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    for code in COMPLETE_MESSAGES {
+        let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
+        assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
+    }
+}
+
 /// Languages whose catalogs cover every status and error message.
-const COMPLETE_MESSAGES: &[&str] = &["de", "es", "fr", "it", "ja", "ru", "uk"];
+const COMPLETE_MESSAGES: &[&str] = &["cs", "de", "es", "fr", "hu", "it", "ja", "ko", "pl", "ru", "uk", "vi"];
 
 /// Crates whose error and status messages reach the status bar.
 const MESSAGE_CRATES: &[&str] = &["ui-egui", "engine", "doc", "format", "svg", "pdf", "eps", "text", "plugins", "metafile", "cad", "trace"];
@@ -1020,4 +1298,92 @@ fn as_template(s: &str) -> String {
     }
     out.push_str(rest);
     out
+}
+
+/// Render-site labels keep English fallback, placeholders and Czech grammar independent of
+/// the plain language-name key. No global language changes: other UI tests may run alongside.
+#[test]
+fn czech_render_site_follow_up() {
+    for (source, expected) in [
+        ("All readable files", "Všechny čitelné soubory"),
+        ("All placeable files", "Všechny soubory pro umístění"),
+        ("SVG Compressed", "Komprimované SVG"),
+        ("PDF-compatible .ai", ".ai kompatibilní s PDF"),
+        ("MIXEL Vector Template", "Šablona MIXEL Vector"),
+    ] {
+        assert_eq!(tr_ctx(cs(), "file-filter", source), expected);
+        assert_eq!(tr_ctx(Lang::EN, "file-filter", source), source);
+    }
+    for source in ["SVG", "PNG", "MIXEL Vector", "unregistered filter"] {
+        assert_eq!(tr_ctx(cs(), "file-filter", source), source);
+    }
+    assert_eq!(tr_ctx(cs(), "diagnostics", "render"), "vykreslení");
+    assert_eq!(tr_ctx(cs(), "diagnostics", "ui"), "rozhraní");
+    assert_eq!(fmt(tr(cs(), "Preset {number}"), &[("number", "12")]), "Přednastavení 12");
+    assert_eq!(fmt(tr(Lang::EN, "Preset {number}"), &[("number", "12")]), "Preset 12");
+    for (kind, expected) in [("Linear", "Lineární přechod"), ("Radial", "Kruhový přechod"), ("Freeform", "Volný přechod")] {
+        assert_eq!(fmt(tr(cs(), "{kind} Gradient"), &[("kind", tr_ctx(cs(), "gradient-kind", kind))]), expected);
+        assert_eq!(fmt(tr(Lang::EN, "{kind} Gradient"), &[("kind", tr_ctx(Lang::EN, "gradient-kind", kind))]), format!("{kind} Gradient"));
+    }
+    assert_eq!(tr(cs(), "Japanese"), "Japonština");
+    assert_eq!(tr_ctx(cs(), "mark-style", "Japanese"), "Japonské");
+    assert_eq!(tr_ctx(Lang::EN, "mark-style", "Japanese"), "Japanese");
+    assert_eq!(tr(cs(), "PRs"), "PR");
+    for (n, expected) in [(0, "0 commitů"), (1, "1 commit"), (2, "2 commity"), (4, "4 commity"), (5, "5 commitů")] {
+        assert_eq!(trn(cs(), n, "{n} commit", "{n} commits"), expected);
+        assert_eq!(trn(cs(), n, "{n} PR", "{n} PRs"), format!("{n} PR"));
+    }
+}
+
+fn pl() -> Lang {
+    Lang::from_code("pl").expect("pl registered")
+}
+
+#[test]
+fn polish_plurals_have_three_forms() {
+    let forms: Vec<usize> = [0, 1, 2, 4, 5, 11, 12, 14, 21, 22, 25, 101, 112, 122].into_iter().map(plural_polish).collect();
+    assert_eq!(forms, [2, 0, 1, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1]);
+    // Every Polish plural row has the three forms, and each count picks its own.
+    let (entries, _) = parse_entries(pl().0.source);
+    let mut count = 0;
+    for (ctx, src, tr) in &entries {
+        if ctx != "@plural" {
+            continue;
+        }
+        count += 1;
+        let forms: Vec<&str> = tr.split('|').collect();
+        assert_eq!(forms.len(), 3, "{src}");
+        let (one, other) = src.split_once('|').unwrap();
+        for (n, form) in [(1, 0), (3, 1), (5, 2), (21, 2), (22, 1)] {
+            assert_eq!(trn(pl(), n, one, other), forms[form].replace("{n}", &n.to_string()), "{src}: {n}");
+        }
+    }
+    assert!(count >= 13, "Polish plural rows missing");
+}
+
+/// Polish uses its vector-illustration vocabulary (obszar kompozycji, ścieżka, obrys…), resolves
+/// every `pl-*` locale, counts with one/few/many and translates the reason inside a message too.
+#[test]
+fn polish_reads_as_polish() {
+    for tag in ["pl", "pl-PL", "pl_PL.UTF-8", "PL-pl"] {
+        assert_eq!(lang_from_tag(tag), Some(pl()), "{tag}");
+    }
+    for (en, want) in [
+        ("File", "Plik"),
+        ("Artboard Tool", "Narzędzie Obszar kompozycji"),
+        ("Swatches", "Próbki"),
+        ("Pathfinder", "Odnajdywanie ścieżek"),
+        ("Stroke", "Obrys"),
+        ("Fill", "Wypełnienie"),
+        ("Workspace", "Obszar roboczy"),
+    ] {
+        assert_eq!(tr(pl(), en), want);
+    }
+    for (n, word) in [(1, "warstwa"), (3, "warstwy"), (5, "warstw"), (22, "warstwy"), (21, "warstw")] {
+        assert_eq!(trn(pl(), n, "{n} Layer", "{n} Layers"), format!("{n} {word}"));
+    }
+    assert_eq!(tr_ctx(pl(), "axis", "Both"), "Obie");
+    assert_eq!(tr_id(pl(), "pathfinder.add", "Add"), "Połącz");
+    let nested = "command `object.group` is not available right now: nothing selected";
+    assert_eq!(message(pl(), nested), "polecenie `object.group` jest teraz niedostępne: nic nie zaznaczono");
 }

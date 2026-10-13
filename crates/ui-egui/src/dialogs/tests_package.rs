@@ -121,7 +121,7 @@ fn fonts_left_out_of_the_package_are_named() {
     let gone = "fonts not copied: No Such Font Family Regular";
     assert!(app.ui.status.contains(gone), "{}", app.ui.status);
     let detail = app.ui.dialog.as_ref().unwrap().str("detail");
-    assert!(detail.contains(gone) && !detail.contains("Source Sans 3"), "{detail}");
+    assert!(detail.contains(gone) && !detail.contains("Noto Sans"), "{detail}");
     // The web's download says so too.
     app.ui.dialog = None;
     app.services.download = Some(Box::new(|_: &str, _: &[u8]| {}));

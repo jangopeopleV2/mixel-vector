@@ -131,8 +131,30 @@ fn a_stroke_written_as_stroked_glyph_outlines_is_the_types_stroke() {
     assert_eq!(d.layers[0].children().unwrap().len(), 2);
 }
 
-/// A 300 × 200 pt page with `lines` of (x, y from the top, size, text) in Source Sans 3.
-fn source_sans(lines: &[(f32, f32, f32, &str)]) -> Vec<u8> {
+/// A `.ai` page moved right in the row, so its art past the artboard clears the page before it
+/// (#1528), still has the stroke drawn on its type's glyphs read as the type's stroke.
+#[test]
+fn a_stroke_on_the_type_of_a_moved_ai_page_is_still_the_types_stroke() {
+    let ai = "/PieceInfo << /Illustrator << /Private << /AIPrivateData1 7 /NumBlock 1 >> >> >>";
+    let content = format!(
+        "0 g -70 10 80 20 re f BT 1 0 0 rg /F1 24 Tf 10 50 Td (Hi) Tj ET 0 0 1 RG 0.5 w {}{}",
+        outline('H', 10.0),
+        outline('i', 10.0 + 0.722 * 24.0)
+    );
+    let pages = [("0 g 10 10 20 20 re f", String::new()), (content.as_str(), HELVETICA.to_string())].map(|(c, resources)| PdfPage {
+        entries: ai.into(),
+        resources,
+        ..PdfPage::new(100.0, 100.0, c)
+    });
+    let d = import(&vectorcraft_testkit::pdf::pdf(&pages, None)).unwrap();
+    assert!(d.artboards[1].rect.x0 > d.artboards[0].rect.x1 + 36.0 + 1.0, "page 2 moved: {:?}", d.artboards);
+    let art = d.layers[1].children().unwrap();
+    assert_eq!(art.len(), 2, "the note and the type: {art:?}");
+    assert!(matches!(art[1].appearance.items.as_slice(), [AppearanceItem::Stroke(_)]), "{:?}", art[1].appearance);
+}
+
+/// A 300 × 200 pt page with `lines` of (x, y from the top, size, text) in Noto Sans.
+fn noto_sans(lines: &[(f32, f32, f32, &str)]) -> Vec<u8> {
     crate::tests_live_text::text_pdf(lines, false)
 }
 
@@ -140,7 +162,7 @@ fn source_sans(lines: &[(f32, f32, f32, &str)]) -> Vec<u8> {
 fn spaces_read_from_wide_gaps_keep_the_glyphs_after_them_in_place() {
     // A barcode's digits in three groups, set apart by more than a space.
     let (x1, x2) = (29.0, 69.0);
-    let bytes = source_sans(&[(20.0, 50.0, 10.0, "3"), (x1, 50.0, 10.0, "533121"), (x2, 50.0, 10.0, "010629")]);
+    let bytes = noto_sans(&[(20.0, 50.0, 10.0, "3"), (x1, 50.0, 10.0, "533121"), (x2, 50.0, 10.0, "010629")]);
     let t = texts(&import(&bytes).unwrap());
     assert_eq!(t.len(), 1);
     assert_eq!(t[0].plain_text(), "3 533121 010629");
@@ -148,9 +170,43 @@ fn spaces_read_from_wide_gaps_keep_the_glyphs_after_them_in_place() {
     let at = |byte: usize| (t[0].xf * laid.glyphs.iter().find(|g| g.byte == byte).unwrap().origin).x;
     assert!((at(2) - f64::from(x1)).abs() < 0.05, "the second group starts where the file has it: {} vs {x1}", at(2));
     assert!((at(9) - f64::from(x2)).abs() < 0.05, "the third group starts where the file has it: {} vs {x2}", at(9));
+    for (byte, x, text) in [(2, x1, "533121"), (9, x2, "010629")] {
+        let group = TextObject::point(Point::ZERO, text, CharStyle { size: 10.0, ..Default::default() });
+        for glyph in &vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &group).glyphs {
+            let expected = f64::from(x) + glyph.origin.x;
+            assert!(
+                (at(byte + glyph.byte) - expected).abs() < 0.05,
+                "nongap glyph {} moved: {} vs {expected}",
+                byte + glyph.byte,
+                at(byte + glyph.byte)
+            );
+        }
+    }
 }
 
-/// A document of area type `text` (Source Sans 3, 10 pt) `width` wide at (20, 30).
+#[test]
+fn opposing_gaps_keep_glyph_placement_when_the_total_line_length_is_unchanged() {
+    let face = vectorcraft_text::FontDb::global().face("Noto Sans", "Regular").unwrap();
+    let advance = |c| face.advance(face.glyph_for(c)) / face.units_per_em() * 10.0;
+    let width = |text: &str| text.chars().map(&advance).sum::<f64>();
+    // Both gaps are wider than 0.2 em, so both become spaces. Their extra
+    // widths cancel: matching the total line length alone cannot place them.
+    let x1 = 20.0 + advance('3') + advance(' ') + 0.4;
+    let x2 = x1 + width("533121") + advance(' ') - 0.4;
+    let natural = TextObject::point(Point::ZERO, "3 533121 010629", CharStyle { size: 10.0, ..Default::default() });
+    let natural_length: f64 = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &natural).glyphs.iter().map(|g| g.advance).sum();
+    assert!((x2 + width("010629") - 20.0 - natural_length).abs() < 0.01, "fixture gaps must cancel in the shaped line length");
+    let bytes = noto_sans(&[(20.0, 50.0, 10.0, "3"), (x1 as f32, 50.0, 10.0, "533121"), (x2 as f32, 50.0, 10.0, "010629")]);
+    let t = texts(&import(&bytes).unwrap());
+    assert_eq!(t.len(), 1);
+    assert_eq!(t[0].plain_text(), "3 533121 010629");
+    let laid = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t[0]);
+    let at = |byte: usize| (t[0].xf * laid.glyphs.iter().find(|g| g.byte == byte).unwrap().origin).x;
+    assert!((at(2) - x1).abs() < 0.05, "the first gap places its following glyph: {} vs {x1}", at(2));
+    assert!((at(9) - x2).abs() < 0.05, "the opposing gap places its following glyph: {} vs {x2}", at(9));
+}
+
+/// A document of area type `text` (Noto Sans, 10 pt) `width` wide at (20, 30).
 fn area_doc(text: &str, justify: Justify, width: f64, space_before: f64) -> Document {
     let style = CharStyle { size: 10.0, fill: Paint::solid(Color::BLACK), ..Default::default() };
     let mut t = TextObject::point(Point::ORIGIN, text, style);
@@ -195,9 +251,9 @@ fn lines_wrapped_in_a_frame_come_back_as_area_type() {
 #[test]
 fn lines_that_were_not_wrapped_stay_point_type() {
     // A list: each line its own, none ending in a space.
-    let bytes = source_sans(&[(20.0, 50.0, 10.0, "Hooks"), (20.0, 62.0, 10.0, "Swivels"), (20.0, 74.0, 10.0, "Leads")]);
+    let bytes = noto_sans(&[(20.0, 50.0, 10.0, "Hooks"), (20.0, 62.0, 10.0, "Swivels"), (20.0, 74.0, 10.0, "Leads")]);
     assert_eq!(texts(&import(&bytes).unwrap()).len(), 3);
     // Wrapped lines whose breaks a frame doesn't give again (a line far short of the others).
-    let bytes = source_sans(&[(20.0, 50.0, 10.0, "One two three four five six "), (20.0, 62.0, 10.0, "a "), (20.0, 74.0, 10.0, "seven")]);
+    let bytes = noto_sans(&[(20.0, 50.0, 10.0, "One two three four five six "), (20.0, 62.0, 10.0, "a "), (20.0, 74.0, 10.0, "seven")]);
     assert_eq!(texts(&import(&bytes).unwrap()).len(), 3);
 }

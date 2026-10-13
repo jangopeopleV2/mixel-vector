@@ -20,7 +20,7 @@ fn doc(family: &str, style: &str) -> (Document, vectorcraft_doc::NodeId) {
 
 /// The `font-weight` the SVG export and the CSS of the text write.
 fn weights(style: &str) -> (Option<String>, Option<String>) {
-    let (d, id) = doc("Source Sans 3", style);
+    let (d, id) = doc("Noto Sans", style);
     let svg = export(&d, &ExportOptions::default());
     let attr = svg.split("font-weight=\"").nth(1).map(|s| s.split('"').next().unwrap().to_string());
     let sheet = css_rules(&d, &[id], &CssOptions::default());
@@ -64,15 +64,13 @@ fn every_style_is_written_with_its_numeric_weight() {
 #[test]
 fn numeric_weights_read_back_to_the_style() {
     let db = FontDb::global();
-    for (family, style) in
-        [("Source Sans 3", "Semibold"), ("Source Sans 3", "Bold"), ("Source Sans 3", "Italic"), ("Inter", "Medium"), ("Inter", "SemiBold")]
-    {
+    for (family, style) in [("Noto Sans", "Semibold"), ("Noto Sans", "Bold"), ("Noto Sans", "Italic"), ("Inter", "Medium"), ("Inter", "SemiBold")] {
         let back = style_back(family, style);
         let face = |s: &str| db.face(family, s).map(|f| f.style.clone());
         assert_eq!(face(&back), face(style), "{family} {style} came back as {back}");
     }
     // Styles the family doesn't have keep their weight.
-    assert_eq!(style_back("Source Sans 3", "Light"), "Light");
-    assert_eq!(style_back("Source Sans 3", "Black Italic"), "Black Italic");
-    assert_eq!(style_back("Source Sans 3", "Heavy"), "Black");
+    assert_eq!(style_back("Noto Sans", "Light"), "Light");
+    assert_eq!(style_back("Noto Sans", "Black Italic"), "Black Italic");
+    assert_eq!(style_back("Noto Sans", "Heavy"), "Black");
 }

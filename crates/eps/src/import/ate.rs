@@ -34,7 +34,7 @@ const MAX_DEPTH: usize = 64;
 /// Most values read.
 const MAX_VALUES: usize = 4_000_000;
 /// The centre of the app's canvas, in the units of its text document.
-const CANVAS_CENTRE: f64 = 8191.5;
+pub(super) const CANVAS_CENTRE: f64 = 8191.5;
 
 /// A value of the text document.
 #[derive(Debug, Clone, PartialEq)]
@@ -634,7 +634,7 @@ impl Story {
         if text.trim().is_empty() && !threaded {
             return None;
         }
-        let leading = self.lines.windows(2).map(|w| (w[1].1 - w[0].1) * scale).find(|l| l.is_finite() && *l > 0.0);
+        let leading = self.line_leading(scale);
         let chars: Vec<char> = text.chars().collect();
         let mut runs = vec![];
         let mut from = 0usize;
@@ -664,6 +664,46 @@ impl Story {
         t.kind = kind;
         t.xf = xf;
         Some(Node::new(id, NodeKind::Text(Box::new(t))))
+    }
+
+    /// Area type that the file lays lines out in, in a frame too short for its first line as it is
+    /// laid out here: a font that isn't available shows in the fallback font, whose lines may be
+    /// taller, and type that doesn't fit its frame isn't drawn. The frame is made taller, from its
+    /// top, by what the first line needs (`vectorcraft_text::fit_first_line`). Whether it was.
+    pub(super) fn fit_first_line(&self, t: &mut TextObject) -> bool {
+        !self.lines.is_empty() && vectorcraft_text::fit_first_line(vectorcraft_text::FontDb::global(), t)
+    }
+
+    /// The leading the file's own line positions imply: the distance from one line to the next, less
+    /// the space between paragraphs that is part of it (a paragraph's space after and the next one's
+    /// space before; a layout's lines are where that space has put them, and the text object adds it
+    /// again).
+    fn line_leading(&self, scale: f64) -> Option<f64> {
+        let para_at = |c: usize| {
+            let mut end = 0usize;
+            for (n, p) in &self.paras {
+                end = end.saturating_add(*n);
+                if c < end {
+                    return Some(p);
+                }
+            }
+            self.paras.last().map(|(_, p)| p)
+        };
+        let chars: Vec<char> = self.text.chars().collect();
+        let breaks: Vec<usize> = chars.iter().enumerate().filter(|(_, c)| matches!(c, '\r' | '\x03')).map(|(i, _)| i).collect();
+        // More lines than breaks: area type wraps, and which break ends which line is unknown.
+        let wraps = self.lines.len() > breaks.len() + 1;
+        self.lines.windows(2).enumerate().find_map(|(i, w)| {
+            let pitch = w[1].1 - w[0].1;
+            let between = match breaks.get(i) {
+                Some(&at) if !wraps && chars.get(at) == Some(&'\r') => {
+                    para_at(at).map_or(0.0, |p| p.space_after) + para_at(at + 1).map_or(0.0, |p| p.space_before)
+                }
+                _ => 0.0,
+            };
+            let l = (pitch - between) * scale;
+            (l.is_finite() && l > 0.0).then_some(l)
+        })
     }
 
     /// The style of each paragraph of `text` (paragraphs split at `\n`).
@@ -758,5 +798,100 @@ mod tests {
         }
         let deep = format!("/0 {}", "[".repeat(200));
         assert!(read(deep.as_bytes()).is_none());
+    }
+
+    /// A point-type story of `text` whose lines start at the heights `ys` (the layout's own: where
+    /// the paragraph spacing has put them), every paragraph styled `para`.
+    fn story(text: &str, ys: &[f64], para: &Para) -> Story {
+        let size = 13.0;
+        let paras = text.split_inclusive('\r').map(|p| (p.chars().count(), para.clone())).collect();
+        Story {
+            text: text.to_string(),
+            anchor: (0.0, 0.0),
+            lines: ys.iter().map(|y| (0.0, *y)).collect(),
+            frames: vec![FrameKind::Point([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])],
+            paras,
+            runs: vec![(
+                text.chars().count(),
+                Style {
+                    font: None,
+                    size,
+                    leading: None,
+                    tracking: 0.0,
+                    baseline_shift: 0.0,
+                    h_scale: 1.0,
+                    v_scale: 1.0,
+                    fill: Some(Color::BLACK),
+                    stroke: None,
+                    stroke_width: 1.0,
+                },
+            )],
+        }
+    }
+
+    /// The leading of the text object a story comes in as.
+    fn leading_of(story: &Story) -> Option<f64> {
+        let node = story.node(NodeId(1), 0, (0.0, 0.0), Affine::IDENTITY)?;
+        match &node.kind {
+            NodeKind::Text(t) => t.runs.first().and_then(|r| r.style.leading),
+            _ => None,
+        }
+    }
+
+    #[test]
+    fn leading_leaves_out_the_space_between_paragraphs_that_the_lines_already_have() {
+        // Lines 10.6 apart that are three paragraphs with 5 less after each: auto leading (15.6) less 5.
+        let para = Para { space_after: -5.0, ..Para::default() };
+        let s = story("one\rtwo\rthree\r", &[0.0, 10.6, 21.2], &para);
+        assert!((s.line_leading(1.0).unwrap() - 15.6).abs() < 1e-9);
+        assert!((leading_of(&s).unwrap() - 15.6).abs() < 1e-9);
+        // Space after and space before both count; the scale of the frame carries onto the leading.
+        let para = Para { space_after: 4.0, space_before: 2.0, ..Para::default() };
+        let s = story("one\rtwo\r", &[0.0, 20.0], &para);
+        assert!((s.line_leading(1.0).unwrap() - 14.0).abs() < 1e-9);
+        assert!((s.line_leading(0.5).unwrap() - 7.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn leading_between_lines_of_a_paragraph_is_their_distance() {
+        // A line break inside a paragraph has no paragraph spacing between its lines.
+        let para = Para { space_after: -5.0, space_before: 3.0, ..Para::default() };
+        let s = story("one\x03two\x03three\r", &[0.0, 15.6, 31.2], &para);
+        assert!((s.line_leading(1.0).unwrap() - 15.6).abs() < 1e-9);
+        // Paragraphs without spacing: the distance as it was.
+        let s = story("one\rtwo\r", &[0.0, 15.6], &Para::default());
+        assert!((s.line_leading(1.0).unwrap() - 15.6).abs() < 1e-9);
+        // Area type whose paragraph wraps: lines and breaks don't pair up, so nothing is taken off.
+        let para = Para { space_after: -5.0, ..Para::default() };
+        let s = story("one two three\rfour\r", &[0.0, 15.6, 31.2, 41.8], &para);
+        assert!((s.line_leading(1.0).unwrap() - 15.6).abs() < 1e-9);
+        // One line has no distance to read.
+        assert_eq!(story("one\r", &[0.0], &Para::default()).line_leading(1.0), None);
+    }
+
+    #[test]
+    fn a_frame_too_short_for_its_first_line_is_made_taller() {
+        // A heading in a frame as tall as its size: a line of the font it shows in here is taller.
+        let s = story("Heading\r", &[0.0], &Para::default());
+        let area = |height: f64| {
+            let mut t = TextObject::point(Point::ZERO, "Heading", CharStyle { size: 13.0, ..CharStyle::default() });
+            t.kind = TextKind::Area { frame: vectorcraft_geom::shapes::rectangle(Rect::new(10.0, 20.0, 210.0, 20.0 + height)) };
+            t
+        };
+        let height =
+            |t: &TextObject| if let TextKind::Area { frame } = &t.kind { frame.bounds().map(|b| (b.x0, b.y0, b.x1, b.height())) } else { None };
+        let lines = |t: &TextObject| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).lines.len();
+        let mut t = area(13.0);
+        assert_eq!(lines(&t), 0, "nothing of it shows");
+        assert!(s.fit_first_line(&mut t));
+        let (x0, y0, x1, h) = height(&t).unwrap();
+        assert!((x0, y0, x1) == (10.0, 20.0, 210.0) && h > 13.0 && h < 26.0, "taller from its top: {h}");
+        assert_eq!(lines(&t), 1);
+        // A frame that holds the line stays as it is; so does one the file lays no line out in
+        // (its type is overset in the file too).
+        let mut t = area(40.0);
+        assert!(!s.fit_first_line(&mut t) && height(&t).unwrap().3 == 40.0);
+        let mut t = area(13.0);
+        assert!(!story("Heading\r", &[], &Para::default()).fit_first_line(&mut t) && height(&t).unwrap().3 == 13.0);
     }
 }

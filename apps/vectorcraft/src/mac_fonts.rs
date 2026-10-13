@@ -68,7 +68,7 @@ mod tests {
         // A space in the name: the URL's escapes are decoded. The bundled serif isn't a font macOS
         // installs.
         let file = dir.join("Registered Font.ttf");
-        std::fs::copy(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/fonts/SourceSerif4-Regular.ttf"), &file).unwrap();
+        std::fs::copy(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/fonts/NotoSerif-Regular.ttf"), &file).unwrap();
         let want = std::fs::canonicalize(&file).unwrap();
         let listed = || super::font_files().iter().any(|f| f.ends_with("/Registered Font.ttf") && std::fs::canonicalize(f).is_ok_and(|p| p == want));
         assert!(!listed());

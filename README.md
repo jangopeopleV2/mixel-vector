@@ -7,14 +7,7 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
 
 ---
 
-<p align="center">
-  <a href="https://getartcraft.com/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
-    </picture>
-  </a>
-</p>
+
 
 
 <h1 align="center">MIXEL Vector</h1>
@@ -25,7 +18,7 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
 
 <p align="center">
   A fast, open-source, clean-room take on the Adobe Illustrator workflow. It runs natively on
-  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly. Built by the ArtCraft team.
+  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly. Maintained by MIXEL, based on upstream work by the ArtCraft team.
 </p>
 
 <p align="center">
@@ -41,7 +34,7 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/vectorcraft"><b>MIXEL Vector on getartcraft.com</b></a> ·
+  <a href="https://github.com/jangopeopleV2/mixel-vector"><b>MIXEL Vector project page</b></a> ·
   <a href="https://getartcraft.com/">ArtCraft</a> ·
   <a href="https://getartcraft.com/apps">All Crafting Apps</a>
 </p>
@@ -157,6 +150,9 @@ exposes to agents, and exported by MIXEL Vector's own renderer. The source files
 ## Quick start
 
 ```sh
+git clone https://github.com/jangopeopleV2/mixel-vector
+cd mixel-vector
+
 cargo run --release -p vectorcraft                          # desktop app
 cargo run --release -p vectorcraft -- examples/dusk-poster.vectorcraft
 cargo run --release -p vectorcraft -- --control 7979        # + JSON control channel
@@ -179,12 +175,13 @@ next one. To pick one when starting the app, set `WGPU_POWER_PREF=high` (or `low
 its name, such as `WGPU_ADAPTER_NAME=nvidia` (see [`docs/development.md`](docs/development.md#desktop-graphics-processor)).
 
 On native Wayland, winit 0.30 does not deliver dropped files. To open an SVG, use File › Open;
-to place artwork in the current document, copy and paste the file in a file manager; or run
-under XWayland (`WAYLAND_DISPLAY= vectorcraft`) for file drag-and-drop
+to place artwork in the current document, copy and paste the file in a file manager. For file
+drag-and-drop, set **Preferences › Performance › Linux Display Server** to **X11 (XWayland)** and restart, or start
+the app with `WAYLAND_DISPLAY= vectorcraft`: the window then opens through XWayland, where drops work
 (see [`docs/development.md`](docs/development.md#linux-wayland-and-x11)).
 
 On Linux under KDE Plasma 6.3 or later with Wayland, a drawing tablet's pen moves the cursor but MIXEL Vector doesn't
-respond to it yet (#491). Start the app under XWayland instead: `WAYLAND_DISPLAY= vectorcraft` (see
+respond to it yet (#491). Open the window through XWayland instead, with the same preference or `WAYLAND_DISPLAY= vectorcraft` (see
 [`docs/development.md`](docs/development.md#linux-wayland-and-x11)).
 
 ### Use it from Claude Code and other agents
@@ -207,11 +204,14 @@ For the experimental, unsupported 64-bit Windows 7 build, see [Windows 7 instruc
 
 ## Status
 
-MIXEL Vector is under active development. [**ROADMAP.md**](ROADMAP.md) covers what ships today, the
-milestones, and honest time-to-parity estimates.
+MIXEL Vector is under active development. [**ROADMAP.md**](ROADMAP.md) has the stage, the numbers by dimension
+and what's next; [`docs/target-app-parity.md`](docs/target-app-parity.md) the full parity assessment and
+[`docs/gaps.md`](docs/gaps.md) the ranked list of what's missing.
 
-**Where we are (2026-10-10):** roughly 69–75% of Illustrator's features exist and work, and about 40–55% of
-"a power user can't tell the difference". Everyday vector illustration is close to usable: drawing and path tools,
+**Where we are (2026-10-10): alpha.** About 88% of Illustrator 2026's menu items, tools, effects and formats exist
+(92.5% of menu items do something), feature depth is ~75%, and we estimate ~65% "ready for real work" for a mainstream illustrator (~62% against
+all of Illustrator): everyday
+vector illustration is close to usable: drawing and path tools,
 Pathfinder and Shape Builder, paint, gradients, appearance and transparency, type with styles, threading and Hebrew/Arabic bidirectional layout, and
 files (SVG, PDF and PDF-compatible `.ai` with PDF/X, EPS, DXF, EMF/WMF, raster formats, PSD out and PSD/PSB in as their merged image, Print, Package).
 Affinity documents (`.af` from Affinity 3, `.afdesign`, `.afpub` and, by their content, `.afphoto` from Affinity 1 and 2) open
@@ -222,23 +222,25 @@ doesn't write Affinity files. Current `.af` validation includes 33 pinned files,
 and every-board SVG/PDF/PSD export, with fixes for Affinity 3 artboards, source-backed JPEGs and text runs.
 [Scope and limits](crates/affinity/README.md); [source audit and remaining gaps](docs/affinity-validation.md).
 The interface
-speaks English, German, Japanese, Traditional and Simplified Chinese, Spanish, French, Italian, Russian and Ukrainian (and Czech and Brazilian Portuguese in the menus).
-The scores are
-self-assessed, so the [honest assessment](ROADMAP.md#honest-assessment-2026-10-05) explains how far to trust them.
+speaks English, German, Japanese, Korean, Vietnamese, Traditional and Simplified Chinese, Spanish, French, Hungarian, Italian, Polish, Russian and Ukrainian (and Czech and Brazilian Portuguese in the menus);
+[localization-parity.md](docs/localization-parity.md) has the details.
+The scores are self-assessed from our code against Illustrator's public documentation;
+[target-app-parity.md](docs/target-app-parity.md#how-this-was-measured-2026-10-10) explains how far to trust them.
 
 **What's missing:**
-- 3D and Materials;
-- the Photoshop-style raster effects (Effect Gallery);
-- CJK composition for vertical type (vertical type itself has initial support, with a Japanese interface);
-- Variables and scripting;
+- reliable exchange of Illustrator's own `.ai` files (layer structure in real files; Illustrator's editing data isn't written);
 - an interaction-fidelity pass covering every tool's modifiers and small behaviours;
-- packaging for Windows and Linux.
+- 3D and Materials beyond the initial live Revolve (Extrude & Bevel, Inflate, Rotate, materials);
+- about half of the Photoshop-style raster effects (28 of 57 still missing; Film Grain is available under Artistic) and the Effect Gallery;
+- CJK composition for vertical type (vertical type itself has initial support, with a Japanese interface);
+- scripting, and the rest of Variables (image and graph kinds, dataset import);
+- generative AI features.
 
-**Where we're going:** next is the interaction-fidelity pass alongside the raster-effects package, then 3D and
-advanced type, then hardening and packaging for 1.0. The prioritized list is in
-[Where we're lacking](ROADMAP.md#where-were-lacking-in-priority-order).
+**Where we're going:** next is the interaction-fidelity pass, `.ai` files from real users and start-up stability,
+alongside the raster-effects package; then type, the Illustrator 2026 additions and 3D. The ranked list is in
+[`docs/gaps.md`](docs/gaps.md).
 
-**Workspace:** `crates/{geom, color, doc, pathops, text, effects, trace, brush, render, svg, pdf, eps, cad, metafile, format, tools, engine, ui-egui, mcp, testkit}`
+**Workspace:** `crates/{geom, color, doc, pathops, text, effects, three-d, trace, brush, render, svg, pdf, eps, cad, metafile, format, tools, engine, ui-egui, mcp, testkit}`
 and `apps/{vectorcraft, vectorcraft-cli, vectorcraft-web}`. The egui frontend is its own crate, so
 the UI can be swapped without touching the engine.
 
@@ -249,7 +251,7 @@ signed and published. Every bundled asset is listed with its licence in [`ASSETS
 
 ## Downloads
 
-**New to MIXEL Vector?** Download it from the [MIXEL Vector page on getartcraft.com](https://getartcraft.com/apps/vectorcraft). That's the easiest way to install it.
+**New to MIXEL Vector?** Download it from the [MIXEL Vector page on getartcraft.com](https://github.com/jangopeopleV2/mixel-vector). That's the easiest way to install it.
 
 **Want a specific build or format?** On GitHub, the [latest release](https://github.com/storytold/vectorcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/vectorcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
@@ -301,7 +303,7 @@ stand on its own.
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
 | <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.photo.png" alt="" width="32" height="32"> | **MIXEL Photo** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.vector.png" alt="" width="32" height="32"> | **MIXEL Vector** | **Vector illustration · you are here** | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://getartcraft.com/apps/vectorcraft) |
+| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.vector.png" alt="" width="32" height="32"> | **MIXEL Vector** | **Vector illustration · you are here** | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://github.com/jangopeopleV2/mixel-vector) |
 | <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.film.png" alt="" width="32" height="32"> | **MIXEL Film** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.light.png" alt="" width="32" height="32"> | **MIXEL Light** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.print.png" alt="" width="32" height="32"> | **MIXEL Print** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
@@ -329,7 +331,7 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
   <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
   <a href="https://getartcraft.com/">getartcraft.com</a> ·
   <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/vectorcraft">MIXEL Vector</a>
+  <a href="https://github.com/jangopeopleV2/mixel-vector">MIXEL Vector</a>
 </p>
 
 ## Star history
@@ -339,7 +341,8 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
 ## License and credits
 
 MIXEL Vector is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the MIXEL Vector contributors. Required notices are in [NOTICE](NOTICE).
+Copyright (c) 2026 ArtCraft Team and the VectorCraft contributors. Required notices are in [NOTICE](NOTICE).
+MIXEL Vector modifications by MIXEL contributors.
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ASSETS.md](ASSETS.md). Release builds also embed the
@@ -349,14 +352,14 @@ Simplified Chinese and Arabic faces; SIL Open Font License 1.1).
 The app icon (an engraved dragon on MIXEL Vector red, `#e8573f`) is the owner's original artwork; its
 palette and files are in [`assets/app-icon/`](assets/app-icon/README.md).
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and MIXEL Vector, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
-Forks and modified versions must remove them.
+The historical ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks
+of the ArtCraft Team and are not covered by this license. Their original source files, attribution
+and [`brand licence`](docs/brand/LICENSE-brand.txt) remain as upstream history. They are excluded
+from MIXEL's runtime branding and README artwork; the fork uses its own branding and retains
+plain-text credit to the ArtCraft team.
 
 <sub>Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. MIXEL Vector is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <sub>Based on upstream work by the <a href="https://getartcraft.com/">ArtCraft</a> team and community. Maintained by MIXEL.</sub>
 </p>

@@ -11285,7 +11285,7 @@
                   {
                     "text": "NEON DRIVE",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Bold",
                       "size": 132.0,
                       "tracking": 60.0,
@@ -11363,7 +11363,7 @@
                   {
                     "text": "VECTOR  ·  PURE RUST  ·  60 FPS",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Semibold",
                       "size": 28.0,
                       "tracking": 300.0,
@@ -13390,7 +13390,7 @@
                   {
                     "text": "made with VectorCraft",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Regular",
                       "size": 22.0,
                       "tracking": 200.0,

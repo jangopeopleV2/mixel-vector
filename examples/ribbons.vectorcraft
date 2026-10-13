@@ -1090,7 +1090,7 @@
                   {
                     "text": "Live Blends",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Bold",
                       "size": 64.0,
                       "tracking": 20.0,
@@ -1156,7 +1156,7 @@
                   {
                     "text": "70 steps · smooth colour · editable spines",
                     "style": {
-                      "font_family": "Source Sans 3",
+                      "font_family": "Noto Sans",
                       "font_style": "Regular",
                       "size": 22.0,
                       "tracking": 40.0,

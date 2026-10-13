@@ -89,6 +89,10 @@ pub struct Tokens {
     pub error: Color32,
     /// Warning marks (a modified linked file).
     pub warning: Color32,
+    /// Rotation gizmo axes, also labelled X, Y and Z.
+    pub axis_x: Color32,
+    pub axis_y: Color32,
+    pub axis_z: Color32,
 }
 
 impl Tokens {
@@ -133,6 +137,9 @@ impl Tokens {
             bleed: hex(0xf03030),
             error: hex(0xe34850),
             warning: hex(0xf0a330),
+            axis_x: hex(0xef6058),
+            axis_y: hex(0x45af63),
+            axis_z: hex(0x378ef0),
         };
         match b {
             Brightness::Dark => base,
@@ -222,6 +229,14 @@ impl Tokens {
     }
 }
 
+/// Selected text in the text fields `ui` draws from here on is in the strong text colour. egui
+/// paints it in the selection stroke's colour, the accent, which is hard to read on the selection's
+/// accent tint (#1465). For fields that draw their own frame: egui's frame takes its focus ring from
+/// the same stroke.
+pub fn strong_selected_text(ui: &mut egui::Ui) {
+    ui.visuals_mut().selection.stroke.color = Tokens::get(ui.ctx()).text_strong;
+}
+
 pub const FONT_UI: &str = "ui";
 pub const FONT_UI_SEMIBOLD: &str = "ui-semibold";
 pub const FONT_MONO: &str = "mono";
@@ -238,22 +253,29 @@ pub fn install_fonts(ctx: &egui::Context) {
     let add = |f: &mut FontDefinitions, name: &str, bytes: &'static [u8]| {
         f.font_data.insert(name.to_owned(), Arc::new(FontData::from_static(bytes)));
     };
-    add(&mut fonts, "SourceSans3", include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf"));
-    add(&mut fonts, "SourceSans3-Semibold", include_bytes!("../../../assets/fonts/SourceSans3-Semibold.ttf"));
+    add(&mut fonts, "Inter", include_bytes!("../../../assets/fonts/Inter-Regular.ttf"));
+    add(&mut fonts, "Inter-SemiBold", include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf"));
     add(&mut fonts, "JetBrainsMono", include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf"));
     let fallback: Vec<String> = fonts.families.get(&FontFamily::Proportional).cloned().unwrap_or_default();
-    let mut prop = vec!["SourceSans3".to_string()];
+    let mut prop = vec!["Inter".to_string()];
     prop.extend(fallback.clone());
     fonts.families.insert(FontFamily::Proportional, prop);
-    let mut semi = vec!["SourceSans3-Semibold".to_string()];
+    let mut semi = vec!["Inter-SemiBold".to_string()];
     semi.extend(fallback.clone());
     fonts.families.insert(FontFamily::Name(FONT_UI_SEMIBOLD.into()), semi);
-    let mut ui = vec!["SourceSans3".to_string()];
+    let mut ui = vec!["Inter".to_string()];
     ui.extend(fallback.clone());
     fonts.families.insert(FontFamily::Name(FONT_UI.into()), ui);
     let mut mono = vec!["JetBrainsMono".to_string()];
     mono.extend(fallback);
     fonts.families.insert(FontFamily::Name(FONT_MONO.into()), mono);
+    // Inter and egui's proportional defaults do not cover every UI symbol (notably ▾).
+    // Reuse the bundled OFL face after the existing choices; monospace keeps its first choice.
+    for stack in fonts.families.values_mut() {
+        if !stack.iter().any(|name| name == "JetBrainsMono") {
+            stack.push("JetBrainsMono".to_owned());
+        }
+    }
     add_craft_fonts(&mut fonts);
     ctx.set_fonts(fonts);
 }
@@ -295,18 +317,11 @@ pub fn apply(ctx: &egui::Context, b: Brightness) {
     v.popup_shadow = egui::epaint::Shadow { offset: [0, 4], blur: 14, spread: 0, color: Color32::from_black_alpha(if t.dark { 120 } else { 60 }) };
     v.window_shadow = egui::epaint::Shadow { offset: [0, 8], blur: 28, spread: 0, color: Color32::from_black_alpha(if t.dark { 140 } else { 70 }) };
     let w = &mut v.widgets;
-    for (wv, fill) in [
-        (&mut w.noninteractive, t.panel),
-        (&mut w.inactive, t.button),
-        (&mut w.hovered, t.hover),
-        (&mut w.active, t.tool_active),
-        (&mut w.open, t.hover),
-    ] {
-        wv.bg_fill = fill;
-        wv.weak_bg_fill = fill;
-        wv.corner_radius = t.cr();
-        wv.fg_stroke = Stroke::new(1.0, t.text);
-    }
+    craft_ui::theme::WidgetPalette { noninteractive: t.panel, inactive: t.button, hovered: t.hover, active: t.tool_active, open: t.hover }.apply_to(
+        w,
+        t.cr(),
+        Stroke::new(1.0, t.text),
+    );
     w.noninteractive.bg_stroke = Stroke::new(1.0, t.divider);
     w.inactive.bg_stroke = Stroke::NONE;
     w.hovered.bg_stroke = Stroke::new(1.0, t.input_border);
@@ -341,5 +356,25 @@ mod tests {
             assert_eq!(Brightness::parse(b.label()), Some(b));
         }
         assert!(!Tokens::for_brightness(Brightness::Light).dark);
+    }
+
+    #[test]
+    fn symbol_fallback_covers_each_ui_family_without_changing_its_first_font() {
+        let ctx = egui::Context::default();
+        install_fonts(&ctx);
+        ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
+        ctx.fonts_mut(|fonts| {
+            for (family, first) in [
+                (FontFamily::Proportional, "Inter"),
+                (FontFamily::Name(FONT_UI.into()), "Inter"),
+                (FontFamily::Name(FONT_UI_SEMIBOLD.into()), "Inter-SemiBold"),
+                (FontFamily::Name(FONT_MONO.into()), "JetBrainsMono"),
+            ] {
+                let stack = &fonts.definitions().families[&family];
+                assert_eq!(stack.first().map(String::as_str), Some(first));
+                assert_eq!(stack.iter().filter(|name| name.as_str() == "JetBrainsMono").count(), 1);
+                assert!(fonts.has_glyph(&FontId::new(13.0, family.clone()), '▾'), "{family:?}");
+            }
+        });
     }
 }

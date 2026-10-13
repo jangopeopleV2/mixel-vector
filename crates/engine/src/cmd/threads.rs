@@ -281,13 +281,17 @@ mod tests {
         assert!(!ta.is_empty() && !tb.is_empty());
         assert_eq!(format!("{ta}{tb}"), TEXT.repeat(4));
         // Editing the first frame re-flows into the second.
-        s.execute("text.editRange", &json!({"id": a, "start": 0, "end": 0, "insert": "NEW "})).unwrap();
-        assert_eq!(format!("{}{}", text(&s, a), text(&s, b)), format!("NEW {}", TEXT.repeat(4)));
+        // Insert more than its measured contents, so the edit must move overflow
+        // regardless of the bundled face's word-wrap slack.
+        let insert = format!("NEW {}", ta.repeat(2));
+        let edited_story = format!("{insert}{}", TEXT.repeat(4));
+        s.execute("text.editRange", &json!({"id": a, "start": 0, "end": 0, "insert": insert})).unwrap();
+        assert_eq!(format!("{}{}", text(&s, a), text(&s, b)), edited_story);
         assert_ne!(text(&s, b), tb, "the overflow moved on");
         // Deleting the first frame moves all its text into the second.
         s.execute("select.set", &json!({"ids": [a]})).unwrap();
         s.execute("edit.clear", &json!({})).unwrap();
-        assert_eq!(text(&s, b), format!("NEW {}", TEXT.repeat(4)));
+        assert_eq!(text(&s, b), edited_story);
         assert!(s.doc().unwrap().doc.text_threads.is_empty(), "a one-frame thread is no thread");
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc().unwrap().doc.text_threads.len(), 1);

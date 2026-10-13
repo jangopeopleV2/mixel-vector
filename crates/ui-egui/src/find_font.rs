@@ -24,7 +24,7 @@ pub fn open_on_missing(app: &mut VectorcraftApp) {
 
 /// Open the dialog with the document's font `selected` (an index into `text.fonts`) chosen.
 fn open_at(app: &mut VectorcraftApp, selected: usize) {
-    app.ui.dialog = Some(Dialog::new("findFont", json!({ "selected": selected, "family": "Source Sans 3", "style": "", "selectionOnly": false })));
+    app.ui.dialog = Some(Dialog::new("findFont", json!({ "selected": selected, "family": "Noto Sans", "style": "", "selectionOnly": false })));
 }
 
 fn fonts(app: &mut VectorcraftApp) -> Vec<Value> {
@@ -179,7 +179,7 @@ mod tests {
         let from = fonts(&mut app)[0].clone();
         assert_eq!(from["missing"], true);
         change(&mut app, &d, &from, true).unwrap();
-        assert_eq!(fonts(&mut app)[0]["family"], "Source Sans 3");
+        assert_eq!(fonts(&mut app)[0]["family"], "Noto Sans");
     }
 
     #[test]

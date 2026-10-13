@@ -41,7 +41,7 @@ fn doc() -> Document {
     let mut sq = Node::path(vectorcraft_doc::NodeId(0), shapes::rectangle(Rect::new(10.0, 10.0, 60.0, 60.0)), red);
     sq.name = Some("方块".into());
     add(&mut d, sq);
-    add(&mut d, text(Point::new(20.0, 120.0), &[(LINE, style("Source Sans 3", "Regular"))]));
+    add(&mut d, text(Point::new(20.0, 120.0), &[(LINE, style("Noto Sans", "Regular"))]));
     d
 }
 
@@ -138,7 +138,7 @@ fn tiny_has_no_filters_masks_symbols_or_style_sheets() {
     add(&mut d, a);
     let mut b = Node::path(vectorcraft_doc::NodeId(0), shapes::rectangle(Rect::new(80.0, 10.0, 130.0, 60.0)), fill(0, 0, 255));
     b.blend = BlendMode::Multiply;
-    b.mask =
+    b.extras_mut().mask =
         Some(Box::new(OpacityMask::new(Node::path(d.alloc_id(), shapes::ellipse(Rect::new(80.0, 10.0, 130.0, 60.0)), fill(255, 255, 255)), true)));
     add(&mut d, b);
     let art = Node::path(d.alloc_id(), shapes::rectangle(Rect::new(-5.0, -5.0, 5.0, 5.0)), fill(0, 128, 0));
@@ -187,10 +187,10 @@ fn embedded(svg: &str) -> Vec<(String, u16, Vec<u8>)> {
 #[test]
 fn embedded_fonts_hold_only_the_glyphs_used() {
     let mut d = Document::new(300.0, 200.0);
-    add(&mut d, text(Point::new(20.0, 60.0), &[("Hello ", style("Source Sans 3", "Regular")), ("Bold", style("Source Sans 3", "Semibold"))]));
+    add(&mut d, text(Point::new(20.0, 60.0), &[("Hello ", style("Noto Sans", "Regular")), ("Bold", style("Noto Sans", "Semibold"))]));
     let svg = export_full(&d, &ExportOptions { embed_fonts: true, ..Default::default() }, None).svg;
     let fonts = embedded(&svg);
-    assert_eq!(fonts.iter().map(|f| (f.0.as_str(), f.1)).collect::<Vec<_>>(), [("\"Source Sans 3\"", 400), ("\"Source Sans 3\"", 600)], "{svg}");
+    assert_eq!(fonts.iter().map(|f| (f.0.as_str(), f.1)).collect::<Vec<_>>(), [("\"Noto Sans\"", 400), ("\"Noto Sans\"", 600)], "{svg}");
     assert!(svg.contains("font-weight=\"600\"") && svg.contains("format(&quot;truetype&quot;)"), "{svg}");
     for (_, w, data) in &fonts {
         let f = skrifa::FontRef::new(data).unwrap();
@@ -241,10 +241,9 @@ fn variable_font_instances_embed_as_themselves() {
     assert!(advances[1] > advances[0], "{advances:?}");
 }
 
-/// The bundled Source Sans 3 Regular renamed `family` (13 characters, as long as the original
-/// name) with OS/2 `fsType` set to `fs_type`.
+/// The bundled Noto Sans Regular with a rebuilt family name and OS/2 embedding flags.
 fn licensed_font(family: &str, fs_type: u16) -> Vec<u8> {
-    let mut data = include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf").to_vec();
+    let mut data = include_bytes!("../../../assets/fonts/NotoSans-Regular.ttf").to_vec();
     let table = |data: &[u8], tag: &[u8; 4]| {
         let f = skrifa::FontRef::new(data).unwrap();
         let r = f.table_directory.table_records().iter().find(|r| r.tag().to_be_bytes() == *tag).unwrap();
@@ -252,17 +251,7 @@ fn licensed_font(family: &str, fs_type: u16) -> Vec<u8> {
     };
     let (os2, _) = table(&data, b"OS/2");
     data[os2 + 8..os2 + 10].copy_from_slice(&fs_type.to_be_bytes());
-    let (name, len) = table(&data, b"name");
-    assert_eq!(family.len(), "Source Sans 3".len());
-    let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
-    for (from, to) in [(utf16("Source Sans 3"), utf16(family)), (b"Source Sans 3".to_vec(), family.as_bytes().to_vec())] {
-        let mut i = name;
-        while let Some(at) = data[i..name + len].windows(from.len()).position(|w| w == from) {
-            data[i + at..i + at + to.len()].copy_from_slice(&to);
-            i += at + to.len();
-        }
-    }
-    data
+    vectorcraft_text::test_fonts::renamed_font(&data, &[("Noto Sans", family)]).unwrap()
 }
 
 #[test]
@@ -277,7 +266,7 @@ fn font_licences_are_respected() {
     let fonts = embedded(&o.svg);
     assert_eq!(fonts.len(), 1, "{:?}", o.warnings);
     assert_eq!(fonts[0].0, "\"Wholed Sans 3\"");
-    let size = include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf").len();
+    let size = include_bytes!("../../../assets/fonts/NotoSans-Regular.ttf").len();
     assert!(fonts[0].2.len() + 64 >= size, "embedded whole: {} of {size} bytes", fonts[0].2.len());
     assert!(o.warnings.iter().any(|w| w.contains("Sealed Sans 3") && w.contains("doesn't allow embedding")), "{:?}", o.warnings);
     assert!(o.warnings.iter().any(|w| w.contains("Wholed Sans 3") && w.contains("whole")), "{:?}", o.warnings);

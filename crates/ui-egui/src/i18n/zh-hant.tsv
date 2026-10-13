@@ -216,6 +216,7 @@
 	Author Title:	作者職稱：
 	Author:	作者：
 	Auto	自動
+	Auto Color	自動顏色
 	Automatic	自動
 	Auto Size New Area Type	自動調整新區域文字大小
 	Auto Spell Check	自動拼字檢查
@@ -1095,12 +1096,31 @@
 	Graph	圖表
 	Graph Data	圖表資料
 	Graph Type	圖表類型
+	Graph Design	圖表設計
+	Graph Marker	圖表標記
+	New Design	新增設計
+	Delete Design	刪除設計
+	Paste Design	貼上設計
+	Select Unused	選取未使用項目
+	Import Data…	匯入資料…
+	Transpose	轉置
+	Switch x/y	切換 x/y
+	Number of Decimals:	小數位數：
+	Column Width:	欄寬：
+	No Legend	無圖例
+	Standard Legend	標準圖例
+	Legends in Wedges	楔形中的圖例
+	Ratio	比例
+	Even	平均
+	Stacked	堆疊
 	Graphic Style	繪圖樣式
 	Graphic Style Libraries	繪圖樣式資料庫
 	Graphic Style Libraries Menu	繪圖樣式資料庫選單
 	Graphic Style Library	繪圖樣式資料庫
 	Graphic Style Options	繪圖樣式選項
 	Graphic Style Options…	繪圖樣式選項…
+	Symbol Options	符號選項
+	Symbol Options…	符號選項…
 	Graphic Styles	繪圖樣式
 	Graphic Styles Options	繪圖樣式選項
 	Graphics	圖形
@@ -1170,6 +1190,7 @@
 	Highlight Alternate Glyphs	醒目提示替代字符
 	Highlight anchors on mouse over	滑鼠移過時醒目提示錨點
 	Highlight Rows	反白顯示列
+	Highlight Variable	突出顯示變數
 	Highlight Substituted Fonts	醒目提示被取代的字體
 	Highlight Substituted Glyphs	醒目提示被取代的字符
 	History	步驟記錄
@@ -1201,6 +1222,7 @@
 	Identify Objects By	識別物件依據
 	Ignore	略過
 	Ignore Artboards (all the art as one page)	忽略工作區域 (所有圖稿視為單一頁面)
+	Ignore Color	忽略顏色
 	Ignore White	忽略白色
 	Palette:	調色盤：
 	Limited	有限
@@ -1315,6 +1337,7 @@
 	Last Effect…	最後一次效果…
 	Last Page	最後一頁
 	Latin	拉丁文
+	Thai	泰文
 	Latin Extended	拉丁文擴充
 	Latin-1 Supplement	拉丁文-1 補充
 	Layer	圖層
@@ -1537,6 +1560,7 @@
 	Move Rows	移動列
 	Move Slices	移動切片
 	Move Spine Point	移動脊線點
+	Reshape Spine Segment	改變脊線線段外框
 	Move Swatch	移動色票
 	Move Up	上移
 	Move…	移動…
@@ -1867,7 +1891,7 @@
 	Paragraph Style Options	段落樣式選項
 	Paragraph Styles	段落樣式
 	Paragraph Symbol	段落符號
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	ArtCraft 的一部分。MIT OR Apache-2.0。字體：Source Sans 3、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + MIXEL Vector。
+	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基於 ArtCraft 團隊的工作。MIT OR Apache-2.0。字體：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + MIXEL Vector。
 	Password	密碼
 	Paste	貼上
 	Paste in Back	貼至後方
@@ -2028,6 +2052,11 @@
 	Proof Colors	校樣色彩
 	Proof Setup	校樣設定
 	Properties	內容
+	Proportional Metrics	比例度量
+	Digits	數字
+	Arabic	阿拉伯數字
+	Hindi	印地數字
+	Farsi	波斯數字
 	Proportional Oldstyle	比例舊式數字
 	Pucker & Bloat…	縮攏與膨脹…
 	Pucker Tool	縮攏工具
@@ -2118,6 +2147,9 @@
 	Rectangle: Sunshine	矩形：陽光
 	Rectangle…	矩形…
 	Rectangular Grid	矩形格線
+# Rectangular Grid click dialog.
+	Horizontal Dividers:	水平分隔線：
+	Vertical Dividers:	垂直分隔線：
 	Rectangular Grid Tool	矩形格線工具
 	Red	紅色
 	Redefine Character Style	重新定義字元樣式
@@ -2127,6 +2159,9 @@
 	Redefine Symbol	重新定義符號
 	Redefine {kind} Style	重新定義{kind}樣式
 	Redo	重做
+	List Folder	列出資料夾
+	Begin Undo Group	開始還原群組
+	End Undo Group	結束還原群組
 	Redo {name}	重做 {name}
 	Redo {}	重做 {}
 	Reduce Colors	縮減顏色
@@ -2179,6 +2214,13 @@
 	Relinked {n} image(s); not in that folder: {}	已重新連結 {n} 張影像；不在該資料夾中：{}
 	Relinked {} image(s)	已重新連結 {} 張影像
 	Relink…	重新連結…
+	Find Linked Files	尋找連結檔案
+	Find Linked Files in Folder…	在資料夾中尋找連結檔案…
+	Choose the file to relink each linked file to. Files with the size and contents saved with the link come first.	請為每個連結檔案選擇要重新連結的檔案。大小和內容與連結所儲存相同的檔案會排在最前面。
+	Same file	相同檔案
+	Same size	相同大小
+	Don't Relink	不重新連結
+	Copy into the document's folder	複製到文件所在的資料夾
 	Reload Plug-ins	重新載入增效模組
 	Remove	移除
 	Remove Anchor Points	移除錨點
@@ -2447,6 +2489,7 @@
 	Select an image to see its Link Info.	選取影像以檢視其連結資訊。
 	Select an image to trace	選取要描圖的影像
 	Select Anchors	選取錨點
+	Select Segments	選取路徑區段
 	Select Appearance Item	選取外觀項目
 	Select Art	選取圖稿
 	Select art and choose Object › Pattern › Make.	選取圖稿，然後選擇「物件 › 圖樣 › 製作」。
@@ -2492,7 +2535,6 @@
 	Set base color to the current color	將基本色設為目前顏色
 	Set Bounds	設定邊界
 	Set Current Layer	設定目前圖層
-	Set Key Object	設定關鍵物件
 	Set Keyboard Shortcut	設定鍵盤快速鍵
 	Set Mesh Point Color	設定網格點顏色
 	Set Preference	設定偏好設定
@@ -2610,6 +2652,7 @@
 	Size Tile to Art	拼貼符合圖稿大小
 	Size/Leading	大小/行距
 	Size:	大小：
+	Ridges per segment:	每段起伏數：
 	Size: {size}  Tracking: {tracking}	大小：{size}  字距：{tracking}
 	Skew	傾斜
 	Skin Tone Ramps	膚色漸階
@@ -2664,7 +2707,7 @@
 	Sort by Name	依名稱排序
 	Sort by Status	依狀態排序
 	Source code on GitHub	GitHub 上的原始碼
-	Source Sans 3	Source Sans 3
+	Noto Sans	Noto Sans
 	Space After Paragraph	段後間距
 	Space Before Paragraph	段前間距
 	Spaces	空格
@@ -2680,6 +2723,8 @@
 	Spiral Tool	螺旋工具
 	Split Freeform Line	分割任意形狀線條
 	Split Into Grid	分割為格線
+	Total:	總計：
+	Add Guides	增加參考線
 	Split Into Grid…	分割為格線…
 	Split Path	分割路徑
 	spot	特別色
@@ -2879,6 +2924,9 @@
 	Tool Options…	工具選項…
 	Toolbar: Advanced / Basic	工具列：進階 / 基本
 	Toolbar: Single/Double Column	工具列：單欄/雙欄
+	Toolbar: Add Tool	工具列：新增工具
+	Toolbar: Remove Tool	工具列：移除工具
+	Toolbar: Reset	工具列：重設
 	Toolbars	工具列
 	Tools	工具
 	Top	上
@@ -2987,6 +3035,8 @@
 	Update Changed Links	更新已變更的連結
 	{count} linked image(s) changed on disk. Show the new versions?	有 {count} 個連結影像已在磁碟上變更。要顯示新版本嗎？
 @msg	Updated {_1} linked file(s) changed on disk	已更新 {_1} 個在磁碟上變更的連結檔案
+@msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	連結的圖片在找到其檔案之前顯示檔案中儲存的低解析度預覽：請在「連結」面板中重新連結
+@msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	框架高度不足以容納所顯示字體一行的區域文字已加高框架 ({_1})：否則文字不會顯示
 	Update Modified Links	更新已修改的連結
 	Updated {} image(s)	已更新 {} 張影像
 	UPPERCASE	全部大寫
@@ -3038,6 +3088,38 @@
 	V:	V：
 	Variable Width Profile	可變寬度描述檔
 	Variables	變數
+	New Variable	新增變數
+	Delete Variable	刪除變數
+	List Variables	列出變數
+	Bind Variable	綁定變數
+	Unbind Variable	解除變數綁定
+	New Data Set	新增資料集
+	Delete Data Set	刪除資料集
+	List Data Sets	列出資料集
+	Select Data Set	選取資料集
+	Next Data Set	下一個資料集
+	Previous Data Set	上一個資料集
+	Data Sets	資料集
+	New Variable…	新增變數…
+	New Data Set…	新增資料集…
+	Edit Data Set…	編輯資料集…
+	Data Set	資料集
+	Kind	類型
+	Variable	變數
+	no document	沒有文件
+	no data set to edit	沒有可編輯的資料集
+	Make Text Dynamic	使文字動態化
+	Make Visibility Dynamic	使可見性動態化
+	Capture Data Set	擷取資料集
+	Update Data Set	更新資料集
+	Rename Data Set…	重新命名資料集…
+	Variable Options…	變數選項…
+	Select Bound Object	選取繫結的物件
+	Select All Bound Objects	選取所有繫結的物件
+	Multiple objects	多個物件
+	New Name	新名稱
+	no variable to rename	沒有可重新命名的變數
+	no data set to rename	沒有可重新命名的資料集
 	Variation:	變化：
 	Vector Effects	向量效果
 	Vector Halftone	向量半色調
@@ -3055,6 +3137,7 @@
 	Vertical %	垂直 %
 	Vertical Align Bottom	垂直靠下對齊
 	Vertical Align Center	垂直置中對齊
+	Horizontal & Vertical Align Center	水平和垂直置中對齊
 	Vertical Align Top	垂直靠上對齊
 	Vertical Area Type Tool	垂直區域文字工具
 	Vertical Distribute Bottom	垂直均分下緣
@@ -3143,6 +3226,7 @@
 	{warning}: click to correct to the closest color ({hex})	{warning}：按一下以修正為最接近的顏色 ({hex})
 	“{file}” is protected by a password.	「{file}」受密碼保護。
 	● Recording	● 錄製中
+imageTrace	Outline	輪廓
 @plural	{n} item|{n} items	{n} 個項目
 @plural	Color Table ({n} color)|Color Table ({n} colors)	色彩表 ({n} 色)
 @plural	Delete this {n} graphic style?|Delete these {n} graphic styles?	要刪除這 {n} 個繪圖樣式嗎？
@@ -3262,6 +3346,7 @@ axis	Horizontal	水平
 axis	Vertical	垂直
 axis	Both	兩者
 	Drag to move	拖曳以移動
+	Drag to move out of the set	拖曳以移出該組合
 	Drag to float as a toolbar	拖曳使其浮動為工具列
 	Put back in the toolbar	放回工具列
 	Float Panel	浮動面板
@@ -3284,6 +3369,8 @@ axis	Both	兩者
 	Images: link to the file instead of only embedding it.	影像：連結至檔案，而不只是嵌入。
 	MIXEL Vector documents: one locked object, updated when the file changes.	MIXEL Vector 文件：單一鎖定物件，檔案變更時隨之更新。
 	A file dialog is open: choose there first	檔案對話方塊已開啟：請先在其中選擇
+	The document was closed while its file dialog was open	檔案對話方塊開啟期間，文件已關閉
+	The dialog was closed before its file dialog answered	檔案對話方塊回應之前，對話方塊已關閉
 	Shaper	Shaper
 	Expand Shaper Group	展開 Shaper 群組
 	Release Shaper Group	釋放 Shaper 群組
@@ -3388,3 +3475,159 @@ axis	Both	兩者
 effect	Soft	柔和
 	Edge	邊緣
 	System Title Bar	系統標題列
+	Value Axis	數值軸
+	On Left Side	左側
+	On Right Side	右側
+	On Both Sides	兩側
+	Short	短
+	Full Width	全寬
+	Distort	扭曲
+	Diffuse Glow…	擴散光暈…
+	Glass…	玻璃…
+	Ocean Ripple…	海洋波紋…
+	Diffuse Glow	擴散光暈
+	Glass	玻璃
+	Ocean Ripple	海洋波紋
+	Graininess	顆粒
+	Glow Amount	光暈量
+	Clear Amount	清除量
+	Ripple Size	波紋大小
+	Ripple Magnitude	波紋強度
+	Blocks	塊狀
+	Frosted	磨砂
+	Tiny Lens	小鏡頭
+	Rename Data Set	重新命名資料集
+	Rename Variable	重新命名變數
+	Variable Options	變數選項
+	Edit Data Set	編輯資料集
+	Define a variable first	請先定義一個變數
+	Text	文字
+	Visibility	可見性
+# Shared panel docking
+	Activate Panel	啟用面板
+	Change Panel Layout	變更面板配置
+	Close Panel	關閉面板
+	Move Panel	移動面板
+	Group with	群組至
+	Resize panels	調整面板大小
+	Resize panel window	調整面板視窗大小
+
+# Revolve profile guidance.
+
+# Interactive Revolve controls.
+	Lighting	照明
+	Revolve angle	旋轉成形角度
+	Axis side	軸的位置
+	Rotation X	X 軸旋轉
+	Rotation Y	Y 軸旋轉
+	Rotation Z	Z 軸旋轉
+	Shading	明暗處理
+	Direction	方向
+	Elevation	仰角
+	Ambient	環境光
+	Segments	分段數
+	Show axis	顯示軸
+	Reset all	全部重設
+	Reset to default	重設為預設值
+	Reset all Revolve settings to their defaults.	將所有旋轉成形設定重設為預設值。
+	Drag values or labels. Double-click a value to type.	拖曳數值或標籤。按兩下數值即可輸入。
+	Drag rings to rotate. Shift snaps to 15°.	拖曳圓環旋轉。按住 Shift 以 15° 為間距調整。
+	Drag the light, or its rings. Shift snaps to 15°.	拖曳光源或圓環。按住 Shift 以 15° 為間距調整。
+lighting	Light	光源
+	Keep visible surfaces only when expanding	展開時僅保留可見表面
+	Trim covered geometry on Expand Appearance. Live preview keeps the full surface. Transparent paints and surfaces exceeding visibility limits retain all faces.	展開外觀時裁剪被遮擋的幾何區域。即時預覽保留完整表面。透明繪製或超出可見性處理限制的表面保留所有面。
+	Accented Edges…	強調邊緣…
+	Angled Strokes…	傾斜筆觸…
+	Crosshatch…	交叉影線…
+	Dark Strokes…	深色筆觸…
+	Ink Outlines…	墨水輪廓…
+	Spatter…	噴濺…
+	Sprayed Strokes…	噴灑筆觸…
+	Sumi-e…	水墨畫…
+	Accented Edges	強調邊緣
+	Angled Strokes	傾斜筆觸
+	Crosshatch	交叉影線
+	Dark Strokes	深色筆觸
+	Ink Outlines	墨水輪廓
+	Spatter	噴濺
+	Sprayed Strokes	噴灑筆觸
+	Sumi-e	水墨畫
+	Direction Balance	方向平衡
+	Stroke Length	筆觸長度
+	Sharpness	銳利度
+	Strength	力度
+	Balance	平衡
+	Black Intensity	黑色強度
+	White Intensity	白色強度
+	Dark Intensity	暗部強度
+	Spray Radius	噴灑半徑
+	Stroke Direction	筆觸方向
+	Stroke Width	筆觸寬度
+	Stroke Pressure	筆觸壓力
+	Right Diagonal	右對角線
+	Left Diagonal	左對角線
+	Vertical Guide	垂直參考線
+	Horizontal Guide	水平參考線
+	Move Guide to Layer	將參考線移至圖層
+	Linux Display Server	Linux 顯示伺服器
+	X11 (XWayland)	X11 (XWayland)
+	Ruler Origin	尺標原點
+	Reset Ruler Origin	重設尺標原點
+	Artistic	藝術效果
+	Film Grain…	底片顆粒…
+	Highlight Area	亮部範圍
+	Concentric Dividers:	同心分隔線：
+	Radial Dividers:	徑向分隔線：
+# Grid tool options (the Rectangular Grid and Polar Grid click dialogs).
+	Skew:	傾斜：
+	Inside	內側
+	Outside	外側
+	Use Outside Rectangle As Frame	使用外部矩形作為框架
+	Create Compound Path From Ellipses	從橢圓形建立複合路徑
+	Fill Grid	格線填色
+	Select two or more objects, or a group	請選取兩個或更多物件，或一個群組
+# 3D and Materials › Extrude & Bevel, Inflate and Rotate: options, Position presets and bevel shapes.
+	Back	背面
+	Both sides	雙面
+	Classic	經典
+	Cove	凹圓
+	Depth	深度
+	Front	正面
+	Isometric Bottom	等角底部
+	Isometric Left	等角左側
+	Isometric Right	等角右側
+	Isometric Top	等角頂部
+	Off-Axis Back	離軸背面
+	Off-Axis Bottom	離軸底部
+	Off-Axis Front	離軸正面
+	Off-Axis Left	離軸左側
+	Off-Axis Right	離軸右側
+	Off-Axis Top	離軸頂部
+	Ogee	反曲線
+	Reset all 3D settings to their defaults.	將所有 3D 設定重設為預設值。
+	Step	階梯
+	Taper	錐化
+	Twist	扭轉
+	Volume	體積
+3d	Cap	封口
+3d	Solid	實心
+3d	Hollow	空心
+3d	Bevel	斜角
+3d	Rounded	圓角
+3d	Space	間距
+	Bevel Shape	斜角形狀
+	Bevel Inside	斜角向內
+	Bevel both sides	雙面斜角
+	Presets	預設集
+@msg	An object takes one 3D effect. Edit the existing effect's options, or remove it first.	一個物件只能套用一種 3D 效果。請編輯現有效果的選項，或先將其移除。
+@msg	{label} currently requires a path or compound path. Convert type, images and groups to paths first.	{label}目前需要路徑或複合路徑。請先將文字、影像和群組轉換為路徑。
+@msg	{label} requires a shape with at least two anchors	{label}需要至少有兩個錨點的形狀
+@msg	The shape is too complex for a 3D effect	形狀過於複雜，無法套用 3D 效果
+@msg	The 3D surface is too complex; simplify the shape	3D 表面過於複雜；請簡化形狀
+	Transform Objects	變形物件
+@msg	unknown parameter `{key}`; did you mean `{near}`?	未知的參數 `{key}`；您是指 `{near}` 嗎？
+@msg	unknown parameter `{key}`; the command takes no parameters	未知的參數 `{key}`；此指令沒有參數
+@msg	unknown parameter `{key}`; the command takes: {keys}	未知的參數 `{key}`；此指令接受：{keys}
+	Load EPS into Clipboard	將 EPS 載入剪貼簿
+@msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的影像過大，無法繪製
+	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	模擬會按照疊印預覽顯示的效果列印疊印；分色一律保留疊印。預設集會在列印前平面化透明度（PostScript 檔案一律平面化透明度）。

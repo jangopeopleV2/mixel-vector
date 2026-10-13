@@ -83,6 +83,7 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `assets/icons/copy.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/dc-actions.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-al-bottom.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-center.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-al-hcenter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-al-left.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-al-right.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
@@ -98,6 +99,7 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `assets/icons/dc-arc.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-arrow-down.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-arrow-extend.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arrow-fill.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 | The Selection and Direct Selection arrows' fill, painted black or white under their outline |
 | `assets/icons/dc-arrow-tip.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-arrow-up.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
 | `assets/icons/dc-artboard-options.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
@@ -331,3 +333,35 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `examples/ribbons.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
 | `examples/feature-sheet.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
 | `examples/perspective-city.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
+
+
+## MIXEL font replacement — 2026-10-13
+
+The five Source Sans 3 / Source Serif 4 TTF assets listed above are retired and no longer present or embedded in MIXEL Vector. Their original credit rows and OFL licence texts are retained as historical upstream notices. The owner-authorized replacements below keep the existing Latin font footprint at five faces. The UI uses the already bundled Inter family; document text uses Noto Sans and Noto Serif. The Noto binaries are unmodified official files pinned to source commit `4e15001b9fb484cc871d7b2ad930cd2226edf260`; their sidecars record SHA-256 checksums.
+
+| Asset | Author | Source | Licence | Notes |
+|---|---|---|---|---|
+| `assets/fonts/NotoSans-Regular.ttf` | The Noto Project Authors | https://raw.githubusercontent.com/notofonts/notofonts.github.io/4e15001b9fb484cc871d7b2ad930cd2226edf260/fonts/NotoSans/unhinted/ttf/NotoSans-Regular.ttf | OFL-1.1 (`assets/fonts/OFL-Noto.txt`) | Unmodified official static face; SHA-256 `f3961a9cde016d41a4879aecda1474d3a36d6bf54fa0e4643de029cc2248b0e8` |
+| `assets/fonts/NotoSans-Regular.ttf.attribution` | MIXEL | Original provenance record for the font above | MIT OR Apache-2.0 | Source commit and SHA-256 pin |
+| `assets/fonts/NotoSans-SemiBold.ttf` | The Noto Project Authors | https://raw.githubusercontent.com/notofonts/notofonts.github.io/4e15001b9fb484cc871d7b2ad930cd2226edf260/fonts/NotoSans/unhinted/ttf/NotoSans-SemiBold.ttf | OFL-1.1 (`assets/fonts/OFL-Noto.txt`) | Unmodified official static face; SHA-256 `a7af8d4a11e8e49fea9a19786a6469210b512cd4061413e8036bdd2425722795` |
+| `assets/fonts/NotoSans-SemiBold.ttf.attribution` | MIXEL | Original provenance record for the font above | MIT OR Apache-2.0 | Source commit and SHA-256 pin |
+| `assets/fonts/NotoSans-Bold.ttf` | The Noto Project Authors | https://raw.githubusercontent.com/notofonts/notofonts.github.io/4e15001b9fb484cc871d7b2ad930cd2226edf260/fonts/NotoSans/unhinted/ttf/NotoSans-Bold.ttf | OFL-1.1 (`assets/fonts/OFL-Noto.txt`) | Unmodified official static face; SHA-256 `87cb2d84472a7d66da659ee47b6cdb9552326e8c128245231f191b6ac72529d9` |
+| `assets/fonts/NotoSans-Bold.ttf.attribution` | MIXEL | Original provenance record for the font above | MIT OR Apache-2.0 | Source commit and SHA-256 pin |
+| `assets/fonts/NotoSans-Italic.ttf` | The Noto Project Authors | https://raw.githubusercontent.com/notofonts/notofonts.github.io/4e15001b9fb484cc871d7b2ad930cd2226edf260/fonts/NotoSans/unhinted/ttf/NotoSans-Italic.ttf | OFL-1.1 (`assets/fonts/OFL-Noto.txt`) | Unmodified official static face; SHA-256 `678288f868807d4d64a6f3b51466871d117d915780381ce9d0ed4b3bcbd06d37` |
+| `assets/fonts/NotoSans-Italic.ttf.attribution` | MIXEL | Original provenance record for the font above | MIT OR Apache-2.0 | Source commit and SHA-256 pin |
+| `assets/fonts/NotoSerif-Regular.ttf` | The Noto Project Authors | https://raw.githubusercontent.com/notofonts/notofonts.github.io/4e15001b9fb484cc871d7b2ad930cd2226edf260/fonts/NotoSerif/unhinted/ttf/NotoSerif-Regular.ttf | OFL-1.1 (`assets/fonts/OFL-Noto.txt`) | Unmodified official static face; SHA-256 `a15cfbbc1539d707115111d672d590a3d70d4f74b4c0a315956da20ae19a14e1` |
+| `assets/fonts/NotoSerif-Regular.ttf.attribution` | MIXEL | Original provenance record for the font above | MIT OR Apache-2.0 | Source commit and SHA-256 pin |
+| `assets/fonts/OFL-Noto.txt` | The Noto Project Authors | https://github.com/notofonts/latin-greek-cyrillic/blob/main/OFL.txt | OFL-1.1 | Full licence text for Noto Sans and Noto Serif |
+
+
+## MIXEL runtime trademark policy — 2026-10-13
+
+The `docs/brand/` ArtCraft logo and mark rows remain as historical upstream credits. Those files are not used as MIXEL runtime marks or README artwork. The runtime brand mark is the original MIT/Apache-2.0 engraved-dragon app icon already attributed above, and the README retains plain-text ArtCraft credit.
+
+## MIXEL UI symbol fallback — 2026-10-13
+
+The existing unmodified JetBrains Mono Regular face also supplies UI symbols missing from Inter, including U+25BE (BLACK DOWN-POINTING SMALL TRIANGLE). It follows the current proportional UI fonts and remains first for the mono family. Its bytes match the official immutable source above at commit `19371302b95d218af43299bce79ddbddd0bc364d`, SHA-256 `e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1`; the existing complete OFL text matches the same commit, SHA-256 `a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697`. No new font binary or modified glyph is added.
+
+| Asset | Author | Source | Licence | Notes |
+| --- | --- | --- | --- | --- |
+| `assets/fonts/JetBrainsMono-Regular.ttf.attribution` | MIXEL | Original provenance record; [pinned official font](https://raw.githubusercontent.com/JetBrains/JetBrainsMono/19371302b95d218af43299bce79ddbddd0bc364d/fonts/ttf/JetBrainsMono-Regular.ttf) | MIT OR Apache-2.0 | Records the existing OFL face and SHA-256 pin; the original font credit row above remains unchanged |

@@ -57,7 +57,9 @@ fn round_joined_character_strokes_have_no_miter_spikes() {
 
 #[test]
 fn character_and_object_strokes_on_type_are_dashed() {
-    // An "I" without a fill: its outline drawn with 8/8 dashes breaks up along the left stem edge.
+    // Noto Sans's "l" is a rectangular stem (font-unit bounds 85,0..173,760,
+    // at 1000 units/em). At 120 pt its 91.2 pt left edge crosses many 8/8
+    // dashes. Capital "I" has end bars whose leftmost ink misses the stem.
     let none = CharStyle { fill: Paint::None, ..Default::default() };
     let dash = Some(Dash { pattern: vec![8.0, 8.0], ..Default::default() });
     let transitions = |img: &Rendered| {
@@ -66,18 +68,18 @@ fn character_and_object_strokes_on_type_are_dashed() {
         (y0..y1).filter(|y| dark(img, col, *y) != dark(img, col, y + 1)).count()
     };
     let solid = CharStyle { stroke: Paint::solid(Color::BLACK), stroke_width: 3.0, ..none.clone() };
-    assert!(transitions(&render_text("I", solid.clone(), vec![])) <= 2, "a solid stroke is continuous");
+    assert!(transitions(&render_text("l", solid.clone(), vec![])) <= 2, "a solid stroke is continuous");
     let chars = CharStyle { stroke_dash: dash.clone(), ..solid };
-    assert!(transitions(&render_text("I", chars, vec![])) >= 6, "character dashes");
+    assert!(transitions(&render_text("l", chars, vec![])) >= 6, "character dashes");
     let mut st = vectorcraft_doc::StrokeLayer::new(Paint::solid(Color::BLACK), 3.0);
     st.dash = dash;
-    let object = render_text("I", none, vec![AppearanceItem::Stroke(st.clone())]);
+    let object = render_text("l", none, vec![AppearanceItem::Stroke(st.clone())]);
     assert!(transitions(&object) >= 6, "object dashes");
     // And its opacity.
     st.opacity = 0.5;
     st.dash = None;
-    let half = render_text("I", CharStyle { fill: Paint::None, ..Default::default() }, vec![AppearanceItem::Stroke(st)]);
-    let (x0, y0, _, y1) = ink(&render_text("I", CharStyle::default(), vec![]));
+    let half = render_text("l", CharStyle { fill: Paint::None, ..Default::default() }, vec![AppearanceItem::Stroke(st)]);
+    let (x0, y0, _, y1) = ink(&render_text("l", CharStyle::default(), vec![]));
     let p = half.pixel(x0, (y0 + y1) / 2);
     assert!(p[0] > 90 && p[0] < 200, "a half-opaque stroke is grey: {p:?}");
 }

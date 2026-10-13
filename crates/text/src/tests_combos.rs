@@ -11,7 +11,7 @@ use vectorcraft_geom::PathData;
 const COPY: &str = "Typography is the craft of arranging type to make written language legible, readable and appealing when displayed. \
 The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing and letter spacing.";
 
-/// Words full of `fi` (Source Serif 4 ligates it).
+/// Words full of `fi` (Noto Serif ligates it).
 const FI: &str = "fine fish finish first in fifty fields of fireflies, a fitting finale for the final fiddler";
 
 /// Two lines that single-line and every-line composers break differently (see
@@ -27,7 +27,7 @@ fn sans(size: f64) -> CharStyle {
 }
 
 fn serif(size: f64, tracking: f64) -> CharStyle {
-    CharStyle { font_family: "Source Serif 4".into(), size, tracking, ..CharStyle::default() }
+    CharStyle { font_family: "Noto Serif".into(), size, tracking, ..CharStyle::default() }
 }
 
 fn run(text: &str, style: CharStyle) -> TextRun {

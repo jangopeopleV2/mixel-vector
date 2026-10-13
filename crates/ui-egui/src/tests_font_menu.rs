@@ -80,12 +80,12 @@ fn escape_closes_the_menu_and_ends_the_preview() {
 
 #[test]
 fn samples_show_the_text_in_the_family_or_a_generic_sample() {
-    let latin = crate::font_menu::render_sample_for_test("Source Serif 4", "Gagaku", 24).unwrap();
+    let latin = crate::font_menu::render_sample_for_test("Noto Serif", "Gagaku", 24).unwrap();
     assert_eq!(latin.size[1], 24);
     assert!(latin.pixels.iter().any(|p| p.a() > 0), "ink");
     // Japanese text in a Latin font: the generic sample, not glyphs from another font.
-    let ja = crate::font_menu::render_sample_for_test("Source Serif 4", "雅楽", 24).unwrap();
-    let sample = crate::font_menu::render_sample_for_test("Source Serif 4", "Sample", 24).unwrap();
+    let ja = crate::font_menu::render_sample_for_test("Noto Serif", "雅楽", 24).unwrap();
+    let sample = crate::font_menu::render_sample_for_test("Noto Serif", "Sample", 24).unwrap();
     assert_eq!(ja.size, sample.size);
 }
 
@@ -103,15 +103,15 @@ fn preview_changes_the_text_live_and_only_a_choice_is_a_step() {
     let steps = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
     assert_eq!(crate::font_menu::sample_text(&app).as_deref(), Some("Gagaku"));
     let before = steps(&app);
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Source Serif 4".into(), None));
-    assert_eq!(font(&app), "Source Serif 4", "previewed on the text");
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Source Sans 3".into(), None));
-    assert_eq!(font(&app), "Source Sans 3");
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Noto Serif".into(), None));
+    assert_eq!(font(&app), "Noto Serif", "previewed on the text");
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Noto Sans".into(), None));
+    assert_eq!(font(&app), "Noto Sans");
     crate::font_menu::apply(&mut app, &ctx, FontPick::EndPreview);
     assert_eq!((font(&app), steps(&app)), ("Inter".to_string(), before), "the preview leaves nothing behind");
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Source Serif 4".into(), None));
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Chosen("Source Serif 4".into(), None));
-    assert_eq!((font(&app), steps(&app)), ("Source Serif 4".to_string(), before + 1), "one step");
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Noto Serif".into(), None));
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Chosen("Noto Serif".into(), None));
+    assert_eq!((font(&app), steps(&app)), ("Noto Serif".to_string(), before + 1), "one step");
     app.run("edit.undo", json!({})).unwrap();
     assert_eq!(font(&app), "Inter");
 }
@@ -126,7 +126,7 @@ fn a_preview_left_open_by_a_menu_that_is_gone_is_undone() {
     let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Gagaku", "font": "Inter"})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
     let steps = app.session.active().unwrap().history.undo.len();
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Source Serif 4".into(), None));
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Preview("Noto Serif".into(), None));
     assert!(app.session.in_interaction());
     crate::font_menu::end_stale_preview(&mut app, &ctx);
     assert!(!app.session.in_interaction(), "no menu drawn: the preview is undone");
@@ -185,8 +185,8 @@ fn bundled_families_are_classified() {
     let db = FontDb::global();
     let class = |f: &str| db.family_traits(f).class;
     assert_eq!(class("JetBrains Mono"), FontClass::Monospaced);
-    assert_eq!(class("Source Serif 4"), FontClass::Serif);
-    assert_eq!(class("Source Sans 3"), FontClass::Sans);
+    assert_eq!(class("Noto Serif"), FontClass::Serif);
+    assert_eq!(class("Noto Sans"), FontClass::Sans);
     assert!(!db.family_traits("Inter").japanese);
 }
 
@@ -200,7 +200,7 @@ fn right_arrow_lists_a_familys_styles_and_they_preview() {
         let (mut at, mut picked) = (egui::Pos2::ZERO, None);
         let mut out = ctx.run_ui(input, |ui| {
             at = ui.next_widget_position();
-            picked = font_menu(ui, "test-styles", "Source Sans 3", 260.0, None, MenuLook::default());
+            picked = font_menu(ui, "test-styles", "Noto Sans", 260.0, None, MenuLook::default());
         });
         out.textures_delta.clear();
         (at, picked)
@@ -213,15 +213,66 @@ fn right_arrow_lists_a_familys_styles_and_they_preview() {
     for _ in 0..5 {
         frame(vec![]);
     }
-    let styles = FontDb::global().styles("Source Sans 3");
+    let styles = FontDb::global().styles("Noto Sans");
     assert!(styles.len() > 1);
     frame(key(egui::Key::ArrowRight));
     let (_, picked) = frame(key(egui::Key::ArrowDown));
-    assert_eq!(picked, Some(FontPick::Preview("Source Sans 3".into(), Some(styles[0].clone()))), "the first style under the family");
+    assert_eq!(picked, Some(FontPick::Preview("Noto Sans".into(), Some(styles[0].clone()))), "the first style under the family");
     let (_, picked) = frame(key(egui::Key::ArrowDown));
-    assert_eq!(picked, Some(FontPick::Preview("Source Sans 3".into(), Some(styles[1].clone()))));
+    assert_eq!(picked, Some(FontPick::Preview("Noto Sans".into(), Some(styles[1].clone()))));
     let (_, picked) = frame(key(egui::Key::Enter));
-    assert_eq!(picked, Some(FontPick::Chosen("Source Sans 3".into(), Some(styles[1].clone()))));
+    assert_eq!(picked, Some(FontPick::Chosen("Noto Sans".into(), Some(styles[1].clone()))));
+}
+
+/// #1116: styles listed above the highlight (a click on another family's triangle) leave it on its
+/// family; it doesn't land on one of those styles and preview it.
+#[test]
+fn styles_listed_above_the_highlight_leave_it_on_its_family() {
+    let ctx = egui::Context::default();
+    crate::theme::install_fonts(&ctx);
+    let frame = |events: Vec<egui::Event>| {
+        let input =
+            egui::RawInput { events, screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(600.0, 800.0))), ..Default::default() };
+        let (mut at, mut picked) = (egui::Pos2::ZERO, None);
+        let mut out = ctx.run_ui(input, |ui| {
+            at = ui.next_widget_position();
+            picked = font_menu(ui, "test-rebuild", "Noto Sans", 260.0, None, MenuLook::default());
+        });
+        out.textures_delta.clear();
+        // The family's row: the lowest text naming it (the menu's button above names it too).
+        let row = out
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Text(t) if t.galley.text() == "Noto Sans" => Some(t.pos + egui::vec2(0.0, t.galley.size().y * 0.5)),
+                _ => None,
+            })
+            .max_by(|a, b| a.y.total_cmp(&b.y));
+        (at, picked, row)
+    };
+    let (at, ..) = frame(vec![]);
+    let click = at + egui::vec2(40.0, 10.0);
+    let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+    frame(vec![egui::Event::PointerMoved(click), button(click, true)]);
+    frame(vec![button(click, false)]);
+    let mut row = None;
+    for _ in 0..5 {
+        row = frame(vec![]).2;
+    }
+    // The family's disclosure triangle, left of its name: hovered, it highlights the family.
+    let triangle = row.expect("the family is listed") - egui::vec2(7.0, 0.0);
+    frame(vec![egui::Event::PointerMoved(triangle)]);
+    let (_, picked, _) = frame(key(egui::Key::ArrowDown));
+    let Some(FontPick::Preview(next, None)) = picked else { panic!("↓ previews the next family: {picked:?}") };
+    // A click on the triangle, the pointer still: the styles are listed between the two families.
+    frame(vec![button(triangle, true)]);
+    frame(vec![button(triangle, false)]);
+    for _ in 0..3 {
+        let (_, picked, _) = frame(vec![]);
+        assert_eq!(picked, None, "{next} stays highlighted and previewed");
+    }
+    let (_, picked, _) = frame(key(egui::Key::Enter));
+    assert_eq!(picked, Some(FontPick::Chosen(next, None)));
 }
 
 #[test]
@@ -229,12 +280,12 @@ fn stars_mark_favourites_and_the_preferences_size_the_rows() {
     let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("Inter".into()));
-    crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("Source Serif 4".into()));
-    assert_eq!(app.ui.favorite_fonts, ["Inter", "Source Serif 4"]);
+    crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("Noto Serif".into()));
+    assert_eq!(app.ui.favorite_fonts, ["Inter", "Noto Serif"]);
     crate::font_menu::apply(&mut app, &ctx, FontPick::Favorite("inter".into()));
-    assert_eq!(app.ui.favorite_fonts, ["Source Serif 4"], "a second click takes the star off (any case)");
+    assert_eq!(app.ui.favorite_fonts, ["Noto Serif"], "a second click takes the star off (any case)");
     let saved: crate::state::UiState = serde_json::from_str(&serde_json::to_string(&app.ui).unwrap()).unwrap();
-    assert_eq!(saved.favorite_fonts, ["Source Serif 4"], "favourites are kept with the UI state");
+    assert_eq!(saved.favorite_fonts, ["Noto Serif"], "favourites are kept with the UI state");
     let look = MenuLook::of(&app);
     assert!(look.samples && look.row == 24.0);
     app.run("prefs.set", json!({"values": {"fontPreviewSize": "large", "fontPreview": false}})).unwrap();
@@ -258,11 +309,11 @@ fn menus_that_only_pick_a_font_leave_the_document_alone() {
     let before = steps(&app);
     use crate::font_menu::picked;
     assert_eq!(picked(&mut app, None), None);
-    assert_eq!(picked(&mut app, Some(FontPick::Preview("Source Serif 4".into(), None))), None);
+    assert_eq!(picked(&mut app, Some(FontPick::Preview("Noto Serif".into(), None))), None);
     assert_eq!(picked(&mut app, Some(FontPick::EndPreview)), None);
     assert_eq!(
-        picked(&mut app, Some(FontPick::Chosen("Source Serif 4".into(), Some("Bold".into())))),
-        Some(("Source Serif 4".to_string(), Some("Bold".to_string())))
+        picked(&mut app, Some(FontPick::Chosen("Noto Serif".into(), Some("Bold".into())))),
+        Some(("Noto Serif".to_string(), Some("Bold".to_string())))
     );
     assert_eq!((font(&app), steps(&app)), ("Inter".to_string(), before), "nothing previewed or applied on the text");
     assert_eq!(picked(&mut app, Some(FontPick::Favorite("Inter".into()))), None);

@@ -47,7 +47,7 @@ fn inline_art_advances_by_its_scaled_width_and_centres_on_the_cap_height() {
     let ig = &l.inlines[0];
     assert_eq!((ig.run, ig.byte, ig.glyph), (1, 1, l.glyphs.iter().position(|g| g.run == 1).unwrap()));
     // Left edge on the pen; vertical centre half the cap height above the baseline.
-    let face = db().face("Source Sans 3", "Regular").unwrap();
+    let face = db().face("Noto Sans", "Regular").unwrap();
     let cap = face.cap_height * 20.0 / face.upem;
     let b = ig.bounds;
     assert!((b.x0 - g.origin.x).abs() < 1e-6 && (b.width() - 40.0).abs() < 1e-6 && (b.height() - 20.0).abs() < 1e-6, "{b:?}");
@@ -86,7 +86,7 @@ fn shift_tracking_and_missing_symbols() {
 fn tall_inline_art_opens_up_its_line() {
     let plain = layout(db(), &text("Ab", art(1.0), "cd", 20.0));
     let tall = layout(db(), &text("Ab", art(3.0), "cd", 20.0));
-    let face = db().face("Source Sans 3", "Regular").unwrap();
+    let face = db().face("Noto Sans", "Regular").unwrap();
     let cap = face.cap_height * 20.0 / face.upem;
     // At scale 1 the art stays inside the font's ascent and descent: the line doesn't change.
     let font_only = layout(db(), &TextObject::point(Point::ZERO, "Abcd", style(20.0)));
@@ -262,7 +262,7 @@ fn character_alignment_treats_inline_art_as_a_character_of_its_run_size() {
         let x = l.glyphs.iter().find(|g| g.run == 2).map(|g| g.origin.y).unwrap();
         (l.inlines[0].bounds.center().y, x)
     };
-    let face = db().face("Source Sans 3", "Regular").unwrap();
+    let face = db().face("Noto Sans", "Regular").unwrap();
     let c = face.ideographic_centre();
     // Next to a 40 pt character, the 20 pt run (graphic and letter alike) moves up by the same.
     let (roman, roman_x) = centre_y(CharAlign::RomanBaseline, 1.0, 40.0);
@@ -318,7 +318,7 @@ fn inline_art_moves_with_vertically_aligned_lines() {
             let line = &l.lines[g.line];
             assert!(line.baseline > 100.0, "{align:?}: not aligned, baseline {}", line.baseline);
             // Still centred on the cap height above its (moved) baseline.
-            let face = db().face("Source Sans 3", "Regular").unwrap();
+            let face = db().face("Noto Sans", "Regular").unwrap();
             let cap = face.cap_height * 20.0 / face.upem;
             let b = l.inlines[0].bounds;
             assert!((b.center().y - (line.baseline - cap * 0.5)).abs() < 1e-6, "{align:?}: {b:?} baseline {}", line.baseline);

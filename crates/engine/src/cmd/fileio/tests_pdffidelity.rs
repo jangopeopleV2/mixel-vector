@@ -101,6 +101,6 @@ fn exports_that_draw_type_in_a_missing_font_say_it_is_the_fallback_font() {
     }
     let pdf_export = s.execute("document.exportPdf", &json!({})).unwrap();
     assert!(pdf_export["warnings"].to_string().contains(&family), "{pdf_export}");
-    s.execute("text.replaceFont", &json!({"from": {"family": family}, "to": {"family": "Source Serif 4"}})).unwrap();
+    s.execute("text.replaceFont", &json!({"from": {"family": family}, "to": {"family": "Noto Serif"}})).unwrap();
     assert!(!warned(&mut s, json!({"format": "pdf"})), "replaced: nothing is substituted");
 }

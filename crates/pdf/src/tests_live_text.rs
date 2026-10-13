@@ -8,16 +8,16 @@ use vectorcraft_doc::{Document, NodeKind, TextObject};
 
 use crate::*;
 
-const SOURCE_SANS: &[u8] = include_bytes!("../../../assets/fonts/SourceSans3-Regular.ttf");
-const SOURCE_SERIF: &[u8] = include_bytes!("../../../assets/fonts/SourceSerif4-Regular.ttf");
+const NOTO_SANS: &[u8] = include_bytes!("../../../assets/fonts/NotoSans-Regular.ttf");
+const NOTO_SERIF: &[u8] = include_bytes!("../../../assets/fonts/NotoSerif-Regular.ttf");
 
-/// A 300 × 200 pt page with `lines` of (x, y from the top, size, text) in Source Sans 3, and the
+/// A 300 × 200 pt page with `lines` of (x, y from the top, size, text) in Noto Sans, and the
 /// same rotated 90° when `rotated`.
 pub(crate) fn text_pdf(lines: &[(f32, f32, f32, &str)], rotated: bool) -> Vec<u8> {
     let mut pdf = krilla::Document::new();
     let mut page = pdf.start_page_with(PageSettings::from_wh(300.0, 200.0).unwrap());
     let mut s = page.surface();
-    let font = Font::new(SOURCE_SANS.into(), 0).unwrap();
+    let font = Font::new(NOTO_SANS.into(), 0).unwrap();
     if rotated {
         s.push_transform(&Transform::from_row(0.0, 1.0, -1.0, 0.0, 150.0, 20.0));
     }
@@ -54,7 +54,7 @@ fn lines_of_text_in_installed_fonts_come_in_as_point_type() {
     assert_eq!(t.len(), 2, "{t:?}");
     let first = t.iter().find(|t| t.plain_text() == "Gagaku Concert").unwrap();
     let st = first.first_style();
-    assert_eq!((st.font_family.as_str(), st.font_style.as_str()), ("Source Sans 3", "Regular"));
+    assert_eq!((st.font_family.as_str(), st.font_style.as_str()), ("Noto Sans", "Regular"));
     assert!((st.size - 24.0).abs() < 0.01);
     let origin = first.xf * kurbo::Point::ZERO;
     assert!((origin.x - 20.0).abs() < 0.01 && (origin.y - 50.0).abs() < 0.01, "on the PDF's baseline: {origin:?}");
@@ -78,11 +78,11 @@ fn rotated_lines_keep_their_angle_and_outline_text_option_outlines_everything() 
 
 #[test]
 fn letter_spacing_in_the_pdf_becomes_tracking() {
-    // Source Sans 3 at 20 pt, every letter 2 pt further apart than its advance.
+    // Noto Sans at 20 pt, every letter 2 pt further apart than its advance.
     let mut x = 20.0;
     let mut lines = vec![];
     let word = "Wide";
-    let font = vectorcraft_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
+    let font = vectorcraft_text::FontDb::global().find_postscript("NotoSans-Regular").unwrap();
     let mut pieces = vec![];
     for c in word.chars() {
         pieces.push((x, c.to_string()));
@@ -121,7 +121,7 @@ fn cid_tables_ignore_fonts_that_are_not_cid_keyed_cff() {
         cff.extend_from_slice(&junk);
         let _ = crate::import::CidText::of(&cff);
     }
-    let sans = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/fonts/SourceSans3-Regular.ttf")).unwrap();
+    let sans = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/fonts/NotoSans-Regular.ttf")).unwrap();
     assert!(crate::import::CidText::of(&sans).is_none(), "a TrueType font has no CID charset");
 }
 
@@ -136,12 +136,12 @@ fn kangxi_radicals_from_cid_tables_become_ideographs() {
 fn a_glyph_whose_unicode_names_another_letter_stays_outlined() {
     // The glyph of `l` labelled `W` in the PDF's ToUnicode map: opening it as live `W` would change
     // what the page shows.
-    let font = vectorcraft_text::FontDb::global().find_postscript("SourceSans3-Regular").unwrap();
+    let font = vectorcraft_text::FontDb::global().find_postscript("NotoSans-Regular").unwrap();
     let l = font.glyph_for('l');
     let mut pdf = krilla::Document::new();
     let mut page = pdf.start_page_with(PageSettings::from_wh(300.0, 200.0).unwrap());
     let mut s = page.surface();
-    let kfont = Font::new(SOURCE_SANS.into(), 0).unwrap();
+    let kfont = Font::new(NOTO_SANS.into(), 0).unwrap();
     let glyph = krilla::text::KrillaGlyph {
         glyph_id: krilla::text::GlyphId::new(l),
         text_range: 0..1,
@@ -159,32 +159,20 @@ fn a_glyph_whose_unicode_names_another_letter_stays_outlined() {
     assert!(r.warnings.iter().any(|w| w.contains("differ from the installed font")), "{:?}", r.warnings);
 }
 
-/// `font` with each of `names` (`from`, `to`, the same length) replaced, in ASCII and UTF-16.
+/// A fixture font with every matching name record rebuilt, preserving valid offsets.
 fn renamed(font: &[u8], names: &[(&str, &str)]) -> Vec<u8> {
-    let mut bytes = font.to_vec();
-    let utf16 = |s: &str| s.encode_utf16().flat_map(u16::to_be_bytes).collect::<Vec<u8>>();
-    for &(from, to) in names {
-        assert_eq!(from.len(), to.len());
-        for (from, to) in [(from.as_bytes().to_vec(), to.as_bytes().to_vec()), (utf16(from), utf16(to))] {
-            let mut i = 0;
-            while let Some(at) = bytes[i..].windows(from.len()).position(|w| w == from.as_slice()) {
-                bytes[i + at..i + at + from.len()].copy_from_slice(&to);
-                i += at + from.len();
-            }
-        }
-    }
-    bytes
+    vectorcraft_text::test_fonts::renamed_font(font, names).unwrap()
 }
 
-/// Source Sans 3 renamed `SourceSans9-Regular` (a font no machine has installed).
+/// Noto Sans renamed `AbsentSans-Regular` (a font no machine has installed).
 fn uninstalled_font() -> Vec<u8> {
-    renamed(SOURCE_SANS, &[("SourceSans3-Regular", "SourceSans9-Regular")])
+    renamed(NOTO_SANS, &[("NotoSans-Regular", "AbsentSans-Regular")])
 }
 
-/// Source Serif 4 renamed `SourceSerif9-Regular`, family Source Serif 9: a serif font that isn't
-/// installed (the fallback font, Source Sans 3, is a sans).
+/// Noto Serif renamed `AbsentSerif-Regular`, family Absent Serif: a serif font that isn't
+/// installed (the fallback font, Noto Sans, is a sans).
 fn uninstalled_serif() -> Vec<u8> {
-    renamed(SOURCE_SERIF, &[("SourceSerif4", "SourceSerif9"), ("Source Serif 4", "Source Serif 9")])
+    renamed(NOTO_SERIF, &[("NotoSerif", "AbsentSerif"), ("Noto Serif", "Absent Serif")])
 }
 
 /// A page with `text` in `font` (24 pt, at 20, 50).
@@ -217,8 +205,8 @@ fn outlined_text_in_a_missing_font_keeps_the_embedded_glyphs() {
         outlines(&r.document)
     };
     let missing = outlined(&one_line_pdf(uninstalled_serif(), "Serif Hamburg"));
-    let installed = outlined(&one_line_pdf(SOURCE_SERIF.to_vec(), "Serif Hamburg"));
-    let fallback = outlined(&one_line_pdf(SOURCE_SANS.to_vec(), "Serif Hamburg"));
+    let installed = outlined(&one_line_pdf(NOTO_SERIF.to_vec(), "Serif Hamburg"));
+    let fallback = outlined(&one_line_pdf(NOTO_SANS.to_vec(), "Serif Hamburg"));
     let (m, i, f) = (missing.bounding_box(), installed.bounding_box(), fallback.bounding_box());
     assert!(m.width() > 50.0, "{m:?}");
     let near = |a: kurbo::Rect, b: kurbo::Rect| (a.x0 - b.x0).abs() + (a.x1 - b.x1).abs() + (a.y0 - b.y0).abs() + (a.y1 - b.y1).abs() < 0.01;
@@ -247,7 +235,7 @@ fn text_in_a_missing_font_stays_live_type() {
         assert_eq!(t[0].plain_text(), "Gagaku");
         // Named by the family its PostScript name reads as, so it picks the font up once installed.
         let family = t[0].first_style().font_family.clone();
-        assert_eq!(family, "Source Sans 9");
+        assert_eq!(family, "Absent Sans");
         assert!(r.warnings.iter().any(|w| w.contains(family.as_str()) && w.contains("fallback font")), "{:?}", r.warnings);
     }
 }
@@ -258,13 +246,15 @@ fn a_single_upright_glyph_comes_in_as_vertical_type_and_takes_no_horizontal_glyp
     use vectorcraft_geom::{Point, Vec2};
     let look = Look {
         font: 1,
-        family: "Source Sans 3".into(),
+        family: "Noto Sans".into(),
         style: "Regular".into(),
         version: None,
         size: 20.0,
         h_scale: 100.0,
         fill: Some(vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb(0.0, 0.0, 0.0))),
         stroke: None,
+        overprint_fill: false,
+        overprint_stroke: false,
     };
     let at = |x: f64, y: f64| Placement { origin: Point::new(x, y), dir: Vec2::new(1.0, 0.0), size: 20.0, h_scale: 100.0, slant: 0.0 };
     let mut line = TextLine::new(at(100.0, 100.0), 1.0);
@@ -281,13 +271,15 @@ fn letter_spaced_vertical_type_keeps_its_characters_together() {
     use vectorcraft_geom::{Point, Vec2};
     let look = Look {
         font: 1,
-        family: "Source Sans 3".into(),
+        family: "Noto Sans".into(),
         style: "Regular".into(),
         version: None,
         size: 20.0,
         h_scale: 100.0,
         fill: Some(vectorcraft_color::Paint::solid(vectorcraft_color::Color::rgb(0.0, 0.0, 0.0))),
         stroke: None,
+        overprint_fill: false,
+        overprint_stroke: false,
     };
     // Glyphs set down a column 1.5 em apart (tracking 500): no spaces come in between them.
     let at = |y: f64| Placement { origin: Point::new(100.0, y), dir: Vec2::new(1.0, 0.0), size: 20.0, h_scale: 100.0, slant: 0.0 };
@@ -307,7 +299,7 @@ fn a_tagged_span_inside_a_line_leaves_the_line_whole() {
     let mut pdf = krilla::Document::new();
     let mut page = pdf.start_page_with(PageSettings::from_wh(300.0, 200.0).unwrap());
     let mut s = page.surface();
-    let font = Font::new(SOURCE_SANS.into(), 0).unwrap();
+    let font = Font::new(NOTO_SANS.into(), 0).unwrap();
     // "Ga" "ga" "ku" with the middle part in its own marked content (a span, as apps write for
     // actual text), all on one baseline.
     s.draw_text(KPoint::from_xy(20.0, 50.0), font.clone(), 24.0, "Ga", false, TextDirection::Auto);
@@ -324,9 +316,9 @@ fn a_tagged_span_inside_a_line_leaves_the_line_whole() {
     assert_eq!(t, ["Gagaku"]);
 }
 
-/// Advance of `text` in `font` at `size` (from the bundled Source Sans 3, as laid out).
+/// Advance of `text` in `font` at `size` (from the bundled Noto Sans, as laid out).
 fn ink_width_of(_font: &Font, size: f32, text: &str) -> f32 {
-    let style = vectorcraft_doc::CharStyle { font_family: "Source Sans 3".into(), size: f64::from(size), ..Default::default() };
+    let style = vectorcraft_doc::CharStyle { font_family: "Noto Sans".into(), size: f64::from(size), ..Default::default() };
     ink_width(&TextObject::point(vectorcraft_geom::Point::ZERO, text, style)) as f32
 }
 

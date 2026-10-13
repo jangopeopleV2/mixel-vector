@@ -15,7 +15,7 @@ fn the_font_list_names_every_available_family_with_its_styles() {
     let mut s = Session::new();
     let fams = names(&s.execute("text.fontList", &json!({})).unwrap()["families"]);
     assert_eq!(fams, *FontDb::global().menu_family_list());
-    for f in ["Source Sans 3", "Source Serif 4", "Inter", "JetBrains Mono"] {
+    for f in ["Noto Sans", "Noto Serif", "Inter", "JetBrains Mono"] {
         assert!(fams.iter().any(|x| x == f), "{f}");
     }
     // Every installed family, though nothing asked for system fonts.
@@ -23,10 +23,10 @@ fn the_font_list_names_every_available_family_with_its_styles() {
     installed.load_system_fonts();
     let missing: Vec<String> = installed.menu_family_list().iter().filter(|f| !fams.contains(f)).cloned().collect();
     assert!(missing.is_empty(), "{missing:?}");
-    let r = s.execute("text.fontList", &json!({"family": "source sans 3"})).unwrap();
-    assert_eq!(r["family"], "Source Sans 3");
+    let r = s.execute("text.fontList", &json!({"family": "noto sans"})).unwrap();
+    assert_eq!(r["family"], "Noto Sans");
     let styles = names(&r["styles"]);
-    assert!(["Regular", "Semibold", "Bold", "Italic"].iter().all(|x| styles.iter().any(|s| s == x)), "{styles:?}");
+    assert!(["Regular", "SemiBold", "Bold", "Italic"].iter().all(|x| styles.iter().any(|s| s == x)), "{styles:?}");
     assert!(s.execute("text.fontList", &json!({"family": "No Such Font"})).is_err());
 }
 
