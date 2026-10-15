@@ -663,6 +663,8 @@ fn main() -> std::process::ExitCode {
         eprintln!("vectorcraft: the App Store build does not expose a control server");
         return std::process::ExitCode::FAILURE;
     }
+    // Before desktop services, so every start-up warning is recorded (`logging`).
+    let logger = logging::install();
     for warning in vectorcraft_engine::macos_mas::initialize("MIXEL Vector") {
         log::warn!("{warning}");
     }
@@ -670,8 +672,6 @@ fn main() -> std::process::ExitCode {
         log::error!("This App Store build must run from its correctly signed sandbox app bundle.");
         std::process::exit(2);
     }
-    // Before desktop services, so every start-up warning is recorded (`logging`).
-    let logger = logging::install();
     vectorcraft_ui_egui::i18n::detect_system_lang_in_background();
     // Before the first font scan (the app's start): the fonts font services load (#579).
     #[cfg(all(windows, not(target_vendor = "win7")))]

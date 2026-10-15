@@ -49,12 +49,12 @@ mod tests {
     const SHARED_PACKAGING: &[(&str, &str, &str)] = &[
         (
             "macos/mas_package.py",
-            "6ca3103d3247610b1c89f319fbdbcc44c92c69b9a52f41dea1d97b7efeeeef92",
+            "1b3117501a8c3aaf86a084497070ad416d1715ee896401d78e183d5a19e18841",
             include_str!("../../packaging/macos/mas_package.py"),
         ),
         (
             "macos/README-mas.md",
-            "c7f65dce62a9c0df908d69e6569ba01ae88bd7269e00af807cdc5a77b9aedc60",
+            "380388c9bc4a3d996ae00b461081573f478f46d1fbf02be7e09f9d240daab7eb",
             include_str!("../../packaging/macos/README-mas.md"),
         ),
     ];
