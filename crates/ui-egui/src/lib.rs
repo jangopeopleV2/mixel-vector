@@ -13,6 +13,7 @@ macro_rules! tl {
     };
 }
 
+pub use vectorcraft_engine::macos_mas;
 pub mod background;
 mod brand;
 pub mod canvas;
@@ -37,6 +38,7 @@ pub mod io;
 pub mod menus;
 pub mod native_menu;
 pub mod opening;
+mod output;
 pub mod palette;
 mod panel_docking;
 pub mod panels;
@@ -397,6 +399,8 @@ pub struct VectorcraftApp {
     clipboard_probe: Option<clipboard_probe::Probe>,
     /// File dialogs shown off the UI thread and what runs again with their answers.
     pub(crate) picks: picks::Picks,
+    /// Host output capability policy; MAS uses the actual shared bookmark registry.
+    pub(crate) output_policy: Option<output::Policy>,
     /// The look for fonts installed or removed while the app was in the background, running
     /// ([`Self::refresh_installed_fonts`]): whether they were.
     font_check: Option<std::sync::mpsc::Receiver<bool>>,
@@ -500,6 +504,7 @@ impl VectorcraftApp {
             system_paste_at: f64::NEG_INFINITY,
             clipboard_probe: None,
             picks: picks::Picks::default(),
+            output_policy: output::native_policy(),
             font_check: None,
             paste_chord: Default::default(),
             background: Default::default(),
@@ -976,6 +981,9 @@ impl VectorcraftApp {
     /// Per-frame logic before layout (control channel, shortcuts, inbox). A bug that panics costs
     /// one frame and shows an error, instead of closing the app with unsaved work.
     pub fn logic(&mut self, ctx: &egui::Context) {
+        for warning in crate::macos_mas::poll() {
+            self.status(warning);
+        }
         let confined = self.synthetic_frame.then(|| self.automation_roots.clone()).flatten();
         if let Err(msg) = file_access::confine(confined.as_ref(), || vectorcraft_engine::guard::catch_panic(|| self.logic_frame(ctx))) {
             self.picks.recover();
@@ -1092,6 +1100,12 @@ impl VectorcraftApp {
         let pos = place::drag_pos(ctx);
         let mut files = vec![];
         for f in dropped {
+            if f.path().is_absolute()
+                && let Err(error) = crate::macos_mas::selected(f.path(), false)
+            {
+                self.status(error);
+                continue;
+            }
             let path = Some(f.path().to_string_lossy().to_string()).filter(|s| !s.is_empty());
             let name = path.as_deref().map_or_else(|| "dropped".into(), vectorcraft_engine::cmd::fileio::file_name);
             // Native file drops usually carry a path. Use the same file reader as File → Open

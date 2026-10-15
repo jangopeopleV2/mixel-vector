@@ -10,6 +10,7 @@ default-run = "vectorcraft"
 workspace = true
 
 [features]
+mac-app-store = ["vectorcraft-engine/mac-app-store", "vectorcraft-ui-egui/mac-app-store"]
 default = ["wgpu", "accessibility"]
 wgpu = ["eframe/wgpu", "dep:winsafe"]
 accessibility = ["eframe/accesskit"]

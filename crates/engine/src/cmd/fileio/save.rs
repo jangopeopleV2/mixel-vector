@@ -98,11 +98,15 @@ pub fn stamp_save_dates(st: &mut DocState, at: i64) {
     d.metadata.modified = Some(at);
 }
 
-/// The Templates folder: the `templatesFolder` preference, else `MIXEL Vector Templates` in the
-/// user's documents folder (none where there is no home folder, as on the web).
+/// The Templates folder: the `templatesFolder` preference, else the verified private
+/// container's Templates folder for MAS, or `MIXEL Vector Templates` in the ordinary
+/// desktop user's documents folder (none where there is no home folder, as on the web).
 pub fn templates_folder(prefs: &Prefs) -> Option<String> {
     if !prefs.templates_folder.is_empty() {
         return Some(prefs.templates_folder.clone());
+    }
+    if crate::macos_mas::enabled() {
+        return crate::macos_mas::container_dir("MIXEL Vector").map(|folder| folder.join("Templates").to_string_lossy().into_owned());
     }
     Some(documents_folder()?.join("MIXEL Vector Templates").to_string_lossy().to_string())
 }
@@ -111,12 +115,32 @@ pub fn templates_folder(prefs: &Prefs) -> Option<String> {
 /// can't be, the nearest folder above it that exists, else the home folder. A dialog asked to
 /// start in a folder that isn't there shows an error on some desktops.
 pub fn templates_dialog_folder(prefs: &Prefs) -> Option<String> {
+    if crate::macos_mas::enabled() {
+        let container = crate::macos_mas::container_dir("MIXEL Vector")?;
+        let preferred = templates_folder(prefs).and_then(|folder| crate::macos_mas::resolve(folder).ok());
+        return preferred
+            .and_then(|folder| scoped_dialog_folder(&folder, |path| crate::macos_mas::directory_granted(path)))
+            .or_else(|| scoped_dialog_folder(&container.join("Templates"), |path| path.starts_with(&container)));
+    }
     let folder = std::path::PathBuf::from(templates_folder(prefs)?);
     if !folder.is_dir() {
         // Best effort: a folder that can't be made leaves the nearest one that exists.
         let _ = std::fs::create_dir_all(&folder);
     }
     folder.ancestors().find(|a| a.is_dir()).map(|a| a.to_string_lossy().into_owned()).or_else(home_folder)
+}
+
+/// Create only inside an actual retained directory scope (or the verified private container).
+/// A remembered path is only a suggestion until its folder has been selected by the user.
+fn scoped_dialog_folder(folder: &std::path::Path, allowed: impl Fn(&std::path::Path) -> bool) -> Option<String> {
+    if !allowed(folder) {
+        return None;
+    }
+    if !folder.is_dir() {
+        // A failed creation can still leave an already granted ancestor suitable for the panel.
+        let _ = std::fs::create_dir_all(folder);
+    }
+    folder.ancestors().find(|path| allowed(path) && path.is_dir()).map(|path| path.to_string_lossy().into_owned())
 }
 
 /// The user's documents folder: on Linux and the BSDs the one the desktop names
@@ -146,8 +170,12 @@ fn xdg_documents(text: &str, home: &std::path::Path) -> Option<std::path::PathBu
     (dir.has_root() && dir != home).then_some(dir)
 }
 
-/// The user's home folder (`HOME`, else `USERPROFILE` on Windows; none on the web).
+/// MAS uses only the verified private settings directory. Other builds use the user's
+/// home folder (`HOME`, else `USERPROFILE` on Windows; none on the web).
 fn home_folder() -> Option<String> {
+    if crate::macos_mas::enabled() {
+        return crate::macos_mas::container_dir("MIXEL Vector").map(|folder| folder.to_string_lossy().into_owned());
+    }
     std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().filter(|h| !h.is_empty())
 }
 
@@ -298,6 +326,8 @@ pub struct SaveJob {
     snapshot: Arc<Document>,
     /// The artboards also saved to files of their own (`separateArtboards`).
     boards: Vec<usize>,
+    /// Only deferred saves: the live document before File Info dates were staged privately.
+    before_stamp: Option<Arc<Document>>,
 }
 
 /// Writes the file at a path with what the filler it is given writes into it
@@ -420,6 +450,9 @@ pub(super) fn encode_ai(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Res
 /// Snapshot the active document for `plan` (stamping File Info's dates when the file becomes the
 /// document's own). Bad options fail here, before anything is encoded.
 pub fn save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
+    if crate::macos_mas::enabled() {
+        return deferred_save_job(s, plan);
+    }
     // The web build, without a clock, leaves the dates unless given one.
     if plan.path.is_some()
         && plan.retargets()
@@ -430,7 +463,23 @@ pub fn save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
     job_for(s, s.doc()?, plan)
 }
 
-/// Snapshot `st` (any open document of `s`) for `plan`, without stamping dates (Data Recovery
+/// Prepare a snapshot without changing the live document before folder consent or a write.
+/// The snapshot is encoded once; cancellation drops it without changing dates or dirty state.
+pub fn deferred_save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
+    let mut st = s.doc()?.clone();
+    let before = st.doc.clone();
+    if plan.path.is_some()
+        && plan.retargets()
+        && let Some(at) = clock_date(s, "modified", plan.modified)
+    {
+        stamp_save_dates(&mut st, at);
+    }
+    let mut job = job_for(s, &st, plan)?;
+    job.before_stamp = Some(before);
+    Ok(job)
+}
+
+/// Snapshot st (any open document of s) for plan, without stamping dates (Data Recovery
 /// snapshots documents that aren't active).
 pub(crate) fn job_for(s: &Session, st: &DocState, plan: SavePlan) -> Result<SaveJob> {
     let cmd = plan.mode.command();
@@ -455,7 +504,7 @@ pub(crate) fn job_for(s: &Session, st: &DocState, plan: SavePlan) -> Result<Save
         // Save keeps every artboard; exports may choose a subset instead.
         o.insert("range".into(), json!("all"));
     }
-    Ok(SaveJob { plan, doc, params, snapshot: st.doc.clone(), boards })
+    Ok(SaveJob { plan, doc, params, snapshot: st.doc.clone(), boards, before_stamp: None })
 }
 
 impl SaveJob {
@@ -506,20 +555,36 @@ impl SaveJob {
     /// folder?, warnings, files?: [{name, dataBase64}] (every file, when there are several),
     /// linked?: [{name, dataBase64}]}`; with one → `{path, format, bytes, warnings, files?:
     /// [path…], linked?: [path…]}`.
-    pub fn write(&self, mut write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
+    pub fn write(&self, write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
+        self.write_prepared(&self.encode()?, write)
+    }
+
+    /// Names only, borrowing already encoded bytes rather than encoding after a picker again.
+    pub fn output_paths(&self, enc: &Encoded) -> Vec<String> {
+        enc.named(&self.doc, self.plan.path.as_deref().unwrap_or(&self.plan.name)).into_iter().map(|(p, _)| p).collect()
+    }
+
+    /// Write an already encoded snapshot after checking every destination before the first write.
+    pub fn write_prepared(&self, enc: &Encoded, mut write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
         let (plan, doc) = (&self.plan, &*self.doc);
-        let mut enc = self.encode()?;
-        let warnings = std::mem::take(&mut enc.warnings);
+        let warnings = enc.warnings.clone();
         let extra = json!({ "format": plan.format.id, "warnings": warnings });
         let Some(path) = &plan.path else {
-            let mut out = write_encoded(None, &plan.name, doc, &enc, extra)?;
+            let mut out = write_encoded(None, &plan.name, doc, enc, extra)?;
             out["name"] = json!(plan.name);
             if let Some(folder) = &plan.folder {
                 out["folder"] = json!(folder);
             }
             return Ok(out);
         };
-        let files = enc.named(doc, path);
+        let mut files = enc.named(doc, path);
+        if crate::macos_mas::enabled() {
+            let access = super::prepare_output_access(path, &files.iter().map(|(p, _)| p.clone()).collect::<Vec<_>>()).map_err(EngineError::Other)?;
+            access.require_complete().map_err(EngineError::Other)?;
+            for ((p, _), actual) in files.iter_mut().zip(access.paths) {
+                *p = actual;
+            }
+        }
         for (p, bytes) in &files {
             write(p, bytes)?;
         }
@@ -588,6 +653,9 @@ impl SaveJob {
     pub fn finish(self, st: &mut DocState) {
         let retargets = self.plan.retargets();
         if let (true, Some(path)) = (retargets, self.plan.path) {
+            if self.before_stamp.as_ref().is_some_and(|before| Arc::ptr_eq(&st.doc, before)) {
+                st.doc = self.snapshot.clone();
+            }
             st.path = Some(path);
             st.format = self.plan.format.id;
             st.save_options = self.plan.options;
@@ -769,6 +837,7 @@ mod tests_folders {
     /// #703: the Templates folder a dialog starts in exists: made when missing, else the nearest
     /// folder above it.
     #[test]
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
     fn the_templates_dialog_folder_exists() {
         let base = std::env::temp_dir().join(format!("vc-templates-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
@@ -783,5 +852,27 @@ mod tests_folders {
         prefs.templates_folder = base.join("blocked").join("Templates").to_string_lossy().into_owned();
         assert_eq!(super::templates_dialog_folder(&prefs).map(PathBuf::from), Some(base.clone()));
         let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn template_suggestions_do_not_create_unselected_folders() {
+        let base = std::env::temp_dir().join(format!("vc-scoped-template-suggestions-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(&base).unwrap();
+        let private = base.join("private");
+        std::fs::create_dir(&private).unwrap();
+        let unselected = base.join("unselected").join("Templates");
+        assert_eq!(super::scoped_dialog_folder(&unselected, |path| path.starts_with(&private)), None);
+        assert!(!unselected.exists());
+        let selected = private.join("Templates");
+        assert_eq!(super::scoped_dialog_folder(&selected, |path| path.starts_with(&private)), Some(selected.to_string_lossy().into_owned()));
+        assert!(selected.is_dir());
+        let blocked = private.join("blocked");
+        std::fs::write(&blocked, b"owned fixture").unwrap();
+        assert_eq!(
+            super::scoped_dialog_folder(&blocked.join("Templates"), |path| path.starts_with(&private)),
+            Some(private.to_string_lossy().into_owned())
+        );
+        std::fs::remove_dir_all(base).unwrap();
     }
 }

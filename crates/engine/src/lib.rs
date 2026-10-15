@@ -12,6 +12,7 @@ pub mod guard;
 pub mod inspect;
 pub mod journal;
 pub mod link_watch;
+pub mod macos_mas;
 pub mod steps;
 mod tooling;
 pub mod units;
@@ -1313,6 +1314,15 @@ impl Session {
 
     /// Execute a command by id. This is THE entry point for every frontend.
     pub fn execute(&mut self, id: &str, params: &Value) -> Result<Value> {
+        let resolved;
+        let params = if crate::macos_mas::enabled() {
+            let mut value = params.clone();
+            crate::macos_mas::resolve_params(&mut value).map_err(EngineError::Other)?;
+            resolved = value;
+            &resolved
+        } else {
+            params
+        };
         let spec = find_command(id).ok_or_else(|| EngineError::UnknownCommand(id.to_string()))?;
         // The crate's own tests are the audit of the params descriptions (#1442): a key a test
         // passes that its command's description doesn't name fails the test.

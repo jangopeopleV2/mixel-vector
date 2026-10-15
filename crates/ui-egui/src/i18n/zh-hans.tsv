@@ -3850,3 +3850,7 @@ lighting	Light	光源
 	Load EPS into Clipboard	将 EPS 载入剪贴板
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的图像过大，无法绘制
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	模拟会按叠印预览显示的效果打印叠印；分色始终保留叠印。预设会在打印前拼合透明度（PostScript 文件始终拼合透明度）。
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	原生文件对话框服务不可用。请重新打开 MIXEL Vector 后重试。
+@msg	Choose the containing folder for all output files before saving. No files were written.	保存前，请选择包含所有输出文件的文件夹。尚未写入任何文件。
+@msg	Choose a folder that contains every output file. No files were written.	请选择包含所有输出文件的文件夹。尚未写入任何文件。
+@msg	Choose an absolute save destination	请选择使用绝对路径的保存位置

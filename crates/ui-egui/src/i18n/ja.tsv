@@ -4254,3 +4254,23 @@ lighting	Light	ライト
 	Load EPS into Clipboard	EPS をクリップボードに読み込む
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} ピクセルの画像は大きすぎて描画できません
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	「シミュレート」はオーバープリントプレビューの表示どおりにオーバープリントを印刷します。色分解では常に保持します。印刷前にプリセットが透明を分割・統合します（PostScript ファイルでは常に分割・統合します）。
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	ネイティブのファイルダイアログサービスを利用できません。MIXEL Vector を開き直して、もう一度お試しください。
+@msg	App Store file access has not been initialized	App Store 版のファイルアクセスが初期化されていません
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	ブックマークの保存件数が上限に達しました。ファイルを含むフォルダーを選択してアクセス権をまとめてください
+@msg	Bookmark store has no location	ブックマークの保存先がありません
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	破損したブックマークストアを保存できません: {e}。元のストアは変更されていません
+@msg	File parameters are nested too deeply	ファイルのパラメーターの入れ子が深すぎます
+@msg	File path is not valid Unicode	ファイルパスが有効な Unicode ではありません
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	破損したブックマークのバックアップに使用できる未使用の名前がありません。元のストアは変更されていません
+@msg	No unused temporary bookmark-store filename is available	ブックマークストアの一時ファイルに使用できる未使用の名前がありません
+@msg	Refreshed OS bookmark has an invalid size	更新された OS のブックマークのサイズが無効です
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	既存のブックマークストアは破損しており、変更されていません。ファイルまたはフォルダーをもう一度選択してください。新しいアクセス権を保存する前に、破損したストアを別途保存します。
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	今回の起動で保持できるファイルアクセス権が上限に達しました。作業を保存してから再起動してください。ファイルを含むフォルダーを選択すると、ファイルごとのアクセス許可を避けられます。
+@msg	Too many pending save destinations; save work and restart	保存先の保留件数が多すぎます。作業を保存して再起動してください
+@msg	bookmark store contains an invalid path or bookmark	ブックマークストアに無効なパスまたはブックマークが含まれています
+@msg	bookmark store exceeds the safe size limit	ブックマークストアが安全なサイズの上限を超えています
+@msg	bookmark store has no parent	ブックマークストアの親フォルダーがありません
+@msg	unsupported or oversized bookmark store	ブックマークストアが未対応の形式か、大きすぎます
+@msg	Choose the containing folder for all output files before saving. No files were written.	保存する前に、すべての出力ファイルを含むフォルダーを選択してください。ファイルは一切書き込まれていません。
+@msg	Choose a folder that contains every output file. No files were written.	すべての出力ファイルを含むフォルダーを選択してください。ファイルは一切書き込まれていません。
+@msg	Choose an absolute save destination	保存先を絶対パスで指定してください

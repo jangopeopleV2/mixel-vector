@@ -4215,3 +4215,23 @@ theme	Appearance	Erscheinungsbild
 	Load EPS into Clipboard	EPS in die Zwischenablage laden
 @msg	an image of {w} × {h} pixels is too large to draw	ein Bild mit {w} × {h} Pixeln ist zu groß, um gezeichnet zu werden
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	Die Option „Simulieren“ druckt Überdrucke so, wie die Überdruckenvorschau sie zeigt; bei Farbauszügen bleiben sie immer erhalten. Eine Vorgabe reduziert die Transparenz vor dem Drucken (PostScript-Dateien reduzieren sie immer).
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Der Dienst für native Dateidialoge ist nicht verfügbar. Öffnen Sie MIXEL Vector erneut und versuchen Sie es noch einmal.
+@msg	App Store file access has not been initialized	Der Dateizugriff der Version für den App Store wurde noch nicht initialisiert
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	Der Speicher für Zugriffslesezeichen hat die maximale Anzahl an Einträgen erreicht; wählen Sie die Ordner, die die Dateien enthalten, um die Zugriffsberechtigungen zusammenzufassen
+@msg	Bookmark store has no location	Für den Speicher der Zugriffslesezeichen ist kein Speicherort festgelegt
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Der beschädigte Speicher für Zugriffslesezeichen kann nicht gesichert werden: {e}; das Original bleibt unverändert
+@msg	File parameters are nested too deeply	Die Dateiparameter sind zu tief verschachtelt
+@msg	File path is not valid Unicode	Der Dateipfad ist kein gültiger Unicode-Text
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Es ist kein freier Name für die Sicherung des beschädigten Speichers für Zugriffslesezeichen verfügbar; das Original bleibt unverändert
+@msg	No unused temporary bookmark-store filename is available	Es ist kein freier temporärer Dateiname für den Speicher der Zugriffslesezeichen verfügbar
+@msg	Refreshed OS bookmark has an invalid size	Das aktualisierte Zugriffslesezeichen des Betriebssystems hat eine ungültige Größe
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	Der vorhandene Speicher für Zugriffslesezeichen ist beschädigt und bleibt unverändert. Wählen Sie erneut eine Datei oder einen Ordner; der beschädigte Speicher wird separat aufbewahrt, bevor der neue Zugriff gespeichert wird.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Bei diesem Start wurde das Limit für Dateizugriffe erreicht. Speichern Sie Ihre Arbeit und starten Sie die Anwendung neu; wählen Sie die Ordner mit den Dateien, damit keine Zugriffsberechtigungen für einzelne Dateien nötig sind.
+@msg	Too many pending save destinations; save work and restart	Zu viele ausstehende Speicherziele; speichern Sie Ihre Arbeit und starten Sie die Anwendung neu
+@msg	bookmark store contains an invalid path or bookmark	der Speicher für Zugriffslesezeichen enthält einen ungültigen Pfad oder ein ungültiges Lesezeichen
+@msg	bookmark store exceeds the safe size limit	der Speicher für Zugriffslesezeichen überschreitet die sichere Größenbegrenzung
+@msg	bookmark store has no parent	der Speicher für Zugriffslesezeichen hat keinen übergeordneten Ordner
+@msg	unsupported or oversized bookmark store	nicht unterstützter oder zu großer Speicher für Zugriffslesezeichen
+@msg	Choose the containing folder for all output files before saving. No files were written.	Wählen Sie vor dem Speichern den Ordner aus, der alle Ausgabedateien enthält. Es wurden keine Dateien geschrieben.
+@msg	Choose a folder that contains every output file. No files were written.	Wählen Sie einen Ordner aus, der alle Ausgabedateien enthält. Es wurden keine Dateien geschrieben.
+@msg	Choose an absolute save destination	Wählen Sie einen Speicherort mit absolutem Pfad

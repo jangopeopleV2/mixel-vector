@@ -1,5 +1,7 @@
 # Hardware parity
 
+> **Phase 1 record status — 2026-10-14:** minor; Mac App Store implementation recorded, verification pending at this dated entry; current evidence tracked in suite STATUS.md. Scores, estimates and the earlier assessment dates below are unchanged.
+
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (a window surface larger than 8192 px keeps working, #1459 in part; Linux Display Server preference opens the window through XWayland, #1151) · **Target:** Adobe Illustrator 2026 (30.x)
 
 What hardware Illustrator uses, per platform, against VectorCraft. Illustrator's side is from its public
@@ -29,10 +31,15 @@ on huge documents. Pen input is pressure-only and Windows-first.
 | Display colour profile (proof and display through the monitor's ICC) | yes | no | no | no | — | missing: 3–5 h |
 | 3D GPU rendering (Materials, ray tracing) | yes | — | — | — | — | blocked on 3D (gap G3) |
 
+## Mac App Store platform variant (2026-10-14)
+
+The `mac-app-store` variant is implemented with verified Foundation container paths, app-scoped bookmarks, parented asynchronous file sheets, Foundation atomic replacement, disabled MAS control listeners, and a separate feature-bound signing/package path. Full source-bound verification was pending when this dated implementation entry was added; current verification and internal delivery evidence are tracked in suite STATUS.md; distributed desktop and TestFlight launches are not claimed. The implementation and input/provenance contract are documented in [`packaging/macos/README-mas.md`](../packaging/macos/README-mas.md). File access requires explicit user selection; the MAS variant keeps the ordinary Developer ID packaging path separate. No hardware/platform score, estimate or existing gap is changed. Delivery status is recorded in the suite STATUS.md.
+
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-14 | minor | Mac App Store sandbox and packaging implementation recorded; verification pending at this dated entry; current evidence tracked in suite STATUS.md; parity scores, estimates and existing gaps unchanged |
 | 2026-10-13 | minor | A window whose surface is larger than 8192 px (stretched over several monitors, or grown by a drag between monitors of different scale) is configured up to the graphics adapter's limit instead of closing the app (#1495, part of #1459); the window growing during that drag on Windows is still open; not reproduced on a mixed-scale setup |
 | 2026-10-11 | minor | Preferences › Performance › Linux Display Server › X11 (XWayland) opens the window through XWayland on a Wayland session, where pens and dropped files reach the app (#1151); score unchanged (estimated) |
 | 2026-10-10 | major | First checklist from the canvas, touch and graphics code and the open hardware issues |

@@ -26,6 +26,7 @@ mod automation_args;
 mod clipboard;
 #[cfg(feature = "wgpu")]
 mod compositor_gpu;
+#[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
 mod control_server;
 #[cfg(feature = "wgpu")]
 mod gpu;
@@ -49,7 +50,9 @@ mod xwayland;
 
 use vectorcraft_engine::Session;
 use vectorcraft_engine::cmd::fileio;
-use vectorcraft_engine::file_access::{self, AutomationRoots};
+use vectorcraft_engine::file_access;
+#[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+use vectorcraft_engine::file_access::AutomationRoots;
 use vectorcraft_ui_egui::graphics::GraphicsLoss;
 use vectorcraft_ui_egui::picks::PickRequest;
 use vectorcraft_ui_egui::{ClipboardProbeFactory, FilePick, Services, VectorcraftApp};
@@ -403,7 +406,19 @@ fn reveal_command(path: &str) -> std::process::Command {
 
 /// Write a file the safe way: a failed write keeps the old file ([`fileio::write_atomic`]).
 fn write_file(path: &str, bytes: &[u8]) -> Result<(), String> {
-    fileio::write_atomic(std::path::Path::new(path), bytes).map_err(|e| e.to_string())
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    {
+        let path = vectorcraft_engine::macos_mas::resolve(path)?;
+        let actual = fileio::write_atomic_path(&path, bytes).map_err(|e| e.to_string())?;
+        // after_write queues a warning; successful publication stays successful.
+        let _ = vectorcraft_engine::macos_mas::after_write(actual);
+        Ok(())
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+    {
+        fileio::write_atomic(std::path::Path::new(path), bytes).map_err(|e| e.to_string())?;
+        vectorcraft_engine::macos_mas::after_write(path)
+    }
 }
 
 /// Linux: show the dialog for `request` over `parent` on a thread of its own, answering on the
@@ -462,24 +477,25 @@ fn start_pick(request: PickRequest, parent: &Parent, ui: &egui::Context) -> Opti
     make_folder(&request);
     // rfd builds the panel and begins the sheet here, on the main thread (as it must).
     let dialog = dialog_for(rfd::AsyncFileDialog::new().parent(window), &request);
-    let path = |f: &rfd::FileHandle| f.path().to_string_lossy().to_string();
+    let save = matches!(request, PickRequest::Save(_));
+    let path = move |f: &rfd::FileHandle| vectorcraft_engine::macos_mas::picked(f.path(), save).map(|p| p.to_string_lossy().to_string());
     let answer: SheetAnswer = match request {
         PickRequest::Open(_) => {
             let picked = dialog.pick_file();
-            Box::pin(async move { picked.await.iter().map(path).collect() })
+            Box::pin(async move { picked.await.iter().filter_map(path).collect() })
         }
         PickRequest::OpenMany => {
             let picked = dialog.pick_files();
-            Box::pin(async move { picked.await.unwrap_or_default().iter().map(path).collect() })
+            Box::pin(async move { picked.await.unwrap_or_default().iter().filter_map(path).collect() })
         }
         PickRequest::Save(pick) => {
             let picked = dialog.save_file();
             mac_save_format::attach(window, &pick);
-            Box::pin(async move { picked.await.iter().map(path).collect() })
+            Box::pin(async move { picked.await.iter().filter_map(path).collect() })
         }
         PickRequest::Folder => {
             let picked = dialog.pick_folder();
-            Box::pin(async move { picked.await.iter().map(path).collect() })
+            Box::pin(async move { picked.await.iter().filter_map(path).collect() })
         }
     };
     // The thread can't be gone: it waits for this. If it were, its receiver answers as cancelled.
@@ -498,7 +514,7 @@ fn services(parent: Parent, ui: egui::Context) -> Services {
         // dialogs run the window's events while they are open.
         start_pick: cfg!(unix).then(|| Box::new(move |request: PickRequest| start_pick(request, &p5, &ui)) as vectorcraft_ui_egui::picks::StartPick),
         dialogs_are_sheets: cfg!(target_os = "macos"),
-        read: Some(Box::new(|p: &str| std::fs::read(p).map_err(|e| e.to_string()))),
+        read: Some(Box::new(|p: &str| vectorcraft_engine::macos_mas::resolve(p).and_then(|p| std::fs::read(p).map_err(|e| e.to_string())))),
         write: Some(Box::new(write_file)),
         // Background Save and Export write from a worker thread.
         write_shared: Some(std::sync::Arc::new(write_file)),
@@ -643,8 +659,19 @@ fn main() -> std::process::ExitCode {
             }
         },
     };
+    if vectorcraft_engine::macos_mas::enabled() && control_port.is_some() {
+        eprintln!("vectorcraft: the App Store build does not expose a control server");
+        return std::process::ExitCode::FAILURE;
+    }
     // Before desktop services, so every start-up warning is recorded (`logging`).
     let logger = logging::install();
+    for warning in vectorcraft_engine::macos_mas::initialize("MIXEL Vector") {
+        log::warn!("{warning}");
+    }
+    if vectorcraft_engine::macos_mas::enabled() && vectorcraft_engine::macos_mas::container_dir("MIXEL Vector").is_none() {
+        log::error!("This App Store build must run from its correctly signed sandbox app bundle.");
+        std::process::exit(2);
+    }
     vectorcraft_ui_egui::i18n::detect_system_lang_in_background();
     // Before the first font scan (the app's start): the fonts font services load (#579).
     #[cfg(all(windows, not(target_vendor = "win7")))]
@@ -669,6 +696,11 @@ fn main() -> std::process::ExitCode {
     }
     // The roots confine the control channel: a bad one keeps the app from starting rather than
     // leaving agents unconfined. Without a control port there is nothing to confine.
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    if read_root.is_some() || write_root.is_some() {
+        log::warn!("Automation roots are ignored in the App Store build, which exposes no control server");
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
     let roots = if control_port.is_none() {
         if read_root.is_some() || write_root.is_some() {
             log::warn!("--automation-read-root and --automation-write-root confine the control channel: ignored without --control");
@@ -831,6 +863,7 @@ fn main() -> std::process::ExitCode {
                     app.graphics_adapter = Some("OpenGL (Windows 7 compatibility)".into());
                 }
                 app.custom_titlebar = custom_titlebar;
+                #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
                 if let Some(port) = control_port {
                     let rx = control_server::start(port, cc.egui_ctx.clone());
                     app = app.with_control(rx).with_automation_roots(roots.clone());

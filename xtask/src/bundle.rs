@@ -44,32 +44,108 @@ mod tests {
     /// File types and wording a raster image editor's packaging carries (lowercase).
     const RASTER_EDITOR: &[&str] = &["pcraft", "psd", "psb", "qoi", "photo", "rastergraphics", "image editor"];
 
+    // These exact sources are shared by all seven products. Bind their packaging-relative paths
+    // and reviewed content, not a directory, file type or basename. Git checkout line endings may differ.
+    const SHARED_PACKAGING: &[(&str, &str, &str)] = &[
+        (
+            "macos/mas_package.py",
+            "1b3117501a8c3aaf86a084497070ad416d1715ee896401d78e183d5a19e18841",
+            include_str!("../../packaging/macos/mas_package.py"),
+        ),
+        (
+            "macos/README-mas.md",
+            "380388c9bc4a3d996ae00b461081573f478f46d1fbf02be7e09f9d240daab7eb",
+            include_str!("../../packaging/macos/README-mas.md"),
+        ),
+    ];
+
+    fn packaging_brand_error(relative: &Path, text: &str) -> Option<String> {
+        for &(path, expected, _) in SHARED_PACKAGING {
+            if relative == Path::new(path) {
+                let canonical = text.replace("\r\n", "\n");
+                return (crate::sha256::hex(canonical.as_bytes()) != expected)
+                    .then(|| "shared packaging source differs from its reviewed content pin".to_string());
+            }
+        }
+        let lowercase = text.to_ascii_lowercase();
+        RASTER_EDITOR.iter().find(|word| lowercase.contains(**word)).map(|word| format!("mentions forbidden term {word}"))
+    }
+
     fn text_files(dir: &Path, out: &mut Vec<(String, String)>) {
         for e in std::fs::read_dir(dir).unwrap().flatten() {
             let p = e.path();
             if p.is_dir() {
                 text_files(&p, out);
             } else if let Ok(t) = std::fs::read_to_string(&p) {
-                out.push((p.display().to_string(), t.to_ascii_lowercase()));
+                out.push((p.display().to_string(), t));
             }
         }
     }
 
     #[test]
     fn packaging_describes_a_vector_app() {
+        let packaging = crate::root().join("packaging");
         let mut files = vec![];
-        text_files(&crate::root().join("packaging"), &mut files);
+        text_files(&packaging, &mut files);
         assert!(files.len() > 5, "packaging files found");
+        for &(relative, _, _) in SHARED_PACKAGING {
+            let expected = packaging.join(relative);
+            assert_eq!(files.iter().filter(|(path, _)| Path::new(path) == expected.as_path()).count(), 1, "required shared source: {relative}");
+        }
         for (path, text) in &files {
-            for w in RASTER_EDITOR {
-                assert!(!text.contains(w), "{path} mentions `{w}`");
-            }
+            let relative = Path::new(path).strip_prefix(&packaging).unwrap();
+            let error = packaging_brand_error(relative, text);
+            assert!(error.is_none(), "{path}: {error:?}");
         }
         let read = |p: &str| std::fs::read_to_string(crate::root().join(p)).unwrap();
         let plist = read("packaging/macos/Info.plist.in");
         assert!(plist.contains("<array><string>vectorcraft</string><string>drawcraft</string></array>"), "native format extensions");
         assert!(read("packaging/linux/ch.mixel.vector.desktop").contains("Categories=Graphics;2DGraphics;VectorGraphics;"));
         assert!(read("packaging/linux/ch.mixel.vector.metainfo.xml.in").contains("<category>VectorGraphics</category>"));
+    }
+
+    #[test]
+    fn reviewed_shared_packaging_accepts_lf_and_crlf() {
+        for &(path, _, text) in SHARED_PACKAGING {
+            let lf = text.replace("\r\n", "\n");
+            assert_eq!(packaging_brand_error(Path::new(path), &lf), None, "{path}: LF");
+            let crlf = lf.replace('\n', "\r\n");
+            assert_eq!(packaging_brand_error(Path::new(path), &crlf), None, "{path}: CRLF");
+        }
+    }
+
+    #[test]
+    fn changed_shared_packaging_rejects_the_source_exception() {
+        for &(path, _, text) in SHARED_PACKAGING {
+            let changed = format!("{text}\n# additional source text\n");
+            let error = packaging_brand_error(Path::new(path), &changed).unwrap();
+            assert!(error.contains("reviewed content pin"), "{path}: {error}");
+            assert!(packaging_brand_error(Path::new(path), "MIXEL Photo").is_some(), "{path}: replacement content");
+        }
+    }
+
+    #[test]
+    fn shared_packaging_at_other_paths_is_still_brand_checked() {
+        for &(path, _, text) in SHARED_PACKAGING {
+            let moved = Path::new("unreviewed").join(path);
+            assert!(packaging_brand_error(&moved, text).is_some(), "same basename at {moved:?}");
+            let sibling = Path::new(path).with_file_name("unreviewed.txt");
+            assert!(packaging_brand_error(&sibling, text).is_some(), "same directory at {sibling:?}");
+        }
+    }
+
+    #[test]
+    fn product_packaging_rejects_every_raster_editor_term() {
+        for path in ["macos/Info.plist.in", "linux/ch.mixel.vector.desktop", "linux/ch.mixel.vector.metainfo.xml.in"] {
+            assert_eq!(packaging_brand_error(Path::new(path), "MIXEL Vector"), None, "{path}: vector control");
+            for word in RASTER_EDITOR {
+                assert!(packaging_brand_error(Path::new(path), &format!("MIXEL Vector {word}")).is_some(), "{path}: {word}");
+                assert!(
+                    packaging_brand_error(Path::new(path), &format!("MIXEL Vector {}", word.to_ascii_uppercase())).is_some(),
+                    "{path}: uppercase {word}"
+                );
+            }
+        }
     }
 
     #[test]

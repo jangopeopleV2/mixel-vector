@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerate every app icon from assets/app-icon/vectorcraft.svg (the canonical artwork).
+# Regenerate app icons from vectorcraft.svg: supplied PNG brand plus editable vector overlays.
 #
 # Needs: resvg (brew install resvg / cargo install resvg). On macOS, iconutil also writes the
 # .icns. The outputs are committed, so building and packaging never need these tools.
@@ -15,7 +15,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 command -v resvg >/dev/null || { echo "error: resvg not found (brew install resvg)" >&2; exit 1; }
 
-# The SVG is a full-bleed 512 tile, used as-is on Windows and Linux. macOS icons follow Apple's grid:
+# The hybrid SVG is a full-bleed 512 tile (rx=104), used as-is on Windows and Linux. macOS follows Apple's grid:
 # the tile is 824/1024 of the canvas with a transparent margin, so widen the viewBox around it.
 MAC="$TMP/mac.svg"
 sed 's/viewBox="0 0 512 512"/viewBox="-62.136 -62.136 636.272 636.272"/' "$SVG" >"$MAC"

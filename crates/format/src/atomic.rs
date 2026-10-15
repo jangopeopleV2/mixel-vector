@@ -1,6 +1,8 @@
 //! Safe saving: a file is written to a temporary file beside it, then renamed over it, so a failed
 //! or interrupted write never leaves a damaged file behind (the old one stays as it was).
 //! [`write_new_with`] creates a file the same way without ever replacing one.
+//! App Store replacement uses Foundation's private staging directory, so a file-only
+//! grant can replace its destination without creating a sibling in the user's folder.
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write as _};
@@ -17,14 +19,33 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> io::Result<()> {
 /// untouched.
 pub fn write_atomic_with(path: &Path, fill: impl FnOnce(&mut File) -> io::Result<()>) -> io::Result<()> {
     let target = resolve_link(path)?;
-    let tmp = temp_path(&target)?;
-    let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp)?;
-    let filled = fill(&mut f).and_then(|()| f.sync_all());
-    drop(f);
-    filled.and_then(|()| keep_permissions(&target, &tmp)).and_then(|()| std::fs::rename(&tmp, &target)).inspect_err(|_| {
-        // Best effort: the temporary file is all there is to clean up.
-        let _ = std::fs::remove_file(&tmp);
-    })
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    {
+        crate::macos_atomic::write_with(&target, fill).map(|_| ())
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+    {
+        let tmp = temp_path(&target)?;
+        let mut f = OpenOptions::new().write(true).create_new(true).open(&tmp)?;
+        let filled = fill(&mut f).and_then(|()| f.sync_all());
+        drop(f);
+        filled.and_then(|()| keep_permissions(&target, &tmp)).and_then(|()| std::fs::rename(&tmp, &target)).inspect_err(|_| {
+            // Best effort: the temporary file is all there is to clean up.
+            let _ = std::fs::remove_file(&tmp);
+        })
+    }
+}
+
+/// App Store publication, preserving streaming and returning the actual committed path.
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+pub fn write_atomic_with_path(path: &Path, fill: impl FnOnce(&mut File) -> io::Result<()>) -> io::Result<PathBuf> {
+    crate::macos_atomic::write_with(&resolve_link(path)?, fill).map(|(_, actual)| actual)
+}
+
+/// [`write_atomic`] with the actual committed path for host bookmark refresh.
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+pub fn write_atomic_path(path: &Path, bytes: &[u8]) -> io::Result<PathBuf> {
+    write_atomic_with_path(path, |file| file.write_all(bytes))
 }
 
 /// Create `path` with the content `fill` writes, never replacing a file or a link of that name. The
@@ -87,7 +108,7 @@ fn temp_path(target: &Path) -> io::Result<PathBuf> {
 
 /// The replacement keeps the replaced file's permissions (Unix; Windows files have none to keep
 /// beyond read-only, which makes the save fail as writing in place would).
-#[cfg(unix)]
+#[cfg(all(unix, not(all(target_os = "macos", feature = "mac-app-store"))))]
 fn keep_permissions(target: &Path, tmp: &Path) -> io::Result<()> {
     match std::fs::metadata(target) {
         Ok(m) => std::fs::set_permissions(tmp, m.permissions()),
@@ -96,7 +117,7 @@ fn keep_permissions(target: &Path, tmp: &Path) -> io::Result<()> {
     }
 }
 
-#[cfg(not(unix))]
+#[cfg(all(not(unix), not(all(target_os = "macos", feature = "mac-app-store"))))]
 fn keep_permissions(_: &Path, _: &Path) -> io::Result<()> {
     Ok(())
 }

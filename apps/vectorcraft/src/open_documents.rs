@@ -53,6 +53,10 @@ pub fn set_ui(ctx: &egui::Context) {
 /// The paths that arrived since the last call.
 pub fn take() -> Vec<String> {
     std::mem::take(&mut *PENDING.lock().unwrap_or_else(PoisonError::into_inner))
+        .into_iter()
+        .filter_map(|p| vectorcraft_engine::macos_mas::picked(p, false))
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect()
 }
 
 /// `application:openURLs:` on the application delegate's class.
