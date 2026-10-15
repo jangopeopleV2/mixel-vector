@@ -4691,3 +4691,20 @@ mark-style	Japanese	Japonské
 @msg	unknown parameter `{key}`; the command takes: {keys}	neznámý parametr `{key}`; příkaz přijímá: {keys}
 	Load EPS into Clipboard	Načíst EPS do schránky
 @msg	an image of {w} × {h} pixels is too large to draw	obraz o velikosti {w} × {h} obrazových bodů je příliš velký na vykreslení
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Služba systémových dialogů pro výběr souborů není dostupná. Znovu otevřete MIXEL Vector a zkuste to znovu.
+@msg	App Store file access has not been initialized	Přístup k souborům ve verzi pro App Store nebyl inicializován
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	Úložiště přístupových záložek dosáhlo limitu položek; vyberte složky obsahující dané soubory, aby se přístupová oprávnění sloučila
+@msg	Bookmark store has no location	Umístění úložiště přístupových záložek není určeno
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Poškozené úložiště přístupových záložek nelze uchovat: {e}; původní úložiště zůstalo beze změny
+@msg	File parameters are nested too deeply	Parametry souborů jsou zanořeny příliš hluboko
+@msg	File path is not valid Unicode	Cesta k souboru není platný řetězec Unicode
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Není k dispozici žádný volný název zálohy poškozeného úložiště přístupových záložek; původní úložiště zůstalo beze změny
+@msg	No unused temporary bookmark-store filename is available	Není k dispozici žádný volný název dočasného souboru úložiště přístupových záložek
+@msg	Refreshed OS bookmark has an invalid size	Obnovená přístupová záložka operačního systému má neplatnou velikost
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	Stávající úložiště přístupových záložek je poškozené a zůstalo beze změny. Znovu vyberte soubor nebo složku; poškozené úložiště bude před uložením nového přístupu uchováno odděleně.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Při tomto spuštění byl dosažen limit přístupu k souborům. Uložte práci a restartujte aplikaci; vybírejte složky obsahující soubory, abyste nemuseli udělovat přístup ke každému souboru zvlášť.
+@msg	Too many pending save destinations; save work and restart	Příliš mnoho čekajících cílů uložení; uložte práci a restartujte aplikaci
+@msg	bookmark store contains an invalid path or bookmark	úložiště přístupových záložek obsahuje neplatnou cestu nebo záložku
+@msg	bookmark store exceeds the safe size limit	úložiště přístupových záložek překračuje bezpečný limit velikosti
+@msg	bookmark store has no parent	úložiště přístupových záložek nemá nadřazenou složku
+@msg	unsupported or oversized bookmark store	nepodporované nebo příliš velké úložiště přístupových záložek

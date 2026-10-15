@@ -76,6 +76,8 @@ pub use svg::options_map as svg_options;
 /// file it replaces), for the apps' own writers too.
 #[cfg(not(target_arch = "wasm32"))]
 pub use vectorcraft_format::write_atomic;
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+pub use vectorcraft_format::write_atomic_path;
 
 use super::*;
 use crate::EngineError;
@@ -770,14 +772,39 @@ pub(crate) fn read_file(path: &str) -> Result<Vec<u8>> {
 pub(crate) fn write_file(path: &str, bytes: &[u8]) -> Result<()> {
     may_write(path)?;
     // Never a half-written file: see [`write_atomic`].
-    write_atomic(std::path::Path::new(path), bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    {
+        let resolved = crate::macos_mas::resolve(path).map_err(EngineError::Other)?;
+        let actual = vectorcraft_format::write_atomic_path(&resolved, bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        // after_write queues a warning; successful publication stays successful.
+        let _ = crate::macos_mas::after_write(actual);
+        Ok(())
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+    {
+        write_atomic(std::path::Path::new(path), bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        crate::macos_mas::after_write(path).map_err(EngineError::Other)
+    }
 }
 
 /// [`write_file`] with what `fill` writes into the file (a save streamed into it).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn write_file_with(path: &str, fill: &mut dyn FnMut(&mut dyn std::io::Write) -> std::io::Result<()>) -> Result<()> {
     may_write(path)?;
-    vectorcraft_format::write_atomic_with(std::path::Path::new(path), |f| fill(f)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    {
+        let resolved = crate::macos_mas::resolve(path).map_err(EngineError::Other)?;
+        let actual =
+            vectorcraft_format::write_atomic_with_path(&resolved, |file| fill(file)).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        // after_write queues a warning; successful publication stays successful.
+        let _ = crate::macos_mas::after_write(actual);
+        Ok(())
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+    {
+        vectorcraft_format::write_atomic_with(std::path::Path::new(path), |f| fill(f)).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+        crate::macos_mas::after_write(path).map_err(EngineError::Other)
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -94,3 +94,8 @@ License 1.1, with the original complete assets/fonts/OFL-JetBrainsMono.txt.
 The font and licence bytes match pinned official source commit
 19371302b95d218af43299bce79ddbddd0bc364d; see its attribution sidecar and
 ASSETS.md. No new font binary or modified glyph is distributed.
+
+App Store file access uses apple-scoped-bookmarks 0.1.0 (MIT OR Apache-2.0),
+by CrispStrobe. Source: https://github.com/CrispStrobe/apple-scoped-bookmarks
+commit 1a07a7dc6569575cc982f062fb7e8672e5361b52. License texts are retained in
+mixel/third-party/apple-scoped-bookmarks-0.1.0/.

@@ -4534,3 +4534,20 @@ mark-style	Japanese	Japońskie
 @msg	unknown parameter `{key}`; the command takes: {keys}	nieznany parametr `{key}`; polecenie przyjmuje: {keys}
 	Load EPS into Clipboard	Wczytaj EPS do schowka
 @msg	an image of {w} × {h} pixels is too large to draw	obraz o wymiarach {w} × {h} pikseli jest zbyt duży, aby go narysować
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Usługa systemowych okien wyboru plików jest niedostępna. Uruchom ponownie MIXEL Vector i spróbuj jeszcze raz.
+@msg	App Store file access has not been initialized	Dostęp do plików w wersji z App Store nie został zainicjowany
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	Magazyn zakładek dostępu osiągnął limit wpisów; wybierz foldery zawierające pliki, aby scalić uprawnienia dostępu
+@msg	Bookmark store has no location	Magazyn zakładek dostępu nie ma określonej lokalizacji
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Nie można zachować uszkodzonego magazynu zakładek dostępu: {e}; oryginał pozostaje bez zmian
+@msg	File parameters are nested too deeply	Parametry plików są zbyt głęboko zagnieżdżone
+@msg	File path is not valid Unicode	Ścieżka pliku nie jest poprawnym ciągiem Unicode
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Brak wolnej nazwy kopii zapasowej uszkodzonego magazynu zakładek dostępu; oryginał pozostaje bez zmian
+@msg	No unused temporary bookmark-store filename is available	Brak wolnej nazwy pliku tymczasowego magazynu zakładek dostępu
+@msg	Refreshed OS bookmark has an invalid size	Odświeżona zakładka dostępu systemu operacyjnego ma nieprawidłowy rozmiar
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	Istniejący magazyn zakładek dostępu jest uszkodzony i pozostaje bez zmian. Wybierz ponownie plik lub folder; uszkodzony magazyn zostanie zachowany osobno przed zapisaniem nowego dostępu.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Podczas tego uruchomienia osiągnięto limit dostępu do plików. Zapisz pracę, a następnie uruchom aplikację ponownie; wybieraj foldery zawierające pliki, aby nie przyznawać dostępu do każdego pliku osobno.
+@msg	Too many pending save destinations; save work and restart	Zbyt wiele oczekujących miejsc zapisu; zapisz pracę i uruchom aplikację ponownie
+@msg	bookmark store contains an invalid path or bookmark	magazyn zakładek dostępu zawiera nieprawidłową ścieżkę lub zakładkę
+@msg	bookmark store exceeds the safe size limit	magazyn zakładek dostępu przekracza bezpieczny limit rozmiaru
+@msg	bookmark store has no parent	magazyn zakładek dostępu nie ma folderu nadrzędnego
+@msg	unsupported or oversized bookmark store	nieobsługiwany lub zbyt duży magazyn zakładek dostępu

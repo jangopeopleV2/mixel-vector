@@ -4657,3 +4657,20 @@ imageTrace	Outline	Körvonal
 @msg	unknown parameter `{key}`; the command takes: {keys}	ismeretlen paraméter: `{key}`; a parancs ezeket fogadja el: {keys}
 	Load EPS into Clipboard	EPS betöltése a vágólapra
 @msg	an image of {w} × {h} pixels is too large to draw	egy {w} × {h} pixeles kép túl nagy a kirajzoláshoz
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	A rendszer fájlválasztó párbeszédablakainak szolgáltatása nem érhető el. Nyisd meg újra a MIXEL Vector alkalmazást, és próbáld újra.
+@msg	App Store file access has not been initialized	Az App Store-verzió fájlhozzáférése még nincs inicializálva
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	A hozzáférési könyvjelzőtár elérte a bejegyzések számának korlátját; a hozzáférések összevonásához válaszd ki a fájlokat tartalmazó mappákat
+@msg	Bookmark store has no location	A hozzáférési könyvjelzőtárnak nincs megadva a helye
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Nem sikerült megőrizni a sérült hozzáférési könyvjelzőtárat: {e}; az eredeti változatlan maradt
+@msg	File parameters are nested too deeply	A fájlparaméterek túl mélyen vannak egymásba ágyazva
+@msg	File path is not valid Unicode	A fájl elérési útja nem érvényes Unicode-karakterlánc
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Nincs szabad név a sérült hozzáférési könyvjelzőtár biztonsági másolatához; az eredeti változatlan maradt
+@msg	No unused temporary bookmark-store filename is available	Nincs szabad ideiglenes fájlnév a hozzáférési könyvjelzőtárhoz
+@msg	Refreshed OS bookmark has an invalid size	Az operációs rendszer frissített hozzáférési könyvjelzőjének mérete érvénytelen
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	A meglévő hozzáférési könyvjelzőtár sérült, és változatlan maradt. Válassz újra egy fájlt vagy mappát; az új hozzáférés mentése előtt a sérült tárat külön megőrizzük.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Az alkalmazás ezen indítása során elérte a fájlhozzáférések korlátját. Mentsd a munkádat, majd indítsd újra az alkalmazást; válaszd ki a fájlokat tartalmazó mappákat, hogy ne kelljen minden fájlhoz külön hozzáférést engedélyezned.
+@msg	Too many pending save destinations; save work and restart	Túl sok függőben lévő mentési cél; mentsd a munkádat, és indítsd újra az alkalmazást
+@msg	bookmark store contains an invalid path or bookmark	a hozzáférési könyvjelzőtár érvénytelen elérési utat vagy könyvjelzőt tartalmaz
+@msg	bookmark store exceeds the safe size limit	a hozzáférési könyvjelzőtár túllépi a biztonságos méretkorlátot
+@msg	bookmark store has no parent	a hozzáférési könyvjelzőtárnak nincs szülőmappája
+@msg	unsupported or oversized bookmark store	nem támogatott vagy túl nagy hozzáférési könyvjelzőtár

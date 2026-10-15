@@ -13,6 +13,7 @@ macro_rules! tl {
     };
 }
 
+pub use vectorcraft_engine::macos_mas;
 pub mod background;
 mod brand;
 pub mod canvas;
@@ -976,6 +977,9 @@ impl VectorcraftApp {
     /// Per-frame logic before layout (control channel, shortcuts, inbox). A bug that panics costs
     /// one frame and shows an error, instead of closing the app with unsaved work.
     pub fn logic(&mut self, ctx: &egui::Context) {
+        for warning in crate::macos_mas::poll() {
+            self.status(warning);
+        }
         let confined = self.synthetic_frame.then(|| self.automation_roots.clone()).flatten();
         if let Err(msg) = file_access::confine(confined.as_ref(), || vectorcraft_engine::guard::catch_panic(|| self.logic_frame(ctx))) {
             self.picks.recover();
@@ -1092,6 +1096,12 @@ impl VectorcraftApp {
         let pos = place::drag_pos(ctx);
         let mut files = vec![];
         for f in dropped {
+            if f.path().is_absolute()
+                && let Err(error) = crate::macos_mas::selected(f.path(), false)
+            {
+                self.status(error);
+                continue;
+            }
             let path = Some(f.path().to_string_lossy().to_string()).filter(|s| !s.is_empty());
             let name = path.as_deref().map_or_else(|| "dropped".into(), vectorcraft_engine::cmd::fileio::file_name);
             // Native file drops usually carry a path. Use the same file reader as File → Open

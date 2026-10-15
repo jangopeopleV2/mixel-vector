@@ -34,6 +34,8 @@
 #[cfg(not(target_arch = "wasm32"))]
 mod atomic;
 mod legacy;
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+pub mod macos_atomic;
 mod stream;
 mod unpack;
 
@@ -46,6 +48,8 @@ use vectorcraft_doc::{Document, ImageBlob};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use atomic::{write_atomic, write_atomic_with, write_new_with};
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+pub use atomic::{write_atomic_path, write_atomic_with_path};
 use stream::{Gz, Indent, KeyScan, Out};
 
 /// v4: large data after the JSON (v1 to v3 files still load).

@@ -4240,3 +4240,20 @@ lighting	Light	Світло
 	Load EPS into Clipboard	Завантажити EPS у буфер обміну
 @msg	an image of {w} × {h} pixels is too large to draw	зображення розміром {w} × {h} пікселів завелике для відображення
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	Режим «Імітувати» друкує накладання так, як їх показує перегляд накладань; кольороподіли завжди їх зберігають. Набір параметрів зводить прозорість перед друком (файли PostScript завжди її зводять).
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Системний діалог вибору файлів недоступний. Відкрийте MIXEL Vector заново та спробуйте ще раз.
+@msg	App Store file access has not been initialized	Доступ до файлів у версії з App Store не ініціалізовано
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	Досягнуто граничної кількості записів у сховищі закладок; виберіть папки, що містять файли, щоб об’єднати дозволи доступу
+@msg	Bookmark store has no location	Не задано розташування сховища закладок
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Не вдалося зберегти пошкоджене сховище закладок: {e}; початкове сховище не змінено
+@msg	File parameters are nested too deeply	Завелика глибина вкладеності параметрів файлів
+@msg	File path is not valid Unicode	Шлях до файлу не є допустимим рядком Unicode
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Немає вільного імені для резервної копії пошкодженого сховища закладок; початкове сховище не змінено
+@msg	No unused temporary bookmark-store filename is available	Немає вільного імені для тимчасового файлу сховища закладок
+@msg	Refreshed OS bookmark has an invalid size	Оновлена системна закладка має неприпустимий розмір
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	Наявне сховище закладок пошкоджено й не змінено. Виберіть файл або папку ще раз; перед збереженням нового дозволу доступу пошкоджене сховище буде збережено окремо.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	У цьому сеансі досягнуто граничної кількості дозволів доступу до файлів. Збережіть роботу й перезапустіть програму; вибирайте папки, що містять файли, щоб не надавати дозвіл для кожного файлу окремо.
+@msg	Too many pending save destinations; save work and restart	Забагато файлів очікують на збереження; збережіть роботу й перезапустіть програму
+@msg	bookmark store contains an invalid path or bookmark	сховище закладок містить неприпустимий шлях або закладку
+@msg	bookmark store exceeds the safe size limit	розмір сховища закладок перевищує безпечну межу
+@msg	bookmark store has no parent	сховище закладок не має батьківської папки
+@msg	unsupported or oversized bookmark store	непідтримуване або завелике сховище закладок

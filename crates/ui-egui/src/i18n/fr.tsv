@@ -4690,3 +4690,20 @@ mark-style	Japanese	Japonais
 theme	Appearance	Apparence
 	Load EPS into Clipboard	Charger un EPS dans le presse-papiers
 @msg	an image of {w} × {h} pixels is too large to draw	une image de {w} × {h} pixels est trop grande pour être dessinée
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Le service natif de sélection de fichiers est indisponible. Rouvrez MIXEL Vector, puis réessayez.
+@msg	App Store file access has not been initialized	L’accès aux fichiers de l’App Store n’a pas été initialisé
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	Le stockage des signets a atteint sa limite d’entrées ; sélectionnez les dossiers contenant les fichiers pour regrouper les autorisations d’accès
+@msg	Bookmark store has no location	Le stockage des signets n’a aucun emplacement défini
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Impossible de conserver le stockage des signets endommagé : {e} ; l’original est inchangé
+@msg	File parameters are nested too deeply	Les paramètres de fichier sont imbriqués trop profondément
+@msg	File path is not valid Unicode	Le chemin du fichier n’est pas du texte Unicode valide
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Aucun nom libre n’est disponible pour la sauvegarde du stockage des signets endommagé ; l’original est inchangé
+@msg	No unused temporary bookmark-store filename is available	Aucun nom de fichier temporaire libre n’est disponible pour le stockage des signets
+@msg	Refreshed OS bookmark has an invalid size	Le signet actualisé du système d’exploitation a une taille non valide
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	Le stockage des signets existant est endommagé et reste inchangé. Choisissez de nouveau un fichier ou un dossier ; le stockage endommagé sera conservé séparément avant l’enregistrement du nouvel accès.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Cette session a atteint sa limite d’accès aux fichiers. Enregistrez votre travail, puis redémarrez l’application ; sélectionnez les dossiers contenant les fichiers pour éviter les autorisations fichier par fichier.
+@msg	Too many pending save destinations; save work and restart	Trop de destinations d’enregistrement sont en attente ; enregistrez votre travail et redémarrez l’application
+@msg	bookmark store contains an invalid path or bookmark	le stockage des signets contient un chemin ou un signet non valide
+@msg	bookmark store exceeds the safe size limit	le stockage des signets dépasse la limite de taille sûre
+@msg	bookmark store has no parent	le stockage des signets n’a pas de dossier parent
+@msg	unsupported or oversized bookmark store	stockage des signets non pris en charge ou trop volumineux

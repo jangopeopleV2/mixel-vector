@@ -4260,3 +4260,20 @@ lighting	Light	Luce
 	Load EPS into Clipboard	Carica EPS negli appunti
 @msg	an image of {w} × {h} pixels is too large to draw	un'immagine di {w} × {h} pixel è troppo grande per essere disegnata
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	L’opzione Simula stampa le sovrastampe come le mostra Anteprima sovrastampa; le separazioni le conservano sempre. Un preset appiattisce la trasparenza prima della stampa (i file PostScript la appiattiscono sempre).
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	Il servizio per le finestre di dialogo native dei file non è disponibile. Riapri MIXEL Vector e riprova.
+@msg	App Store file access has not been initialized	L’accesso ai file per l’App Store non è stato inizializzato
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	L’archivio dei segnalibri ha raggiunto il limite di voci; seleziona le cartelle che contengono i file per raggruppare le autorizzazioni di accesso
+@msg	Bookmark store has no location	L’archivio dei segnalibri non ha una posizione
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	Impossibile conservare l’archivio dei segnalibri danneggiato: {e}; l’originale è invariato
+@msg	File parameters are nested too deeply	I parametri dei file sono annidati troppo in profondità
+@msg	File path is not valid Unicode	Il percorso del file non è una stringa Unicode valida
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	Non è disponibile alcun nome libero per la copia di sicurezza dell’archivio dei segnalibri danneggiato; l’originale è invariato
+@msg	No unused temporary bookmark-store filename is available	Non è disponibile alcun nome di file temporaneo libero per l’archivio dei segnalibri
+@msg	Refreshed OS bookmark has an invalid size	Il segnalibro aggiornato del sistema operativo ha una dimensione non valida
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	L’archivio dei segnalibri esistente è danneggiato e invariato. Scegli di nuovo un file o una cartella; l’archivio danneggiato verrà conservato separatamente prima di salvare il nuovo accesso.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Questo avvio ha raggiunto il limite di accesso ai file. Salva il lavoro e riavvia l’applicazione; seleziona le cartelle che contengono i file per evitare autorizzazioni per singoli file.
+@msg	Too many pending save destinations; save work and restart	Troppe destinazioni di salvataggio in attesa; salva il lavoro e riavvia l’applicazione
+@msg	bookmark store contains an invalid path or bookmark	l’archivio dei segnalibri contiene un percorso o un segnalibro non valido
+@msg	bookmark store exceeds the safe size limit	l’archivio dei segnalibri supera il limite di dimensione sicuro
+@msg	bookmark store has no parent	l’archivio dei segnalibri non ha una cartella superiore
+@msg	unsupported or oversized bookmark store	archivio dei segnalibri non supportato o troppo grande

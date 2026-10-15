@@ -8,6 +8,9 @@ description = "MIXEL Vector native .vectorcraft format (versioned JSON, embedded
 [lints]
 workspace = true
 
+[features]
+mac-app-store = ["dep:objc2-foundation"]
+
 [dependencies]
 vectorcraft-doc = { workspace = true }
 serde = { workspace = true }
@@ -19,3 +22,6 @@ flate2 = { workspace = true }
 vectorcraft-testkit = { workspace = true }
 proptest = { workspace = true }
 vectorcraft-geom = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-foundation = { version = "0.3", optional = true, default-features = false, features = ["std", "NSFileManager", "NSPathUtilities", "NSString", "NSURL", "NSError", "NSDictionary"] }

@@ -4,6 +4,9 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 pub fn prefs_path(legacy: bool) -> Option<PathBuf> {
+    if vectorcraft_engine::macos_mas::enabled() {
+        return (!legacy).then(|| vectorcraft_engine::macos_mas::container_dir("MIXEL Vector").map(|d| d.join("ui.json"))).flatten();
+    }
     prefs_path_with(std::env::consts::OS, legacy, |key| std::env::var_os(key))
 }
 

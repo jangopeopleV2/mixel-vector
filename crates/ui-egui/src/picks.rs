@@ -40,8 +40,8 @@ pub enum PickRequest {
 /// The paths a dialog shown off the UI thread picked (none: cancelled).
 pub type PickAnswer = Vec<String>;
 
-/// Shows a dialog off the UI thread; its answer arrives on the receiver. `None` when it can't, and
-/// the dialog is then shown in line.
+/// Shows a dialog off the UI thread; its answer arrives on the receiver. `None` when it can't.
+/// Hosts requiring native sheets report the failure; other hosts may show the dialog in line.
 pub type StartPick = Box<dyn FnMut(PickRequest) -> Option<Receiver<PickAnswer>>>;
 
 /// What runs again with the picked path.
@@ -96,6 +96,8 @@ pub(crate) struct Picks {
     answer: Option<(PickRequest, PickAnswer)>,
     /// Another dialog was refused while this one is open ([`busy`]).
     refused: bool,
+    /// Preserve a sheet startup failure when an entry subsequently reports generic cancellation.
+    failed: Option<&'static str>,
 }
 
 impl Picks {
@@ -114,6 +116,7 @@ impl Picks {
     pub(crate) fn recover(&mut self) {
         self.entry = None;
         self.answer = None;
+        self.failed = None;
     }
 
     /// The kind of dialog open off the UI thread (`ui.inspect`'s `fileDialog`).
@@ -138,15 +141,25 @@ pub(crate) fn dialog_gone() -> &'static str {
     tl!("The dialog was closed before its file dialog answered")
 }
 
+fn sheet_unavailable(app: &mut VectorcraftApp) {
+    let message = tl!("The native file dialog service is unavailable. Reopen MIXEL Vector and try again.");
+    app.picks.failed = Some(message);
+    app.status(message);
+}
+
 /// Run `f` as `entry`: a dialog it asks for off the UI thread runs `entry` again when it
 /// answers. Inside another entry, that one runs again instead.
 pub(crate) fn as_entry<R>(app: &mut VectorcraftApp, entry: impl FnOnce() -> Entry, f: impl FnOnce(&mut VectorcraftApp) -> R) -> R {
     if app.picks.entry.is_some() {
         return f(app);
     }
+    app.picks.failed = None;
     app.picks.entry = Some(entry());
     let r = f(app);
     app.picks.entry = None;
+    if let Some(message) = app.picks.failed {
+        app.status(message);
+    }
     r
 }
 
@@ -234,10 +247,14 @@ fn ask(app: &mut VectorcraftApp, request: PickRequest) -> Option<PickAnswer> {
     {
         return Some(answer);
     }
-    if !can(app, &request) {
+    let sheets_required = crate::macos_mas::enabled() || app.services.dialogs_are_sheets;
+    if !(can(app, &request) || (sheets_required && app.services.start_pick.is_some())) {
+        if sheets_required {
+            sheet_unavailable(app);
+        }
         return None;
     }
-    if app.services.start_pick.is_some() && app.picks.waiting.is_some() {
+    if (app.services.start_pick.is_some() || sheets_required) && app.picks.waiting.is_some() {
         app.status(busy());
         app.picks.refused = true;
         return None;
@@ -254,6 +271,10 @@ fn ask(app: &mut VectorcraftApp, request: PickRequest) -> Option<PickAnswer> {
         // an entry.
         (None, Some(_)) => log::warn!("a file dialog asked for outside a command, a dialog's OK or a button: {request:?}"),
         _ => {}
+    }
+    if sheets_required {
+        sheet_unavailable(app);
+        return None;
     }
     let s = &mut app.services;
     let one = |p: Option<String>| Some(p.into_iter().collect());
@@ -272,6 +293,9 @@ fn ask(app: &mut VectorcraftApp, request: PickRequest) -> Option<PickAnswer> {
 /// Each frame: when the dialog shown off the UI thread answers with paths, run its entry again
 /// with them. While it is open, look again shortly.
 pub(crate) fn poll(app: &mut VectorcraftApp, ctx: &egui::Context) {
+    if let Some(message) = app.picks.failed.take() {
+        app.status(message);
+    }
     let Some(w) = &app.picks.waiting else { return };
     let answer = match w.answer.try_recv() {
         Ok(answer) => answer,

@@ -178,6 +178,8 @@ pub fn open_path(app: &mut VectorcraftApp, path: &str) -> Result<Value, String> 
 /// [`open_path`]; with `background`, a document (not a file that installs, imports or asks
 /// first) is decoded off the UI thread ([`crate::opening::start`]).
 fn open_file(app: &mut VectorcraftApp, path: &str, background: bool) -> Result<Value, String> {
+    let resolved = crate::macos_mas::resolve(path)?;
+    let path = resolved.to_str().ok_or("File path is not valid Unicode")?;
     let mut bytes = read(app, path)?;
     if background && opens_as(path).is_none() {
         // A PDF with several pages or a password, or a DXF drawing, asks first, as at once.

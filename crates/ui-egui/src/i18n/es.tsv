@@ -4631,3 +4631,20 @@ mark-style	Japanese	Japonesas
 @msg	unknown parameter `{key}`; the command takes: {keys}	parámetro desconocido `{key}`; el comando acepta: {keys}
 	Load EPS into Clipboard	Cargar EPS en el portapapeles
 @msg	an image of {w} × {h} pixels is too large to draw	una imagen de {w} × {h} píxeles es demasiado grande para dibujarse
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	El servicio nativo de selección de archivos no está disponible. Vuelve a abrir MIXEL Vector e inténtalo de nuevo.
+@msg	App Store file access has not been initialized	El acceso a archivos de la App Store no se ha inicializado
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	El almacenamiento de marcadores ha alcanzado el límite de entradas; selecciona las carpetas que contienen los archivos para agrupar los permisos de acceso
+@msg	Bookmark store has no location	El almacén de marcadores no tiene una ubicación
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	No se puede conservar el almacén de marcadores dañado: {e}; el original no se ha modificado
+@msg	File parameters are nested too deeply	Los parámetros de archivo están anidados a demasiada profundidad
+@msg	File path is not valid Unicode	La ruta del archivo no es Unicode válido
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	No hay ningún nombre libre para la copia de seguridad del almacén de marcadores dañado; el original no se ha modificado
+@msg	No unused temporary bookmark-store filename is available	No hay ningún nombre de archivo temporal libre para el almacén de marcadores
+@msg	Refreshed OS bookmark has an invalid size	El marcador actualizado del sistema operativo tiene un tamaño no válido
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	El almacén de marcadores existente está dañado y no se ha modificado. Vuelve a elegir un archivo o una carpeta; el almacén dañado se conservará por separado antes de guardar el nuevo permiso de acceso.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	Esta ejecución ha alcanzado su límite de acceso a archivos. Guarda el trabajo y reinicia la aplicación; selecciona las carpetas que contienen los archivos para evitar permisos de acceso individuales.
+@msg	Too many pending save destinations; save work and restart	Hay demasiados destinos de guardado pendientes; guarda el trabajo y reinicia la aplicación
+@msg	bookmark store contains an invalid path or bookmark	el almacén de marcadores contiene una ruta o un marcador no válido
+@msg	bookmark store exceeds the safe size limit	el almacén de marcadores supera el límite de tamaño seguro
+@msg	bookmark store has no parent	el almacén de marcadores no tiene una carpeta superior
+@msg	unsupported or oversized bookmark store	almacén de marcadores no compatible o demasiado grande

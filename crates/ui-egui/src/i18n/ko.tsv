@@ -4224,3 +4224,20 @@ lighting	Light	광원
 	Load EPS into Clipboard	EPS를 클립보드로 불러오기
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h}픽셀 이미지는 너무 커서 그릴 수 없습니다
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	시뮬레이션은 중복 인쇄 미리 보기에 표시되는 대로 중복 인쇄를 출력하며, 색상 분판에서는 항상 유지합니다. 사전 설정은 인쇄 전에 투명도를 병합합니다(PostScript 파일은 항상 병합합니다).
+	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	기본 파일 대화 상자 서비스를 사용할 수 없습니다. MIXEL Vector를 다시 열고 시도하세요.
+@msg	App Store file access has not been initialized	App Store 버전의 파일 접근이 초기화되지 않았습니다
+@msg	Bookmark storage has reached its entry limit; select containing folders to consolidate access	북마크 저장 항목 수가 한도에 도달했습니다. 파일이 있는 폴더를 선택하여 접근 권한을 통합하세요
+@msg	Bookmark store has no location	북마크 저장소의 위치가 없습니다
+@msg	Cannot preserve damaged bookmark store: {e}; original is unchanged	손상된 북마크 저장소를 보존할 수 없습니다: {e}. 원본은 변경되지 않았습니다
+@msg	File parameters are nested too deeply	파일 매개변수가 너무 깊게 중첩되어 있습니다
+@msg	File path is not valid Unicode	파일 경로가 유효한 Unicode가 아닙니다
+@msg	No unused damaged-bookmark backup name is available; original is unchanged	손상된 북마크의 백업에 사용할 수 있는 새 이름이 없습니다. 원본은 변경되지 않았습니다
+@msg	No unused temporary bookmark-store filename is available	임시 북마크 저장소 파일에 사용할 수 있는 새 이름이 없습니다
+@msg	Refreshed OS bookmark has an invalid size	갱신된 OS 북마크의 크기가 유효하지 않습니다
+@msg	The existing bookmark store is damaged and unchanged. Choose a file or folder again; the damaged store will be preserved separately before new access is saved.	기존 북마크 저장소가 손상되었으며 변경되지 않았습니다. 파일이나 폴더를 다시 선택하세요. 새 접근 권한을 저장하기 전에 손상된 저장소를 별도로 보존합니다.
+@msg	This launch has reached its file-access limit. Save work, then restart; select containing folders to avoid individual-file grants.	이번 실행에서 파일 접근 한도에 도달했습니다. 작업을 저장한 다음 다시 시작하세요. 개별 파일마다 접근 권한을 부여하지 않으려면 파일이 있는 폴더를 선택하세요.
+@msg	Too many pending save destinations; save work and restart	보류 중인 저장 대상이 너무 많습니다. 작업을 저장하고 다시 시작하세요
+@msg	bookmark store contains an invalid path or bookmark	북마크 저장소에 유효하지 않은 경로나 북마크가 있습니다
+@msg	bookmark store exceeds the safe size limit	북마크 저장소가 안전한 크기 한도를 초과했습니다
+@msg	bookmark store has no parent	북마크 저장소의 상위 폴더가 없습니다
+@msg	unsupported or oversized bookmark store	지원하지 않는 형식이거나 너무 큰 북마크 저장소입니다

@@ -8,6 +8,9 @@ description = "MIXEL Vector egui frontend (menus, panels, tools and canvas); swa
 [lints]
 workspace = true
 
+[features]
+mac-app-store = ["vectorcraft-engine/mac-app-store"]
+
 [dependencies]
 craft-ui = { workspace = true }
 vectorcraft-geom = { workspace = true }

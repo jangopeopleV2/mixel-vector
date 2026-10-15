@@ -98,11 +98,15 @@ pub fn stamp_save_dates(st: &mut DocState, at: i64) {
     d.metadata.modified = Some(at);
 }
 
-/// The Templates folder: the `templatesFolder` preference, else `MIXEL Vector Templates` in the
-/// user's documents folder (none where there is no home folder, as on the web).
+/// The Templates folder: the `templatesFolder` preference, else the verified private
+/// container's Templates folder for MAS, or `MIXEL Vector Templates` in the ordinary
+/// desktop user's documents folder (none where there is no home folder, as on the web).
 pub fn templates_folder(prefs: &Prefs) -> Option<String> {
     if !prefs.templates_folder.is_empty() {
         return Some(prefs.templates_folder.clone());
+    }
+    if crate::macos_mas::enabled() {
+        return crate::macos_mas::container_dir("MIXEL Vector").map(|folder| folder.join("Templates").to_string_lossy().into_owned());
     }
     Some(documents_folder()?.join("MIXEL Vector Templates").to_string_lossy().to_string())
 }
@@ -111,12 +115,32 @@ pub fn templates_folder(prefs: &Prefs) -> Option<String> {
 /// can't be, the nearest folder above it that exists, else the home folder. A dialog asked to
 /// start in a folder that isn't there shows an error on some desktops.
 pub fn templates_dialog_folder(prefs: &Prefs) -> Option<String> {
+    if crate::macos_mas::enabled() {
+        let container = crate::macos_mas::container_dir("MIXEL Vector")?;
+        let preferred = templates_folder(prefs).and_then(|folder| crate::macos_mas::resolve(folder).ok());
+        return preferred
+            .and_then(|folder| scoped_dialog_folder(&folder, |path| crate::macos_mas::directory_granted(path)))
+            .or_else(|| scoped_dialog_folder(&container.join("Templates"), |path| path.starts_with(&container)));
+    }
     let folder = std::path::PathBuf::from(templates_folder(prefs)?);
     if !folder.is_dir() {
         // Best effort: a folder that can't be made leaves the nearest one that exists.
         let _ = std::fs::create_dir_all(&folder);
     }
     folder.ancestors().find(|a| a.is_dir()).map(|a| a.to_string_lossy().into_owned()).or_else(home_folder)
+}
+
+/// Create only inside an actual retained directory scope (or the verified private container).
+/// A remembered path is only a suggestion until its folder has been selected by the user.
+fn scoped_dialog_folder(folder: &std::path::Path, allowed: impl Fn(&std::path::Path) -> bool) -> Option<String> {
+    if !allowed(folder) {
+        return None;
+    }
+    if !folder.is_dir() {
+        // A failed creation can still leave an already granted ancestor suitable for the panel.
+        let _ = std::fs::create_dir_all(folder);
+    }
+    folder.ancestors().find(|path| allowed(path) && path.is_dir()).map(|path| path.to_string_lossy().into_owned())
 }
 
 /// The user's documents folder: on Linux and the BSDs the one the desktop names
@@ -146,8 +170,12 @@ fn xdg_documents(text: &str, home: &std::path::Path) -> Option<std::path::PathBu
     (dir.has_root() && dir != home).then_some(dir)
 }
 
-/// The user's home folder (`HOME`, else `USERPROFILE` on Windows; none on the web).
+/// MAS uses only the verified private settings directory. Other builds use the user's
+/// home folder (`HOME`, else `USERPROFILE` on Windows; none on the web).
 fn home_folder() -> Option<String> {
+    if crate::macos_mas::enabled() {
+        return crate::macos_mas::container_dir("MIXEL Vector").map(|folder| folder.to_string_lossy().into_owned());
+    }
     std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok().filter(|h| !h.is_empty())
 }
 
@@ -769,6 +797,7 @@ mod tests_folders {
     /// #703: the Templates folder a dialog starts in exists: made when missing, else the nearest
     /// folder above it.
     #[test]
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
     fn the_templates_dialog_folder_exists() {
         let base = std::env::temp_dir().join(format!("vc-templates-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
@@ -783,5 +812,27 @@ mod tests_folders {
         prefs.templates_folder = base.join("blocked").join("Templates").to_string_lossy().into_owned();
         assert_eq!(super::templates_dialog_folder(&prefs).map(PathBuf::from), Some(base.clone()));
         let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn template_suggestions_do_not_create_unselected_folders() {
+        let base = std::env::temp_dir().join(format!("vc-scoped-template-suggestions-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(&base).unwrap();
+        let private = base.join("private");
+        std::fs::create_dir(&private).unwrap();
+        let unselected = base.join("unselected").join("Templates");
+        assert_eq!(super::scoped_dialog_folder(&unselected, |path| path.starts_with(&private)), None);
+        assert!(!unselected.exists());
+        let selected = private.join("Templates");
+        assert_eq!(super::scoped_dialog_folder(&selected, |path| path.starts_with(&private)), Some(selected.to_string_lossy().into_owned()));
+        assert!(selected.is_dir());
+        let blocked = private.join("blocked");
+        std::fs::write(&blocked, b"owned fixture").unwrap();
+        assert_eq!(
+            super::scoped_dialog_folder(&blocked.join("Templates"), |path| path.starts_with(&private)),
+            Some(private.to_string_lossy().into_owned())
+        );
+        std::fs::remove_dir_all(base).unwrap();
     }
 }

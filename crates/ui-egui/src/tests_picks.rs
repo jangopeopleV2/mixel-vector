@@ -23,6 +23,85 @@ const SVG: &[u8] = br#"<svg xmlns="http://www.w3.org/2000/svg" width="40" height
 /// What the status bar says when an answer comes for a document no longer open.
 const CLOSED: &str = "The document was closed while its file dialog was open";
 
+#[test]
+fn required_sheets_never_fall_back_when_missing_declined_or_outside_an_entry() {
+    for unavailable in ["missing", "declined", "outside"] {
+        for kind in ["open", "save", "folder", "many"] {
+            let mut services = Services {
+                dialogs_are_sheets: true,
+                pick_open: Some(Box::new(|_| panic!("a required native sheet must not fall back to a blocking picker"))),
+                pick_save: Some(Box::new(|_| panic!("a required native sheet must not fall back to a blocking picker"))),
+                pick_folder: Some(Box::new(|| panic!("a required native sheet must not fall back to a blocking picker"))),
+                pick_open_multi: Some(Box::new(|| panic!("a required native sheet must not fall back to a blocking picker"))),
+                ..Default::default()
+            };
+            let started = Rc::new(std::cell::Cell::new(0usize));
+            if unavailable != "missing" {
+                let started = started.clone();
+                services.start_pick = Some(Box::new(move |_| {
+                    started.set(started.get() + 1);
+                    None
+                }));
+            }
+            let mut app = VectorcraftApp::new(Session::new(), services);
+            let ask = move |app: &mut VectorcraftApp| {
+                match kind {
+                    "open" => assert!(picks::open(app, &FilePick::default()).is_none()),
+                    "save" => assert!(picks::save(app, &FilePick::named("Result.svg")).is_none()),
+                    "folder" => assert!(picks::folder(app).is_none()),
+                    "many" => assert!(picks::open_many(app).is_empty()),
+                    _ => panic!("Unknown picker fixture: {kind}"),
+                }
+                // A caller's generic cancellation must not hide why no sheet was shown.
+                app.status("cancelled");
+            };
+            if unavailable == "outside" {
+                ask(&mut app);
+            } else {
+                picks::button(&mut app, ask);
+            }
+            // Menu wrappers can also report cancellation after the entry returns.
+            app.status("cancelled");
+            poll(&mut app);
+            assert!(app.ui.status.contains("native file dialog service is unavailable"), "{unavailable} {kind}: {}", app.ui.status);
+            assert!(!app.file_dialog_open());
+            assert_eq!(started.get(), usize::from(unavailable == "declined"), "{unavailable} {kind}");
+        }
+    }
+}
+
+#[test]
+fn required_sheets_can_start_without_legacy_synchronous_hooks() {
+    let (tx, rx) = channel();
+    let mut rx = Some(rx);
+    let services = Services {
+        dialogs_are_sheets: true,
+        start_pick: Some(Box::new(move |request| {
+            assert_eq!(request, PickRequest::Folder);
+            rx.take()
+        })),
+        ..Default::default()
+    };
+    let mut app = VectorcraftApp::new(Session::new(), services);
+    picks::button(&mut app, |app| assert!(picks::folder(app).is_none()));
+    assert!(app.file_dialog_open());
+    assert!(app.ui.status.is_empty());
+    tx.send(vec![]).unwrap();
+    poll(&mut app);
+    assert!(!app.file_dialog_open());
+    assert!(app.ui.status.is_empty());
+}
+
+#[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
+#[test]
+fn ordinary_hosts_keep_their_synchronous_picker_behavior() {
+    let services = Services { pick_open: Some(Box::new(|_| Some("/illustrations/selected.svg".into()))), ..Default::default() };
+    let mut app = VectorcraftApp::new(Session::new(), services);
+    assert_eq!(picks::open(&mut app, &FilePick::default()).as_deref(), Some("/illustrations/selected.svg"));
+    assert!(!app.file_dialog_open());
+    assert!(app.ui.status.is_empty());
+}
+
 /// A dialog asked for, and where its answer goes.
 type Asked = (PickRequest, Sender<Vec<String>>);
 
