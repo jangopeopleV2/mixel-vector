@@ -38,6 +38,7 @@ pub mod io;
 pub mod menus;
 pub mod native_menu;
 pub mod opening;
+mod output;
 pub mod palette;
 mod panel_docking;
 pub mod panels;
@@ -398,6 +399,8 @@ pub struct VectorcraftApp {
     clipboard_probe: Option<clipboard_probe::Probe>,
     /// File dialogs shown off the UI thread and what runs again with their answers.
     pub(crate) picks: picks::Picks,
+    /// Host output capability policy; MAS uses the actual shared bookmark registry.
+    pub(crate) output_policy: Option<output::Policy>,
     /// The look for fonts installed or removed while the app was in the background, running
     /// ([`Self::refresh_installed_fonts`]): whether they were.
     font_check: Option<std::sync::mpsc::Receiver<bool>>,
@@ -501,6 +504,7 @@ impl VectorcraftApp {
             system_paste_at: f64::NEG_INFINITY,
             clipboard_probe: None,
             picks: picks::Picks::default(),
+            output_policy: output::native_policy(),
             font_check: None,
             paste_chord: Default::default(),
             background: Default::default(),

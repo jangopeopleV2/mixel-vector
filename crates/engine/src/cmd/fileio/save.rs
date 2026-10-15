@@ -326,6 +326,8 @@ pub struct SaveJob {
     snapshot: Arc<Document>,
     /// The artboards also saved to files of their own (`separateArtboards`).
     boards: Vec<usize>,
+    /// Only deferred saves: the live document before File Info dates were staged privately.
+    before_stamp: Option<Arc<Document>>,
 }
 
 /// Writes the file at a path with what the filler it is given writes into it
@@ -448,6 +450,9 @@ pub(super) fn encode_ai(cmd: &str, f: &Format, doc: &Document, p: &Value) -> Res
 /// Snapshot the active document for `plan` (stamping File Info's dates when the file becomes the
 /// document's own). Bad options fail here, before anything is encoded.
 pub fn save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
+    if crate::macos_mas::enabled() {
+        return deferred_save_job(s, plan);
+    }
     // The web build, without a clock, leaves the dates unless given one.
     if plan.path.is_some()
         && plan.retargets()
@@ -458,7 +463,23 @@ pub fn save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
     job_for(s, s.doc()?, plan)
 }
 
-/// Snapshot `st` (any open document of `s`) for `plan`, without stamping dates (Data Recovery
+/// Prepare a snapshot without changing the live document before folder consent or a write.
+/// The snapshot is encoded once; cancellation drops it without changing dates or dirty state.
+pub fn deferred_save_job(s: &mut Session, plan: SavePlan) -> Result<SaveJob> {
+    let mut st = s.doc()?.clone();
+    let before = st.doc.clone();
+    if plan.path.is_some()
+        && plan.retargets()
+        && let Some(at) = clock_date(s, "modified", plan.modified)
+    {
+        stamp_save_dates(&mut st, at);
+    }
+    let mut job = job_for(s, &st, plan)?;
+    job.before_stamp = Some(before);
+    Ok(job)
+}
+
+/// Snapshot st (any open document of s) for plan, without stamping dates (Data Recovery
 /// snapshots documents that aren't active).
 pub(crate) fn job_for(s: &Session, st: &DocState, plan: SavePlan) -> Result<SaveJob> {
     let cmd = plan.mode.command();
@@ -483,7 +504,7 @@ pub(crate) fn job_for(s: &Session, st: &DocState, plan: SavePlan) -> Result<Save
         // Save keeps every artboard; exports may choose a subset instead.
         o.insert("range".into(), json!("all"));
     }
-    Ok(SaveJob { plan, doc, params, snapshot: st.doc.clone(), boards })
+    Ok(SaveJob { plan, doc, params, snapshot: st.doc.clone(), boards, before_stamp: None })
 }
 
 impl SaveJob {
@@ -534,20 +555,36 @@ impl SaveJob {
     /// folder?, warnings, files?: [{name, dataBase64}] (every file, when there are several),
     /// linked?: [{name, dataBase64}]}`; with one → `{path, format, bytes, warnings, files?:
     /// [path…], linked?: [path…]}`.
-    pub fn write(&self, mut write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
+    pub fn write(&self, write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
+        self.write_prepared(&self.encode()?, write)
+    }
+
+    /// Names only, borrowing already encoded bytes rather than encoding after a picker again.
+    pub fn output_paths(&self, enc: &Encoded) -> Vec<String> {
+        enc.named(&self.doc, self.plan.path.as_deref().unwrap_or(&self.plan.name)).into_iter().map(|(p, _)| p).collect()
+    }
+
+    /// Write an already encoded snapshot after checking every destination before the first write.
+    pub fn write_prepared(&self, enc: &Encoded, mut write: impl FnMut(&str, &[u8]) -> Result<()>) -> Result<Value> {
         let (plan, doc) = (&self.plan, &*self.doc);
-        let mut enc = self.encode()?;
-        let warnings = std::mem::take(&mut enc.warnings);
+        let warnings = enc.warnings.clone();
         let extra = json!({ "format": plan.format.id, "warnings": warnings });
         let Some(path) = &plan.path else {
-            let mut out = write_encoded(None, &plan.name, doc, &enc, extra)?;
+            let mut out = write_encoded(None, &plan.name, doc, enc, extra)?;
             out["name"] = json!(plan.name);
             if let Some(folder) = &plan.folder {
                 out["folder"] = json!(folder);
             }
             return Ok(out);
         };
-        let files = enc.named(doc, path);
+        let mut files = enc.named(doc, path);
+        if crate::macos_mas::enabled() {
+            let access = super::prepare_output_access(path, &files.iter().map(|(p, _)| p.clone()).collect::<Vec<_>>()).map_err(EngineError::Other)?;
+            access.require_complete().map_err(EngineError::Other)?;
+            for ((p, _), actual) in files.iter_mut().zip(access.paths) {
+                *p = actual;
+            }
+        }
         for (p, bytes) in &files {
             write(p, bytes)?;
         }
@@ -616,6 +653,9 @@ impl SaveJob {
     pub fn finish(self, st: &mut DocState) {
         let retargets = self.plan.retargets();
         if let (true, Some(path)) = (retargets, self.plan.path) {
+            if self.before_stamp.as_ref().is_some_and(|before| Arc::ptr_eq(&st.doc, before)) {
+                st.doc = self.snapshot.clone();
+            }
             st.path = Some(path);
             st.format = self.plan.format.id;
             st.save_options = self.plan.options;

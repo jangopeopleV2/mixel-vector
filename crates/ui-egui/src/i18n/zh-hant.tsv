@@ -3632,3 +3632,6 @@ lighting	Light	光源
 @msg	an image of {w} × {h} pixels is too large to draw	{w} × {h} 像素的影像過大，無法繪製
 	Simulate prints overprints as Overprint Preview shows them; separations always keep them. A preset flattens transparency before printing (PostScript files always flatten it).	模擬會按照疊印預覽顯示的效果列印疊印；分色一律保留疊印。預設集會在列印前平面化透明度（PostScript 檔案一律平面化透明度）。
 	The native file dialog service is unavailable. Reopen MIXEL Vector and try again.	原生檔案對話方塊服務目前無法使用。請重新開啟 MIXEL Vector 後再試一次。
+@msg	Choose the containing folder for all output files before saving. No files were written.	儲存前，請選取包含所有輸出檔案的資料夾。尚未寫入任何檔案。
+@msg	Choose a folder that contains every output file. No files were written.	請選取包含所有輸出檔案的資料夾。尚未寫入任何檔案。
+@msg	Choose an absolute save destination	請選取使用絕對路徑的儲存位置

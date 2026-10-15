@@ -31,6 +31,7 @@ mod load;
 pub(crate) use load::{MAX_RASTER_ALLOC, too_large_note};
 mod metafile;
 mod native;
+mod output_access;
 pub mod pdf;
 mod pdfimport;
 pub mod pngtext;
@@ -61,11 +62,12 @@ pub use load::{
 pub use load::{losses_summary, overwrite_losses};
 pub(crate) use native::preview_png;
 pub use native::with_compression_pref;
+pub use output_access::{FOLDER_REQUIRED, OutputAccess, WRONG_FOLDER, output_access_with, prepare_output_access};
 pub use pdfimport::{LoadOptions, page_document};
 pub(crate) use save::job_for;
 pub use save::{
-    SAVE_FORMATS, SaveJob, SaveMode, SavePlan, StreamWrite, export_folder, save_filters, save_format, save_job, save_plan, save_with,
-    stamp_save_dates, templates_dialog_folder, templates_folder,
+    SAVE_FORMATS, SaveJob, SaveMode, SavePlan, StreamWrite, deferred_save_job, export_folder, save_filters, save_format, save_job, save_plan,
+    save_with, stamp_save_dates, templates_dialog_folder, templates_folder,
 };
 pub use screens::{PRESETS as SCREEN_PRESETS, ScreenSize, preset_rows as screen_preset_rows};
 pub(crate) use screens::{
@@ -810,6 +812,11 @@ pub fn write_file_with(path: &str, fill: &mut dyn FnMut(&mut dyn std::io::Write)
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn create_dir(path: &str) -> Result<()> {
     may_write(path)?;
+    if crate::macos_mas::enabled() {
+        let actual = crate::macos_mas::resolve(path).map_err(EngineError::Other)?;
+        return output_access::create_scoped_directory(&actual, |p| crate::macos_mas::directory_granted(p), |p| std::fs::create_dir_all(p))
+            .map_err(EngineError::Other);
+    }
     std::fs::create_dir_all(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
 
@@ -1026,7 +1033,16 @@ pub(crate) fn unique_file_names<'a>(names: impl IntoIterator<Item = (&'a str, St
 /// (`files`: every file when there are several; `linked`: the images it links to); with no path
 /// → the same with `dataBase64` and `{name, dataBase64}` rows, named after `name`.
 fn write_encoded(path: Option<&str>, name: &str, doc: &vectorcraft_doc::Document, enc: &Encoded, extra: Value) -> Result<Value> {
-    let files = enc.named(doc, path.unwrap_or(name));
+    let mut files = enc.named(doc, path.unwrap_or(name));
+    if let Some(path) = path
+        && crate::macos_mas::enabled()
+    {
+        let access = prepare_output_access(path, &files.iter().map(|(p, _)| p.clone()).collect::<Vec<_>>()).map_err(EngineError::Other)?;
+        access.require_complete().map_err(EngineError::Other)?;
+        for ((p, _), actual) in files.iter_mut().zip(access.paths) {
+            *p = actual;
+        }
+    }
     let (main, linked) = files.split_at(enc.files.len());
     let row = |(name, bytes): &(String, std::borrow::Cow<[u8]>)| match path {
         Some(_) => json!(name),

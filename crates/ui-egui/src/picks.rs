@@ -19,7 +19,7 @@
 use std::rc::Rc;
 use std::sync::mpsc::{Receiver, TryRecvError};
 
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::state::Dialog;
 use crate::{FilePick, VectorcraftApp};
@@ -288,6 +288,37 @@ fn ask(app: &mut VectorcraftApp, request: PickRequest) -> Option<PickAnswer> {
             (None, None) => None,
         },
     }
+}
+
+/// A second folder sheet resumes captured work directly, rather than replaying its first Save picker.
+/// Cancellation drops the captured snapshot; the original document UID is checked by poll.
+pub(crate) fn folder_once(
+    app: &mut VectorcraftApp,
+    uid: Option<u64>,
+    finish: impl FnOnce(&mut VectorcraftApp, String) -> Result<Value, String> + 'static,
+) -> Result<Value, String> {
+    if app.picks.waiting.is_some() {
+        return Err(busy().into());
+    }
+    if uid.is_some_and(|uid| !app.session.documents().iter().any(|d| d.uid == uid)) {
+        return Err(tl!("The document was closed while its file dialog was open").into());
+    }
+    let answer = app.services.start_pick.as_mut().and_then(|start| start(PickRequest::Folder));
+    let Some(answer) = answer else {
+        sheet_unavailable(app);
+        return Err(app.ui.status.clone());
+    };
+    let finish = std::cell::RefCell::new(Some(finish));
+    let entry = Entry::Call(Rc::new(move |app| {
+        if let Some(selected) = folder(app)
+            && let Some(finish) = finish.borrow_mut().take()
+            && let Err(error) = finish(app, selected)
+        {
+            app.status(error);
+        }
+    }));
+    app.picks.waiting = Some(Waiting { request: PickRequest::Folder, answer, entry, doc: uid });
+    Ok(json!({ "pending": "outputFolder" }))
 }
 
 /// Each frame: when the dialog shown off the UI thread answers with paths, run its entry again

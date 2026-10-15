@@ -4708,3 +4708,6 @@ mark-style	Japanese	Japonské
 @msg	bookmark store exceeds the safe size limit	úložiště přístupových záložek překračuje bezpečný limit velikosti
 @msg	bookmark store has no parent	úložiště přístupových záložek nemá nadřazenou složku
 @msg	unsupported or oversized bookmark store	nepodporované nebo příliš velké úložiště přístupových záložek
+@msg	Choose the containing folder for all output files before saving. No files were written.	Před uložením vyberte složku obsahující všechny výstupní soubory. Nebyly zapsány žádné soubory.
+@msg	Choose a folder that contains every output file. No files were written.	Vyberte složku, která obsahuje všechny výstupní soubory. Nebyly zapsány žádné soubory.
+@msg	Choose an absolute save destination	Vyberte umístění pro uložení s absolutní cestou

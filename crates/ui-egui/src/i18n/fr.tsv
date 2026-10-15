@@ -4707,3 +4707,6 @@ theme	Appearance	Apparence
 @msg	bookmark store exceeds the safe size limit	le stockage des signets dépasse la limite de taille sûre
 @msg	bookmark store has no parent	le stockage des signets n’a pas de dossier parent
 @msg	unsupported or oversized bookmark store	stockage des signets non pris en charge ou trop volumineux
+@msg	Choose the containing folder for all output files before saving. No files were written.	Avant d’enregistrer, choisissez le dossier contenant tous les fichiers de sortie. Aucun fichier n’a été écrit.
+@msg	Choose a folder that contains every output file. No files were written.	Choisissez un dossier contenant tous les fichiers de sortie. Aucun fichier n’a été écrit.
+@msg	Choose an absolute save destination	Choisissez une destination d’enregistrement avec un chemin absolu

@@ -1,51 +1,34 @@
 # MIXEL Vector app icon
 
-**Creature:** a regal engraved dragon, MIXEL Vector's mascot.
+This revision uses the exact user-supplied `mixel_core_clean_master.png` as its MIXEL brand base, with an independently drawn **Bézier control points** product symbol and the uppercase product name **VECTOR**. The supplied brand has not been vectorized or claimed as newly authored open-source art.
 
-**Style:** an engraving-style portrait in the Crafting Apps owl template (the MIXEL Film owl): a tight
-head-and-shoulders portrait on a full-bleed field, no frame or roundel, with the body running off the tile.
+## Editable composition and provenance
 
-**Palette** (exactly three colours):
+The supplied PNG is 1024 × 1024 RGB, SHA-256 `d968314eb375bfc4441e73fd6b4ace5db157128a0b591e10c5187532edc5b516`. Its exact bytes are embedded as a PNG data URI in the `supplied-mixel-master` image element. The `product-symbol` group adds original vectors in the 1024-space box `x=400, y=292, width=224, height=175`. Product-name outlines are centered at baseline `714`, using Inter SemiBold at size `68` with tracking `3.5`; they are paths, not a runtime font dependency.
 
-| Colour | Hex | Used for |
-|---|---|---|
-| Ink | `#0b0b0c` | line work and contour |
-| Paper | `#efe9dc` | the figure |
-| MIXEL Vector colour | `#e8573f` | the full-bleed field |
+The 512 × 512 canonical source has the exact root header `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">`, uses uniform half-scale composition, and clips only the outer white corners to `rx=104`. Keep the embedded master unchanged. Edit the independent product symbol and name-outline groups without redrawing, recoloring or replacing the supplied brand. No five-point-M geometry or old per-product jewel-tone palette is used. Current symbol strokes use `#242121`, accents `#BB181A` and white fills.
 
-**Tile:** `viewBox="0 0 512 512"`, a rounded square with `rx=112`, clipped. The macOS files add Apple's
-transparent margin (tile = 824/1024 of the canvas); Windows and Linux use the tile edge to edge.
+The independently editable glyph sources are delivered separately with the icon artwork. The committed canonical SVG contains the base and all vector overlays, so the existing repository generation script can regenerate its derived assets without the builder or any new font file. Changing the text outlines requires the existing licensed Inter SemiBold source and its notice; keep the original supplied PNG bytes intact.
 
-**Provenance:** the owner's original ArtCraft drawing (2880 px, keyed to the palette), vectorised with
-craftrules `assets/logo-options/_tools/vectorize_tile.py`. The drawing is kept in craftrules at
-`craftrules/assets/app-icons/vectorcraft/source.png`, not here. `vectorcraft.svg` is the canonical
-artwork. Licence: see `LICENSE.txt`.
+## Files and consumers
 
-## Files
+- `vectorcraft.svg`, `vectorcraft-small.svg`: self-contained production compositions; the compact file is byte-identical.
+- `vectorcraft-1024.png`: the repository’s full-tile 1024 px composition.
+- `vectorcraft-macos-512.png`: the existing padded macOS runtime image.
+- `vectorcraft.icns`: macOS bundle icon; MAS packaging copies it to `Contents/Resources/MIXEL Vector.icns`.
+- `vectorcraft.ico`: Windows app icon.
+- `hicolor/<size>/apps/ch.mixel.vector.png` (16, 24, 32, 48, 64, 128, 256, 512) and `hicolor/scalable/apps/ch.mixel.vector.svg`: Linux/shared runtime assets.
 
-| File | What | Used by |
-|---|---|---|
-| `vectorcraft.svg` | master vector (traced at 2048 px, about 700 KB) | source for everything below |
-| `vectorcraft-small.svg` | lighter vector (traced at 1024 px, about 370 KB) | `hicolor/scalable` |
-| `vectorcraft-1024.png` | full tile, 1024 px | docs, store listings |
-| `vectorcraft-macos-512.png` | tile with Apple margin, 512 px | runtime Dock icon (`apps/vectorcraft/src/main.rs`) |
-| `vectorcraft.icns` | macOS icon set, 16 to 1024 px | `cargo xtask bundle` (`CFBundleIconFile`) |
-| `vectorcraft.ico` | Windows icon, 16 to 256 px | `apps/vectorcraft/build.rs` (embedded in the `.exe`) |
-| `hicolor/<size>/apps/ch.mixel.vector.png` | Linux theme icons, 16 to 512 px; the 256 one is also the runtime icon on Windows and Linux, the 128 one the brand mark in the app bar and About box (`crates/ui-egui/src/brand.rs`) | `packaging/linux/ch.mixel.vector.desktop` |
-| `hicolor/scalable/apps/ch.mixel.vector.svg` | Linux scalable icon | as above |
-
-## How it reaches each OS
-
-- **macOS:** the app sets the Dock / app-switcher icon at runtime (`ViewportBuilder::with_icon`); the
-  `.app` from `cargo xtask bundle` carries `vectorcraft.icns`.
-- **Windows:** `build.rs` embeds `vectorcraft.ico` and VERSIONINFO with `winresource` (taskbar, Start
-  menu, Explorer, Alt-Tab); the runtime icon covers the title bar.
-- **Linux:** install `packaging/linux/ch.mixel.vector.desktop` to `share/applications/` and
-  `hicolor/` to `share/icons/`. The app sets its Wayland app ID / X11 class to
-  `ch.mixel.vector`, so the dock matches the window to the launcher.
+The separate App Store delivery is a full-square, opaque RGB 1024 PNG with a matching editable SVG. Keep this delivery outside the repository until deliberately integrated; it is distinct from a padded macOS icon. Actual dimensions and opacity must be checked after rendering. Production MAS packaging continues to consume the ICNS file.
 
 ## Regenerate
 
-Edit or replace `vectorcraft.svg` (and `vectorcraft-small.svg`), then run `packaging/icons.sh`
-(needs `resvg`; `iconutil` on macOS for the `.icns`). It writes every PNG, the `.ico` (via
-`cargo xtask ico`) and the `.icns`.
+Edit `vectorcraft.svg`, mirror it byte-for-byte to `vectorcraft-small.svg`, then run `packaging/icons.sh`. Preserve the exact SVG root header: existing macOS wrapper transforms, especially Effects, depend on it. The script keeps the established output paths, sizes, `resvg` rendering and macOS `iconutil` ICNS generation. ICO packing uses the existing `cargo xtask ico` helper; let it finish in the project’s authorized isolated Cargo target before starting another Cargo operation. The approximately 824-in-1024 macOS body and transparent outer margin remain the script’s responsibility.
+
+Render the separately delivered full-square App Store SVG directly to a 1024 PNG; do not substitute the macOS-padded image. Update current attribution metadata alongside actual generated assets. Run the repository’s existing applicable asset and CI gates after generation.
+
+## Rights and earlier artwork
+
+The supplied MIXEL master and branded composite icons have reserved brand rights under `LICENSE-MIXEL-brand.txt` (`LicenseRef-MIXEL-Brand`). Their use for these seven applications was requested by the project owner; no general public right to reuse or relicense the brand is asserted. The independently drawn product-symbol vector layers alone are original MIXEL contributor work under MIT OR Apache-2.0; see the scoped addendum in `LICENSE.txt` and the repository licence texts. Product-name paths come from the existing Inter SemiBold font; the complete `OFL-Inter.txt` is included. No new font binary is distributed by this icon revision.
+
+These app-icon filenames previously held the upstream engraved dragon artwork. The complete earlier licence and attribution are preserved at the start of `LICENSE.txt` and in historical metadata. Those notices remain active for any unchanged assets or retained derivatives; this app-icon replacement does not remove upstream root LICENSE or NOTICE text.

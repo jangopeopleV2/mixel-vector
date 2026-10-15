@@ -4241,3 +4241,6 @@ lighting	Light	광원
 @msg	bookmark store exceeds the safe size limit	북마크 저장소가 안전한 크기 한도를 초과했습니다
 @msg	bookmark store has no parent	북마크 저장소의 상위 폴더가 없습니다
 @msg	unsupported or oversized bookmark store	지원하지 않는 형식이거나 너무 큰 북마크 저장소입니다
+@msg	Choose the containing folder for all output files before saving. No files were written.	저장하기 전에 모든 출력 파일이 포함된 폴더를 선택하세요. 파일은 하나도 기록되지 않았습니다.
+@msg	Choose a folder that contains every output file. No files were written.	모든 출력 파일이 포함된 폴더를 선택하세요. 파일은 하나도 기록되지 않았습니다.
+@msg	Choose an absolute save destination	절대 경로로 저장 위치를 선택하세요
