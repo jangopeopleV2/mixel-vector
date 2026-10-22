@@ -26,7 +26,6 @@
 	About MIXEL Vector	O aplikaci MIXEL Vector
 	Align to Path	Zarovnat k cestě
 	Cut Path at Selected Anchor Points	Rozdělit cestu ve vybraných kotevních bodech
-	Join Our Discord	Připojit se k našemu Discordu
 	Language	Jazyk
 	UI Brightness	Jas rozhraní
 	Dark	Tmavý
@@ -616,7 +615,7 @@
 	Save Swatch Library…	Uložit knihovnu vzorníku…
 	Symbol Libraries	Knihovny symbolů
 	Help	Nápověda
-	ArtCraft Website	Web ArtCraft
+	MIXEL Website	Web MIXEL
 	MIXEL Vector project page	MIXEL Vector na GitHub
 	MIXEL Vector on GitHub	MIXEL Vector na GitHubu
 	Search Commands…	Hledat příkazy…
@@ -1790,8 +1789,8 @@ lighting	Light	Světlo
 
 # Dialogs
 	Graphics: {adapter}	Grafika: {adapter}
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Založeno na práci týmu ArtCraft. MIT OR Apache-2.0. Písma: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Založeno na práci týmu ArtCraft. MIT OR Apache-2.0. Písma: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Písma: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Písma: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
 	Version {version} — open-source vector illustration in pure Rust.	Verze {version} — open-source vektorová ilustrace v čistém Rustu.
 	Align to Page	Zarovnat ke stránce
 	Smooth Color	Plynulá barva
@@ -3420,10 +3419,6 @@ effect	Regular	Pravidelný
 	Recent Files	Nedávné soubory
 	Vector illustration — fast, open, scriptable.	Vektorová ilustrace — rychlá, otevřená, skriptovatelná.
 	Welcome to MIXEL Vector	Vítejte ve VectorCraftu
-	ArtCraft website	Web ArtCraft
-	Discord	Discord
-	Join our Discord	Připojit se k našemu Discordu
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Připojte se ke komunitě ArtCraft na Discordu (discord.gg/artcraft)
 	Source code on GitHub	Zdrojový kód na GitHubu
 	All Tools	Všechny nástroje
 	Draw	Kresba
@@ -4711,3 +4706,4 @@ mark-style	Japanese	Japonské
 @msg	Choose the containing folder for all output files before saving. No files were written.	Před uložením vyberte složku obsahující všechny výstupní soubory. Nebyly zapsány žádné soubory.
 @msg	Choose a folder that contains every output file. No files were written.	Vyberte složku, která obsahuje všechny výstupní soubory. Nebyly zapsány žádné soubory.
 @msg	Choose an absolute save destination	Vyberte umístění pro uložení s absolutní cestou
+	Privacy Policy	Zásady ochrany osobních údajů

@@ -792,3 +792,9 @@ resizes the root divider (`false`/`true` path entries select first/second childr
 `SetStackOpen {panel,open}` / `ResizeStack {panel,height}` control accordion entries.
 The UI dispatches these same commands. Unknown panel IDs, invalid geometry, and stale
 split paths return an error without changing the workspace.
+
+## MIXEL resource branding (product-specific)
+
+Source update 2026-10-19: company links use **MIXEL Website** / **MIXEL Creative Apps** and `https://www.mixel.ch`. Existing MIXEL Vector project/repository links remain unchanged. Upstream Discord UI, actions and locale keys are removed; no replacement Discord server is claimed. Active resource IDs: `help.website`, `help.appPage`, `help.github`; `help.links` returns `website`, `appPage`, `github`.
+
+This supplemental product-branding record is outside the Adobe feature comparison; scores and generated parity rows are unchanged. Matching source regressions are proposed, with build/test/native click verification pending application of this patch. Existing privacy, author, licence and third-party credit records remain applicable.

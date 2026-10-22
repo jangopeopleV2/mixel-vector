@@ -210,8 +210,7 @@
 	Artboard {number}	Zeichenfläche {number}
 	Artboard:	Zeichenfläche:
 	Artboards	Zeichenflächen
-	ArtCraft Website	ArtCraft-Website
-	ArtCraft website	ArtCraft-Website
+	MIXEL Website	MIXEL-Website
 	Artwork Colors	Farben der Grafik
 	As Multiple Assets	Als mehrere Assets
 	As Single Asset	Als einzelnes Asset
@@ -674,7 +673,6 @@
 	Discard Recovered Documents	Wiederhergestellte Dokumente verwerfen
 	Discard White Overprint in Output	Weißes Überdrucken in der Ausgabe verwerfen
 	Discarded {} recovered document(s)	{} wiederhergestellte(s) Dokument(e) verworfen
-	Discord	Discord
 	Discretionary Hyphen	Bedingter Trennstrich
 	Discretionary Ligatures	Bedingte Ligaturen
 	Display All Blacks Accurately	Alle Schwarztöne genau anzeigen
@@ -1299,9 +1297,6 @@
 	Italian	Italienisch
 	Japanese	Japanisch
 	Join	Zusammenfügen
-	Join Our Discord	Unserem Discord beitreten
-	Join our Discord	Unserem Discord beitreten
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Treten Sie der ArtCraft-Community auf Discord bei (discord.gg/artcraft)
 	Join the lines of each paragraph	Die Zeilen jedes Absatzes verbinden
 	Join Tool	Zusammenfügen-Werkzeug
 	Justification…	Abstände…
@@ -1863,7 +1858,7 @@
 	Paragraph Style Options	Absatzformatoptionen
 	Paragraph Styles	Absatzformate
 	Paragraph Symbol	Absatzmarke
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Basiert auf der Arbeit von ArtCraft. MIT OR Apache-2.0. Schriften: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Symbole: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Schriften: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Symbole: Lucide (ISC) + MIXEL Vector.
 	Password	Kennwort
 	Paste	Einfügen
 	Paste in Back	Dahinter einfügen
@@ -4235,3 +4230,4 @@ theme	Appearance	Erscheinungsbild
 @msg	Choose the containing folder for all output files before saving. No files were written.	Wählen Sie vor dem Speichern den Ordner aus, der alle Ausgabedateien enthält. Es wurden keine Dateien geschrieben.
 @msg	Choose a folder that contains every output file. No files were written.	Wählen Sie einen Ordner aus, der alle Ausgabedateien enthält. Es wurden keine Dateien geschrieben.
 @msg	Choose an absolute save destination	Wählen Sie einen Speicherort mit absolutem Pfad
+	Privacy Policy	Datenschutzerklärung

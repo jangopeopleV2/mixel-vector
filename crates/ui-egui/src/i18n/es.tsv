@@ -228,8 +228,7 @@
 	Artboard {number}	Mesa de trabajo {number}
 	Artboard:	Mesa de trabajo:
 	Artboards	Mesas de trabajo
-	ArtCraft Website	Sitio web de ArtCraft
-	ArtCraft website	Sitio web de ArtCraft
+	MIXEL Website	Sitio web de MIXEL
 	Artwork Colors	Colores de la ilustración
 	As Multiple Assets	Como varios recursos
 	As Single Asset	Como un solo recurso
@@ -688,7 +687,6 @@
 	Discard Recovered Documents	Descartar documentos recuperados
 	Discard White Overprint in Output	Descartar sobreimpresión de blanco en la salida
 	Discarded {} recovered document(s)	Se descartaron {} documento(s) recuperado(s)
-	Discord	Discord
 	Discretionary Hyphen	Guion discrecional
 	Discretionary Ligatures	Ligaduras discrecionales
 	Display All Blacks Accurately	Mostrar todos los negros con precisión
@@ -1317,9 +1315,6 @@
 	Italian	Italiano
 	Japanese	Japonés
 	Join	Unir
-	Join Our Discord	Únete a nuestro Discord
-	Join our Discord	Únete a nuestro Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Únete a la comunidad de ArtCraft en Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Unir las líneas de cada párrafo
 	Join Tool	Herramienta Unir
 	Justification…	Justificación…
@@ -1914,7 +1909,7 @@
 	Paragraph Style Options	Opciones de estilo de párrafo
 	Paragraph Styles	Estilos de párrafo
 	Paragraph Symbol	Símbolo de párrafo
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Basado en el trabajo de ArtCraft. MIT OR Apache-2.0. Fuentes: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Iconos: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Fuentes: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Iconos: Lucide (ISC) + MIXEL Vector.
 	Password	Contraseña
 	Paste	Pegar
 	Paste in Back	Pegar detrás
@@ -4651,3 +4646,4 @@ mark-style	Japanese	Japonesas
 @msg	Choose the containing folder for all output files before saving. No files were written.	Antes de guardar, seleccione la carpeta que contiene todos los archivos de salida. No se ha escrito ningún archivo.
 @msg	Choose a folder that contains every output file. No files were written.	Seleccione una carpeta que contenga todos los archivos de salida. No se ha escrito ningún archivo.
 @msg	Choose an absolute save destination	Seleccione un destino de guardado con una ruta absoluta
+	Privacy Policy	Política de privacidad

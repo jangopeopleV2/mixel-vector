@@ -1,9 +1,9 @@
 <!-- MIXEL-HEADER -->
 # MIXEL Vector
 
-**MIXEL Vector** is part of the MIXEL creative suite: an open-source, pure-Rust alternative to Adobe Illustrator for macOS, Windows, Linux and the web.
+**MIXEL Vector** is part of [MIXEL Creative Apps](https://www.mixel.ch).
 
-Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https://github.com/storytold/vectorcraft) from the ArtCraft Crafting Apps by Brandon Thomas; licensed under Apache-2.0 / MIT (see `LICENSE-APACHE`, `LICENSE-MIT`, `NOTICE`). Upstream changes are merged from the `upstream` remote and re-branded with `rebrand.sh`.
+Maintained by [MIXEL](https://www.mixel.ch). Based on [storytold/vectorcraft](https://github.com/storytold/vectorcraft) by Brandon Thomas; licensed under Apache-2.0 / MIT (see `LICENSE-APACHE`, `LICENSE-MIT`, `NOTICE`). Upstream changes are merged from the `upstream` remote and re-branded with `rebrand.sh`.
 
 ---
 
@@ -18,7 +18,7 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
 
 <p align="center">
   A fast, open-source, clean-room take on the Adobe Illustrator workflow. It runs natively on
-  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly. Maintained by MIXEL, based on upstream work by the ArtCraft team.
+  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly. Maintained by MIXEL.
 </p>
 
 <p align="center">
@@ -29,14 +29,11 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
   <img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-555555">
 </p>
 
-<p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
-</p>
 
 <p align="center">
   <a href="https://github.com/jangopeopleV2/mixel-vector"><b>MIXEL Vector project page</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">All Crafting Apps</a>
+  <a href="https://www.mixel.ch">MIXEL Website</a> ·
+  <a href="https://www.mixel.ch">MIXEL Creative Apps</a>
 </p>
 
 <br>
@@ -46,9 +43,6 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
   <br><sub><b>Neon Drive</b>: a Pathfinder-cut sun, live Outer Glow on the type and grid, and clipping masks · <code>examples/neon-drive.vectorcraft</code></sub>
 </p>
 
-> [!NOTE]
-> **ArtCraft is a community of artists from all walks of life.** Digital, generative, music,
-> games &mdash; if you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/artcraft).**
 
 <p align="center">
   <a href="#a-look-around">A look around</a> ·
@@ -57,7 +51,7 @@ Maintained by [MIXEL](https://mixel.ch). Based on [storytold/vectorcraft](https:
   <a href="#quick-start">Quick start</a> ·
   <a href="#status">Status</a> ·
   <a href="#downloads">Downloads</a> ·
-  <a href="#the-crafting-apps">The Crafting Apps</a> ·
+  <a href="#mixel-creative-apps">MIXEL Creative Apps</a> ·
   <a href="#license-and-credits">License</a>
 </p>
 
@@ -251,7 +245,7 @@ signed and published. Every bundled asset is listed with its licence in [`ASSETS
 
 ## Downloads
 
-**New to MIXEL Vector?** Download it from the [MIXEL Vector page on getartcraft.com](https://github.com/jangopeopleV2/mixel-vector). That's the easiest way to install it.
+**New to MIXEL Vector?** Download it from the [MIXEL Vector project page](https://github.com/jangopeopleV2/mixel-vector). That's the easiest way to install it.
 
 **Want a specific build or format?** On GitHub, the [latest release](https://github.com/storytold/vectorcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/vectorcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
@@ -294,45 +288,9 @@ Installers and executables are code-signed.
 |---|---|---|
 | Static site | `vectorcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
-## The Crafting Apps
+## MIXEL Creative Apps
 
-MIXEL Vector is one of the **Crafting Apps**: free, open-source creative tools from the
-[ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
-stand on its own.
-
-| | App | What it's for | Code | Learn more |
-|:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.photo.png" alt="" width="32" height="32"> | **MIXEL Photo** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.vector.png" alt="" width="32" height="32"> | **MIXEL Vector** | **Vector illustration · you are here** | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://github.com/jangopeopleV2/mixel-vector) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.film.png" alt="" width="32" height="32"> | **MIXEL Film** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.light.png" alt="" width="32" height="32"> | **MIXEL Light** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.print.png" alt="" width="32" height="32"> | **MIXEL Print** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.effects.png" alt="" width="32" height="32"> | **MIXEL Effects** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ch.mixel.design.png" alt="" width="32" height="32"> | **MIXEL Design** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
-
-And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
-
-<br>
-
-<p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
-</p>
-
-<h3 align="center">Come make things with us</h3>
-
-<p align="center">
-  Our Discord is where artists of every kind hang out: people who paint, shoot, draw, cut film,
-  set type, and people still figuring out what they like to make. Share what you're working on,
-  ask for help, tell us what's broken, or tell us what you wish these tools could do.
-  Whatever your medium and however long you've been at it, you're welcome here.
-</p>
-
-<p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://github.com/jangopeopleV2/mixel-vector">MIXEL Vector</a>
-</p>
+Explore [MIXEL Creative Apps](https://www.mixel.ch).
 
 ## Star history
 
@@ -361,5 +319,5 @@ plain-text credit to the ArtCraft team.
 <sub>Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. MIXEL Vector is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
 
 <p align="center">
-  <sub>Based on upstream work by the <a href="https://getartcraft.com/">ArtCraft</a> team and community. Maintained by MIXEL.</sub>
+  <sub>Based on upstream work by the <a href="https://www.mixel.ch">MIXEL Website</a> team and community. Maintained by MIXEL.</sub>
 </p>

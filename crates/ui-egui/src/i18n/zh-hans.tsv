@@ -186,8 +186,7 @@
 	Artboard {number}	画板 {number}
 	Artboard:	画板：
 	Artboards	画板
-	ArtCraft Website	ArtCraft 网站
-	ArtCraft website	ArtCraft 网站
+	MIXEL Website	MIXEL 网站
 	Artwork Colors	图稿颜色
 	As Multiple Assets	作为多个资源
 	As Single Asset	作为单一资源
@@ -643,7 +642,6 @@
 	Discard Recovered Documents	丢弃已恢复的文档
 	Discard White Overprint in Output	输出时放弃白色叠印
 	Discarded {} recovered document(s)	已放弃 {} 份恢复的文档
-	Discord	Discord
 	Discretionary Hyphen	选择性连字号
 	Discretionary Ligatures	任意连字
 	Display All Blacks Accurately	准确显示所有黑色
@@ -1261,9 +1259,6 @@
 	Isolate Group	隔离编组
 	Italian	意大利语
 	Join	连接
-	Join Our Discord	加入 Discord
-	Join our Discord	加入我们的 Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	在 Discord 加入 ArtCraft 社区 (discord.gg/artcraft)
 	Join the lines of each paragraph	合并每个段落的行
 	Join Tool	连接工具
 	Justification…	对齐设置…
@@ -1839,7 +1834,7 @@
 	Paragraph Style Options	段落样式选项
 	Paragraph Styles	段落样式
 	Paragraph Symbol	段落符号
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基于 ArtCraft 团队的工作。MIT OR Apache-2.0。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。图标：Lucide (ISC) + MIXEL Vector。
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。图标：Lucide (ISC) + MIXEL Vector。
 	Password	口令
 	Paste	粘贴
 	Paste in Back	贴在后面
@@ -3282,7 +3277,7 @@ imageTrace	Outline	轮廓
 	X:	X：
 	Y:	Y：
 	Text Displayed in Cell	单元格中显示的文本
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基于 ArtCraft 团队的工作。MIT 或 Apache-2.0 许可。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono、Noto Sans SC (OFL)。图标：Lucide (ISC)+ MIXEL Vector。
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT 或 Apache-2.0 许可。字体：Noto Sans, Noto Serif、Inter、JetBrains Mono、Noto Sans SC (OFL)。图标：Lucide (ISC)+ MIXEL Vector。
 	RGB	RGB
 	Pattern Swatches	图案色板
 	Default Graphic Style	默认图形样式
@@ -3854,3 +3849,4 @@ lighting	Light	光源
 @msg	Choose the containing folder for all output files before saving. No files were written.	保存前，请选择包含所有输出文件的文件夹。尚未写入任何文件。
 @msg	Choose a folder that contains every output file. No files were written.	请选择包含所有输出文件的文件夹。尚未写入任何文件。
 @msg	Choose an absolute save destination	请选择使用绝对路径的保存位置
+	Privacy Policy	隐私政策

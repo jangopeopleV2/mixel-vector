@@ -12,7 +12,7 @@
 # Clean-room: every entry was written from the plain meaning of the English label using the
 # vector-drawing vocabulary in everyday use in Taiwan (錨點, 路徑, 筆畫, 填色, 工作區域, 路徑管理員 ...).
 # No proprietary localisation resource, string table or product UI was consulted or copied; add
-# entries the same way. Product and technology names (MIXEL Vector, ArtCraft, SVG, OpenType, CMYK,
+# entries the same way. Product and technology names (MIXEL Vector, MIXEL, SVG, OpenType, CMYK,
 # Lab ...) and paper sizes (Letter, Tabloid) stay in Latin letters; the trailing "…" of dialog
 # commands is kept. Full-width punctuation (，。：) inside sentences; half-width parentheses and
 # the " · " separators as in the English. Terms shared with MIXEL Photo use the same words as its
@@ -197,8 +197,7 @@
 	Artboard {number}	工作區域 {number}
 	Artboard:	工作區域：
 	Artboards	工作區域
-	ArtCraft Website	ArtCraft 網站
-	ArtCraft website	ArtCraft 網站
+	MIXEL Website	MIXEL 網站
 	Artwork Colors	圖稿顏色
 	As Multiple Assets	作為多個資產
 	As Single Asset	作為單一資產
@@ -661,7 +660,6 @@
 	Discard Recovered Documents	捨棄已復原的文件
 	Discard White Overprint in Output	輸出時捨棄白色疊印
 	Discarded {} recovered document(s)	已捨棄 {} 份復原的文件
-	Discord	Discord
 	Discretionary Hyphen	選擇性連字號
 	Discretionary Ligatures	任意連字
 	Display All Blacks Accurately	精確顯示所有黑色
@@ -1292,9 +1290,6 @@
 	Italian	義大利文
 	Japanese	日文
 	Join	連接
-	Join Our Discord	加入我們的 Discord
-	Join our Discord	加入我們的 Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	加入 Discord 上的 ArtCraft 社群 (discord.gg/artcraft)
 	Join the lines of each paragraph	合併每個段落的各行
 	Join Tool	連接工具
 	Justification…	對齊設定…
@@ -1891,7 +1886,7 @@
 	Paragraph Style Options	段落樣式選項
 	Paragraph Styles	段落樣式
 	Paragraph Symbol	段落符號
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	基於 ArtCraft 團隊的工作。MIT OR Apache-2.0。字體：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + MIXEL Vector。
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0。字體：Noto Sans, Noto Serif、Inter、JetBrains Mono (OFL)。圖示：Lucide (ISC) + MIXEL Vector。
 	Password	密碼
 	Paste	貼上
 	Paste in Back	貼至後方
@@ -3635,3 +3630,4 @@ lighting	Light	光源
 @msg	Choose the containing folder for all output files before saving. No files were written.	儲存前，請選取包含所有輸出檔案的資料夾。尚未寫入任何檔案。
 @msg	Choose a folder that contains every output file. No files were written.	請選取包含所有輸出檔案的資料夾。尚未寫入任何檔案。
 @msg	Choose an absolute save destination	請選取使用絕對路徑的儲存位置
+	Privacy Policy	隱私權政策

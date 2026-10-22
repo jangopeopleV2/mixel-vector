@@ -335,8 +335,7 @@
 	Artboard:	Rajztábla:
 	Artboards	Rajztáblák
 	Artboards: {n}	Rajztáblák: {n}
-	ArtCraft Website	Az ArtCraft webhelye
-	ArtCraft website	Az ArtCraft webhelye
+	MIXEL Website	Az MIXEL webhelye
 	Artwork Colors	Grafika színei
 	As Multiple Assets	Több elemként
 	As Single Asset	Egy elemként
@@ -929,7 +928,6 @@
 	Discard Recovered Documents	Helyreállított dokumentumok elvetése
 	Discard White Overprint in Output	Fehér felülnyomás elvetése a kimenetben
 	Discarded {} recovered document(s)	Elvetett helyreállított dokumentumok: {}
-	Discord	Discord
 	Discretionary Hyphen	Feltételes elválasztójel
 	Discretionary Ligatures	Választható ligatúrák
 	Display All Blacks Accurately	Minden fekete pontos megjelenítése
@@ -1699,9 +1697,6 @@
 	Its graphics, colors and text styles are deleted from this machine.	A grafikái, színei és szövegstílusai törlődnek erről a gépről.
 	Japanese	Japán
 	Join	Összekapcsolás
-	Join Our Discord	Csatlakozz a Discordunkhoz
-	Join our Discord	Csatlakozz a Discordunkhoz
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Csatlakozz az ArtCraft-közösséghez a Discordon (discord.gg/artcraft)
 	Join the lines of each paragraph	Bekezdések sorainak összefűzése
 	Join Tool	Összekapcsolás
 	Joins	Csatlakozások
@@ -2372,8 +2367,8 @@
 	Paragraph Style Options	Bekezdésstílus beállításai
 	Paragraph Styles	Bekezdésstílusok
 	Paragraph Symbol	Bekezdésjel
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Az ArtCraft munkájára épül. MIT OR Apache-2.0. Betűtípusok: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikonok: Lucide (ISC) + MIXEL Vector.
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Az ArtCraft munkájára épül. MIT OR Apache-2.0. Betűtípusok: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikonok: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Betűtípusok: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikonok: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Betűtípusok: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikonok: Lucide (ISC) + MIXEL Vector.
 	Password	Jelszó
 	Paste	Beillesztés
 	Paste in Back	Beillesztés mögé
@@ -4677,3 +4672,4 @@ imageTrace	Outline	Körvonal
 @msg	Choose the containing folder for all output files before saving. No files were written.	Mentés előtt válassza ki az összes kimeneti fájlt tartalmazó mappát. Nem történt fájlírás.
 @msg	Choose a folder that contains every output file. No files were written.	Válasszon olyan mappát, amely az összes kimeneti fájlt tartalmazza. Nem történt fájlírás.
 @msg	Choose an absolute save destination	Válassz abszolút elérési útvonallal megadott mentési helyet
+	Privacy Policy	Adatvédelmi szabályzat

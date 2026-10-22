@@ -30,7 +30,6 @@
 	About MIXEL Vector	O programie MIXEL Vector
 	Align to Path	Wyrównaj do ścieżki
 	Cut Path at Selected Anchor Points	Rozetnij ścieżkę w zaznaczonych punktach kontrolnych
-	Join Our Discord	Dołącz do naszego Discorda
 	Language	Język
 	UI Brightness	Jasność interfejsu
 	Dark	Ciemny
@@ -601,7 +600,7 @@
 	Save Swatch Library…	Zapisz bibliotekę próbek…
 	Symbol Libraries	Biblioteki symboli
 	Help	Pomoc
-	ArtCraft Website	Strona ArtCraft
+	MIXEL Website	Strona MIXEL
 	MIXEL Vector project page	MIXEL Vector w GitHub
 	MIXEL Vector on GitHub	MIXEL Vector w serwisie GitHub
 	Search Commands…	Szukaj poleceń…
@@ -1737,7 +1736,7 @@ lighting	Light	Światło
 	Select All Bound Objects	Zaznacz wszystkie powiązane obiekty
 	Multiple objects	Wiele obiektów
 	Graphics: {adapter}	Grafika: {adapter}
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Na podstawie pracy zespołu ArtCraft. MIT LUB Apache-2.0. Czcionki: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT LUB Apache-2.0. Czcionki: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Ikony: Lucide (ISC) + MIXEL Vector.
 	Version {version} — open-source vector illustration in pure Rust.	Wersja {version} — otwartoźródłowa grafika wektorowa w czystym Ruście.
 	Align to Page	Wyrównaj do strony
 	Smooth Color	Gładki kolor
@@ -3303,10 +3302,6 @@ effect	Regular	Normalny
 	Recent Files	Ostatnie pliki
 	Vector illustration — fast, open, scriptable.	Ilustracja wektorowa — szybka, otwarta, skryptowalna.
 	Welcome to MIXEL Vector	Witamy w MIXEL Vector
-	ArtCraft website	Strona ArtCraft
-	Discord	Discord
-	Join our Discord	Dołącz do naszego Discorda
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Dołącz do społeczności ArtCraft na Discordzie (discord.gg/artcraft)
 	Source code on GitHub	Kod źródłowy w serwisie GitHub
 	All Tools	Wszystkie narzędzia
 	Draw	Rysuj
@@ -4554,3 +4549,4 @@ mark-style	Japanese	Japońskie
 @msg	Choose the containing folder for all output files before saving. No files were written.	Przed zapisaniem wybierz folder zawierający wszystkie pliki wyjściowe. Nie zapisano żadnych plików.
 @msg	Choose a folder that contains every output file. No files were written.	Wybierz folder zawierający wszystkie pliki wyjściowe. Nie zapisano żadnych plików.
 @msg	Choose an absolute save destination	Wybierz miejsce zapisu określone ścieżką bezwzględną
+	Privacy Policy	Polityka prywatności

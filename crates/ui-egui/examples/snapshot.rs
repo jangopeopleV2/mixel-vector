@@ -258,7 +258,7 @@ fn run(options: &Options) -> Result<Value, String> {
     let about_reply = control(harness.state_mut(), &ctx, "engine.execute", json!({"command": "help.about", "params": {}}))?;
     let about = capture(&mut harness, &uploads, &options.out, "about")?;
     let text = about.get("paintedText").and_then(Value::as_str).ok_or("About did not paint text")?;
-    for expected in ["About MIXEL Vector", "MIXEL Vector", "Based on upstream work by ArtCraft.", "Noto Sans, Noto Serif, Inter, JetBrains Mono"] {
+    for expected in ["About MIXEL Vector", "MIXEL Vector", "MIT OR Apache-2.0.", "Noto Sans, Noto Serif, Inter, JetBrains Mono"] {
         if !text.contains(expected) {
             return Err(format!("About UI is missing {expected:?}"));
         }

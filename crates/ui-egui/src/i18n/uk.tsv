@@ -222,8 +222,7 @@
 	Artboard {number}	Монтажна область {number}
 	Artboard:	Монтажна область:
 	Artboards	Монтажні області
-	ArtCraft Website	Веб-сайт ArtCraft
-	ArtCraft website	Веб-сайт ArtCraft
+	MIXEL Website	Веб-сайт MIXEL
 	Artwork Colors	Кольори малюнка
 	As Multiple Assets	Як кілька ресурсів
 	As Single Asset	Як один ресурс
@@ -682,7 +681,6 @@
 	Discard Recovered Documents	Відкинути відновлені документи
 	Discard White Overprint in Output	Скасувати накладення білого під час виведення
 	Discarded {} recovered document(s)	Скасовано відновлених документів: {}
-	Discord	Discord
 	Discretionary Hyphen	М’яке перенесення
 	Discretionary Ligatures	Дискреційні лігатури
 	Display All Blacks Accurately	Відображати всі чорні точно
@@ -1311,9 +1309,6 @@
 	Italian	Італійська
 	Japanese	Японська
 	Join	З’єднати
-	Join Our Discord	Приєднуйтесь до нашого Discord
-	Join our Discord	Приєднуйтесь до нашого Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Приєднуйтесь до спільноти ArtCraft Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Поєднувати рядки кожного абзацу
 	Join Tool	Інструмент «З’єднання»
 	Justification…	Вирівнювання за шириною…
@@ -1906,7 +1901,7 @@
 	Paragraph Style Options	Параметри стилю абзацу
 	Paragraph Styles	Стилі абзаців
 	Paragraph Symbol	Символ абзацу
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	На основі роботи команди ArtCraft. MIT OR Apache-2.0. Шрифти: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Значки: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Шрифти: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Значки: Lucide (ISC) + MIXEL Vector.
 	Password	Пароль
 	Paste	Вставити
 	Paste in Back	Вставити позаду
@@ -4260,3 +4255,4 @@ lighting	Light	Світло
 @msg	Choose the containing folder for all output files before saving. No files were written.	Перед збереженням виберіть папку, що містить усі вихідні файли. Жодного файлу не було записано.
 @msg	Choose a folder that contains every output file. No files were written.	Виберіть папку, що містить усі вихідні файли. Жодного файлу не було записано.
 @msg	Choose an absolute save destination	Виберіть місце збереження з абсолютним шляхом
+	Privacy Policy	Політика конфіденційності

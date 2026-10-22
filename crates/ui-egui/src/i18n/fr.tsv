@@ -229,8 +229,7 @@
 	Artboard {number}	Plan de travail {number}
 	Artboard:	Plan de travail :
 	Artboards	Plans de travail
-	ArtCraft Website	Site web d’ArtCraft
-	ArtCraft website	Site web d’ArtCraft
+	MIXEL Website	Site web d’MIXEL
 	Artwork Colors	Couleurs de l’illustration
 	As Multiple Assets	En plusieurs ressources
 	As Single Asset	En une seule ressource
@@ -690,7 +689,6 @@
 	Discard Recovered Documents	Ignorer les documents récupérés
 	Discard White Overprint in Output	Ignorer la surimpression du blanc en sortie
 	Discarded {} recovered document(s)	{} document(s) récupéré(s) ignoré(s)
-	Discord	Discord
 	Discretionary Hyphen	Tiret conditionnel
 	Discretionary Ligatures	Ligatures conditionnelles
 	Display All Blacks Accurately	Afficher tous les noirs avec précision
@@ -1316,9 +1314,6 @@
 	Italian	Italien
 	Japanese	Japonais
 	Join	Joindre
-	Join Our Discord	Rejoignez notre Discord
-	Join our Discord	Rejoignez notre Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Rejoignez la communauté ArtCraft sur Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Joindre les lignes de chaque paragraphe
 	Join Tool	Outil Jonction
 	Justification…	Justification…
@@ -1911,7 +1906,7 @@
 	Paragraph Style Options	Options de style de paragraphe
 	Paragraph Styles	Styles de paragraphe
 	Paragraph Symbol	Symbole de paragraphe
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Basé sur le travail d’ArtCraft. MIT OR Apache-2.0. Polices : Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icônes : Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Polices : Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icônes : Lucide (ISC) + MIXEL Vector.
 	Password	Mot de passe
 	Paste	Coller
 	Paste in Back	Coller derrière
@@ -4478,7 +4473,7 @@ lighting	Light	Lumière
 	PDF/X-4:2010	PDF/X-4:2010
 	PRs	PR
 	Page Cover 1640×624	Couverture de page 1640×624
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Basé sur le travail d’ArtCraft. MIT OR Apache-2.0. Polices : Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icônes : Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Polices : Noto Sans, Noto Serif, Inter, JetBrains Mono, Noto Sans SC (OFL). Icônes : Lucide (ISC) + MIXEL Vector.
 	Pattern Swatches	Nuances de motif
 	Pen	Plume
 	Pentagram	Pentagramme
@@ -4710,3 +4705,4 @@ theme	Appearance	Apparence
 @msg	Choose the containing folder for all output files before saving. No files were written.	Avant d’enregistrer, choisissez le dossier contenant tous les fichiers de sortie. Aucun fichier n’a été écrit.
 @msg	Choose a folder that contains every output file. No files were written.	Choisissez un dossier contenant tous les fichiers de sortie. Aucun fichier n’a été écrit.
 @msg	Choose an absolute save destination	Choisissez une destination d’enregistrement avec un chemin absolu
+	Privacy Policy	Politique de confidentialité

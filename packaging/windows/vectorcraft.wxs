@@ -35,7 +35,7 @@
     <Property Id="ARPPRODUCTICON" Value="VectorcraftIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/jangopeopleV2/mixel-vector" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/jangopeopleV2/mixel-vector" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
+    <Property Id="ARPHELPLINK" Value="https://www.mixel.ch" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="MIXEL Vector" />

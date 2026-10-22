@@ -264,8 +264,7 @@
 	Artboard:	Bảng vẽ:
 	Artboards	Các bảng vẽ
 	Artboards: {n}	Bảng vẽ: {n}
-	ArtCraft Website	Trang web ArtCraft
-	ArtCraft website	Trang web ArtCraft
+	MIXEL Website	Trang web MIXEL
 	Artistic	Nghệ thuật
 	Artwork Colors	Màu sắc tác phẩm
 	As Multiple Assets	Thành nhiều asset
@@ -822,7 +821,6 @@
 	Discard Recovered Documents	Loại bỏ tài liệu đã phục hồi
 	Discard White Overprint in Output	Loại bỏ in chồng màu trắng khi xuất
 	Discarded {} recovered document(s)	Đã loại bỏ {} tài liệu đã phục hồi
-	Discord	Discord
 	Discretionary Hyphen	Gạch nối tùy chọn
 	Discretionary Ligatures	Chữ ghép tùy chọn
 	Display All Blacks Accurately	Hiển thị tất cả màu đen chính xác
@@ -1527,9 +1525,6 @@
 	Its graphics, colors and text styles are deleted from this machine.	Đồ họa, màu sắc và kiểu văn bản của nó sẽ bị xóa khỏi máy này.
 	Japanese	Tiếng Nhật
 	Join	Nối
-	Join Our Discord	Tham gia Discord
-	Join our Discord	Tham gia Discord của chúng tôi
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Tham gia cộng đồng ArtCraft trên Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Nối các dòng trong mỗi đoạn văn
 	Join Tool	Công cụ Nối
 	Joins	Kiểu nối
@@ -2165,7 +2160,7 @@
 	Paragraph Style Options	Tùy chọn kiểu đoạn văn
 	Paragraph Styles	Kiểu đoạn văn
 	Paragraph Symbol	Ký hiệu đoạn văn
-	Based on upstream work by ArtCraft. MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	Dựa trên công trình của ArtCraft. MIT OR Apache-2.0. Phông chữ: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Biểu tượng: Lucide (ISC) + MIXEL Vector.
+	MIT OR Apache-2.0. Fonts: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + MIXEL Vector.	MIT OR Apache-2.0. Phông chữ: Noto Sans, Noto Serif, Inter, JetBrains Mono (OFL). Biểu tượng: Lucide (ISC) + MIXEL Vector.
 	Password	Mật khẩu
 	Paste	Dán
 	Paste Design	Dán thiết kế
@@ -4262,3 +4257,4 @@ theme	Appearance	Giao diện
 @msg	Choose the containing folder for all output files before saving. No files were written.	Trước khi lưu, hãy chọn thư mục chứa tất cả các tệp đầu ra. Không có tệp nào được ghi.
 @msg	Choose a folder that contains every output file. No files were written.	Hãy chọn thư mục chứa tất cả các tệp đầu ra. Không có tệp nào được ghi.
 @msg	Choose an absolute save destination	Chọn vị trí lưu bằng đường dẫn tuyệt đối
+	Privacy Policy	Chính sách quyền riêng tư
