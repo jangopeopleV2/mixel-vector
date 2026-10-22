@@ -38,7 +38,11 @@
     <Property Id="ARPHELPLINK" Value="https://www.mixel.ch" />
 
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="INSTALLFOLDER" Name="MIXEL Vector" />
+      <Directory Id="INSTALLFOLDER" Name="MIXEL Vector">
+        <Directory Id="LegalDirb6ed7474d821cba8cc93" Name="Licenses">
+          <Directory Id="LegalDirbf7bd124d5cb58020f67" Name="epaint_default_fonts-0.36.2" />
+        </Directory>
+      </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
     <StandardDirectory Id="DesktopFolder" />
@@ -49,6 +53,7 @@
     </Property>
 
     <Feature Id="Main" Title="MIXEL Vector" Level="1">
+      <ComponentGroupRef Id="LegalNoticesVector" />
       <ComponentGroupRef Id="VectorcraftFiles" />
       <ComponentRef Id="DesktopShortcut" />
     </Feature>
@@ -133,5 +138,25 @@
           Target="[#VectorcraftExe]" WorkingDirectory="INSTALLFOLDER" Icon="VectorcraftIcon.ico" IconIndex="0" />
       <RegistryValue Root="HKLM" Key="Software\MIXEL Vector" Name="DesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
     </Component>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="LegalNoticesVector">
+      <Component Id="LegalComponentd55f151970136b435138" Directory="LegalDirb6ed7474d821cba8cc93">
+        <File Id="LegalFiled55f151970136b435138" Source="$(var.BinDir)\Licenses\NOTICE" KeyPath="yes" />
+      </Component>
+      <Component Id="LegalComponent2ab8518d58389872646b" Directory="LegalDirbf7bd124d5cb58020f67">
+        <File Id="LegalFile2ab8518d58389872646b" Source="$(var.BinDir)\Licenses\epaint_default_fonts-0.36.2\Hack-Regular.txt" KeyPath="yes" />
+      </Component>
+      <Component Id="LegalComponent72c941b79372feddc147" Directory="LegalDirbf7bd124d5cb58020f67">
+        <File Id="LegalFile72c941b79372feddc147" Source="$(var.BinDir)\Licenses\epaint_default_fonts-0.36.2\OFL.txt" KeyPath="yes" />
+      </Component>
+      <Component Id="LegalComponentfcc049a978d3eaf3ec47" Directory="LegalDirbf7bd124d5cb58020f67">
+        <File Id="LegalFilefcc049a978d3eaf3ec47" Source="$(var.BinDir)\Licenses\epaint_default_fonts-0.36.2\UFL.txt" KeyPath="yes" />
+      </Component>
+      <Component Id="LegalComponenta17ed85064e7f0a32008" Directory="LegalDirbf7bd124d5cb58020f67">
+        <File Id="LegalFilea17ed85064e7f0a32008" Source="$(var.BinDir)\Licenses\epaint_default_fonts-0.36.2\emoji-icon-font-mit-license.txt" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
   </Fragment>
 </Wix>

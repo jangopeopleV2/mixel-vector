@@ -31,6 +31,7 @@ overrides:
       - libc6 (>= 2.35)
       - libgcc-s1
       - libxkbcommon0
+      - libxkbcommon-x11-0
       - libvulkan1 | libegl1
     recommends:
       - libwayland-client0
@@ -50,6 +51,7 @@ overrides:
       - libm.so.6()(64bit)
       - libgcc_s.so.1()(64bit)
       - libxkbcommon.so.0()(64bit)
+      - libxkbcommon-x11.so.0()(64bit)
       - (libvulkan.so.1()(64bit) or libEGL.so.1()(64bit))
     recommends:
       - libwayland-client
